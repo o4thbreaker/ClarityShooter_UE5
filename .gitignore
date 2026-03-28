@@ -80,5 +80,11 @@ Content/Variant_Platforming
 Source/Clarity/Variant_Combat
 Source/Clarity/Variant_Platforming
 
+# Variants World Partition
+Content/__ExternalActors__/Varian_Combat
+Content/__ExternalActors__/Varian_Platforming
+Content/__ExternalObjects__/Varian_Combat
+Content/__ExternalObjects__/Varian_Platforming
+
 # Temporary do not include TwinBlast
 Content/Characters/ParagonTwinBlast
