@@ -73,3 +73,12 @@ Plugins/**/Intermediate/*
 
 # Cache files for the editor to use
 DerivedDataCache/*
+
+# Custom
+Content/Variant_Combat
+Content/Variant_Platforming
+Source/Clarity/Variant_Combat
+Source/Clarity/Variant_Platforming
+
+# Temporary do not include TwinBlast
+Content/Characters/ParagonTwinBlast
