@@ -81,10 +81,10 @@ Source/Clarity/Variant_Combat
 Source/Clarity/Variant_Platforming
 
 # Variants World Partition
-Content/__ExternalActors__/Varian_Combat
-Content/__ExternalActors__/Varian_Platforming
-Content/__ExternalObjects__/Varian_Combat
-Content/__ExternalObjects__/Varian_Platforming
+Content/__ExternalActors__/Variant_Combat
+Content/__ExternalActors__/Variant_Platforming
+Content/__ExternalObjects__/Variant_Combat
+Content/__ExternalObjects__/Variant_Platforming
 
 # Temporary do not include TwinBlast
 Content/Characters/ParagonTwinBlast
