@@ -26,9 +26,12 @@ ACPlayerCharacter::ACPlayerCharacter()
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
 
 	/// \NOTE: sets defaults, better tweak it in derived blueprint
+	DefaultWalkingSpeed = 300.f;
+	AimingWalkingSpeed = 200.f;
+
 	GetCharacterMovement()->JumpZVelocity = 500.f;
 	GetCharacterMovement()->AirControl = 0.35f;
-	GetCharacterMovement()->MaxWalkSpeed = 300.f;
+	GetCharacterMovement()->MaxWalkSpeed = DefaultWalkingSpeed;
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
@@ -43,6 +46,14 @@ ACPlayerCharacter::ACPlayerCharacter()
 	FollowCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCameraComponent"));
 	FollowCameraComponent->SetupAttachment(CameraBoomComponent, USpringArmComponent::SocketName);
 	FollowCameraComponent->bUsePawnControlRotation = false;
+
+	// mouse sensitivity
+	NormalTurnRate = 1.0f;
+	NormalLookUpRate = 1.0f;
+	AimTurnRate = NormalTurnRate;
+	AimLookUpRate = NormalLookUpRate;
+	MouseXSensitivity = 0.0f;
+	MouseYSensitivity = 0.0f;
 
 	// set aiming setting
 	bIsAiming = false;
@@ -59,20 +70,6 @@ void ACPlayerCharacter::Tick(float DeltaTime)
 	/// \TODO: transfer to events
 
 	Super::Tick(DeltaTime);
-
-	if (bIsAiming)
-	{
-		CameraCurrentFOV = FMath::Lerp(CameraCurrentFOV, CameraAimingFOV, CameraAimingSpeed * DeltaTime);
-	}
-	else
-	{
-		CameraCurrentFOV = FMath::Lerp(CameraCurrentFOV, CameraDefaultFOV, CameraAimingSpeed * DeltaTime);
-	}
-
-	if (CameraCurrentFOV != CameraDefaultFOV)
-	{
-		FollowCameraComponent->FieldOfView = CameraCurrentFOV;
-	}
 }
 
 void ACPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -101,6 +98,24 @@ void ACPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	}
 }
 
+void ACPlayerCharacter::SetAimingFOV(bool IsAiming)
+{
+	TargetFOV = IsAiming ? CameraAimingFOV : CameraDefaultFOV;
+
+	GetWorldTimerManager().SetTimer(AimingTimerHandle, this, &ACPlayerCharacter::UpdateFOV, GetWorld()->GetDeltaSeconds(), true);
+}
+
+void ACPlayerCharacter::UpdateFOV()
+{
+	CameraCurrentFOV = FMath::FInterpTo(CameraCurrentFOV, TargetFOV, GetWorld()->GetDeltaSeconds(), CameraAimingSpeed);
+	FollowCameraComponent->SetFieldOfView(CameraCurrentFOV);
+
+	if (FMath::IsNearlyEqual(CameraCurrentFOV, TargetFOV, 0.1f))
+	{
+		GetWorldTimerManager().ClearTimer(AimingTimerHandle);
+	}
+}
+
 void ACPlayerCharacter::Move(const FInputActionValue& Value)
 {
 	FVector2D MovementVector = Value.Get<FVector2D>();
@@ -118,6 +133,12 @@ void ACPlayerCharacter::Look(const FInputActionValue& Value)
 void ACPlayerCharacter::Aim(const FInputActionValue& Value)
 {
 	bIsAiming = Value.Get<bool>();
+
+	GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimingWalkingSpeed : DefaultWalkingSpeed;
+	GetCharacterMovement()->bOrientRotationToMovement = bIsAiming ? false : true;
+	GetCharacterMovement()->bUseControllerDesiredRotation = bIsAiming ? true : false;
+
+	SetAimingFOV(bIsAiming);
 }
 
 void ACPlayerCharacter::DoMove(float Right, float Forward)
@@ -144,9 +165,12 @@ void ACPlayerCharacter::DoLook(float Yaw, float Pitch)
 {
 	if (GetController())
 	{
+		MouseXSensitivity = bIsAiming ? AimTurnRate : NormalTurnRate;
+		MouseYSensitivity = bIsAiming ? AimLookUpRate : NormalLookUpRate;
+
 		// add yaw and pitch input to controller
-		AddControllerYawInput(Yaw);
-		AddControllerPitchInput(Pitch);
+		AddControllerYawInput(Yaw * MouseXSensitivity);
+		AddControllerPitchInput(Pitch * MouseYSensitivity);
 	}
 }
 

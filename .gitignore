@@ -80,11 +80,21 @@ Content/Variant_Platforming
 Source/Clarity/Variant_Combat
 Source/Clarity/Variant_Platforming
 
+# Lyra
+Content/Characters/Mannequin
+
 # Variants World Partition
 Content/__ExternalActors__/Variant_Combat
 Content/__ExternalActors__/Variant_Platforming
 Content/__ExternalObjects__/Variant_Combat
 Content/__ExternalObjects__/Variant_Platforming
 
-# Temporary do not include TwinBlast
-Content/Characters/ParagonTwinBlast
+# visual studio nonsense
+enc_temp_folder
+
+# Temporary do not include Paragon TwinBlast
+Content/Characters/ParagonTwinblast
+
+
+# Temporary do not include Documentation
+Documentation

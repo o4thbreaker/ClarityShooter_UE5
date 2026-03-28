@@ -62,6 +62,46 @@ protected:
 	/* control interpolation speed */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Aim")
 	float CameraAimingSpeed;
+	
+	/* default horizontal rate sensitivity */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Aim")
+	float NormalTurnRate;
+
+	/* default vertical rate sensitivity */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Aim")
+	float NormalLookUpRate;
+
+	/* aim horizontal rate sensitivity */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (UIMin = "0.0", UIMax = "1.0"), Category = "Aim")
+	float AimTurnRate;
+
+	/* aim vertical rate sensitivity */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (UIMin = "0.0", UIMax = "1.0"), Category = "Aim")
+	float AimLookUpRate;
+
+	/* current horizontal sensitivity */
+	float MouseXSensitivity;
+
+	/* current vertical sesitivity */
+	float MouseYSensitivity;
+
+	float TargetFOV;
+
+	FTimerHandle AimingTimerHandle;
+
+	/* walking speed when aiming */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
+	float AimingWalkingSpeed;
+
+	/* default speed when aiming */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
+	float DefaultWalkingSpeed;
+
+	/* called for aiming timer */
+	void SetAimingFOV(bool IsAiming);
+
+	/* interpolates the FOV */
+	void UpdateFOV();
 
 	/** called for movement input */
 	void Move(const FInputActionValue& Value);
