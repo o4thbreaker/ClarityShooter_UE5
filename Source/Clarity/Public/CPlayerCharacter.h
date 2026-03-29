@@ -10,6 +10,7 @@ class USpringArmComponent;
 class UCameraComponent;
 class UInputAction;
 struct FInputActionValue;
+class ACWeaponBase;
 
 UCLASS(Abstract)
 class CLARITY_API ACPlayerCharacter : public ACharacter
@@ -45,38 +46,43 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* AimAction;
 
+	/** shoot input action */
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* FireAction;
+
 	/* aiming a gun */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Aim")
+	UPROPERTY(BlueprintReadOnly, Category = "Aim")
 	bool bIsAiming;
 
 	/* FOV setting for default */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
 	float CameraDefaultFOV;
 
 	/* FOV setting for current */
 	float CameraCurrentFOV;
 
 	/* FOV setting for aiming */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Aim")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
 	float CameraAimingFOV;
 
 	/* control interpolation speed */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Aim")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
 	float CameraAimingSpeed;
 	
 	/* default horizontal rate sensitivity */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Aim")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
 	float NormalTurnRate;
 
 	/* default vertical rate sensitivity */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Aim")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
 	float NormalLookUpRate;
 
 	/* aim horizontal rate sensitivity */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (UIMin = "0.0", UIMax = "1.0"), Category = "Aim")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (UIMin = "0.0", UIMax = "1.0"), Category = "Camera")
 	float AimTurnRate;
 
 	/* aim vertical rate sensitivity */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (UIMin = "0.0", UIMax = "1.0"), Category = "Aim")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (UIMin = "0.0", UIMax = "1.0"), Category = "Camera")
 	float AimLookUpRate;
 
 	/* current horizontal sensitivity */
@@ -85,8 +91,10 @@ protected:
 	/* current vertical sesitivity */
 	float MouseYSensitivity;
 
+	/* target FOV to zoom into */
 	float TargetFOV;
 
+	/* timer to handle zooming */
 	FTimerHandle AimingTimerHandle;
 
 	/* walking speed when aiming */
@@ -96,6 +104,15 @@ protected:
 	/* default speed when aiming */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
 	float DefaultWalkingSpeed;
+
+	FName WeaponSocketName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
+	TSubclassOf<ACWeaponBase> DefaultWeapon;
+
+	virtual void BeginPlay() override;
+
+	void SpawnWeapon();
 
 	/* called for aiming timer */
 	void SetAimingFOV(bool IsAiming);
@@ -112,10 +129,11 @@ protected:
 	/** called for aiming input */
 	void Aim(const FInputActionValue& Value);
 
+	/** called for firing input */
+	void Fire(const FInputActionValue& Value);
+
 public:
 	ACPlayerCharacter();
-
-	virtual void Tick(float DeltaTime) override;
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 

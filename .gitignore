@@ -92,9 +92,7 @@ Content/__ExternalObjects__/Variant_Platforming
 # visual studio nonsense
 enc_temp_folder
 
-# Temporary do not include Paragon TwinBlast
+# Temporary do not include
 Content/Characters/ParagonTwinblast
-
-
-# Temporary do not include Documentation
 Documentation
+Content/Core/VFX
