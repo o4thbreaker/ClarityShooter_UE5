@@ -21,4 +21,8 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 	USkeletalMeshComponent* WeaponMesh;
+
+public:
+
+	FORCEINLINE USkeletalMeshComponent* GetMesh() const { return WeaponMesh; };
 };

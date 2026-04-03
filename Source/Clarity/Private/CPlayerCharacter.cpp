@@ -10,12 +10,16 @@
 #include "EnhancedInputSubsystems.h"
 #include "CWeaponBase.h"
 #include "Engine/SkeletalMeshSocket.h"
+#include "Kismet/GameplayStatics.h"
+#include "Sound/SoundCue.h"
+#include "CPlayerAnimInstance.h"
 
 ACPlayerCharacter::ACPlayerCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
 	WeaponSocketName = FName(TEXT("RightHandSocket"));
+	BarrelSocketName = FName(TEXT("MuzzleFlash"));
 
 	// set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
@@ -90,9 +94,10 @@ void ACPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &ACPlayerCharacter::Aim);
 
 		// firing
-		/// \TODO: change to toggle
 		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &ACPlayerCharacter::Fire);
-		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &ACPlayerCharacter::Fire);
+		
+		/// \NOTE: if needed the full auto
+		//EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &ACPlayerCharacter::Fire);
 	}
 	else
 	{
@@ -104,21 +109,73 @@ void ACPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// initialize animation instance
+	PlayerAnimInstance = Cast<UCPlayerAnimInstance>(GetMesh()->GetAnimInstance());
+
 	SpawnWeapon();
+}
+
+void ACPlayerCharacter::PlayFireSound()
+{
+	if (FiringAudio)
+	{
+		UGameplayStatics::PlaySound2D(this, FiringAudio);
+	}
+}
+
+void ACPlayerCharacter::PlayMuzzleFlash(const FTransform SocketTransform)
+{
+	if (MuzzleFlash)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), MuzzleFlash, SocketTransform);
+	}
+}
+
+void ACPlayerCharacter::PlayImpactEffect(const FVector& ImpactPoint)
+{
+	if (ImpactEffect)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactEffect, ImpactPoint);
+	}
+}
+
+void ACPlayerCharacter::PlayWeaponRecoil()
+{
+	if (ensure(PlayerAnimInstance))
+	{
+		PlayerAnimInstance->DoProceduralRecoil(1.5f);
+	}
 }
 
 void ACPlayerCharacter::SpawnWeapon()
 {
-	ACWeaponBase* Weapon = GetWorld()->SpawnActor<ACWeaponBase>();
+	CurrentWeapon = GetWorld()->SpawnActor<ACWeaponBase>(DefaultWeapon);
 
-	if (Weapon)
+	if (CurrentWeapon)
 	{
-		const USkeletalMeshSocket* RightHandSocket =  GetMesh()->GetSocketByName(WeaponSocketName);
+		const USkeletalMeshSocket* RightHandSocket = GetMesh()->GetSocketByName(WeaponSocketName);
 		if (RightHandSocket)
 		{
-			RightHandSocket->AttachActor(Cast<AActor>(Weapon), GetMesh());
+			RightHandSocket->AttachActor(Cast<AActor>(CurrentWeapon), GetMesh());
 		}
 	}
+}
+
+bool ACPlayerCharacter::GetCrosshairWorldProperties(FVector& WorldPosition, FVector& WorldDirection)
+{
+	FVector2D ViewportSize;
+
+	// get screen size
+	if (GEngine && GEngine->GameViewport)
+	{
+		GEngine->GameViewport->GetViewportSize(ViewportSize);
+	}
+
+	// calculate crosshair location on screen (in the middle)
+	FVector2D CrosshairLocation(ViewportSize.X / 2.0f, ViewportSize.Y / 2.0f);
+
+	// try to convert data from screen to world and save to WorldPosition and WorldDirection
+	return UGameplayStatics::DeprojectScreenToWorld(UGameplayStatics::GetPlayerController(this, 0), CrosshairLocation, WorldPosition, WorldDirection);
 }
 
 void ACPlayerCharacter::SetAimingFOV(bool IsAiming)
@@ -166,7 +223,52 @@ void ACPlayerCharacter::Aim(const FInputActionValue& Value)
 
 void ACPlayerCharacter::Fire(const FInputActionValue& Value)
 {
+	PlayFireSound();
 
+	const USkeletalMeshSocket* BarrelSocket = CurrentWeapon->GetMesh()->GetSocketByName(BarrelSocketName);
+
+	if (!BarrelSocket) return;
+
+	const FTransform SocketTransform = BarrelSocket->GetSocketTransform(CurrentWeapon->GetMesh());
+
+	PlayMuzzleFlash(SocketTransform);
+
+	bScreenToWorld = GetCrosshairWorldProperties(CrosshairWorldPosition, CrosshairWorldDirection);
+
+	if (bScreenToWorld)
+	{
+		FHitResult HitResult;
+		FVector Start = CrosshairWorldPosition;
+
+		/// \TODO: fix the magic number
+		FVector End = Start + CrosshairWorldDirection * 60000.0f;
+
+		GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECollisionChannel::ECC_Visibility);
+
+		if (HitResult.bBlockingHit)
+		{
+			PlayImpactEffect(HitResult.Location);
+
+			//DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 2.0f);
+			//DrawDebugPoint(GetWorld(), HitResult.Location, 4.0f, FColor::Blue, false, 2.0f);
+		}
+
+		FHitResult WeaponTraceHit;
+
+		const FVector WeaponStart = SocketTransform.GetLocation();
+		const FVector WeaponEnd = HitResult.Location;
+
+		GetWorld()->LineTraceSingleByChannel(WeaponTraceHit, WeaponStart, WeaponEnd, ECollisionChannel::ECC_Visibility);
+		if (WeaponTraceHit.bBlockingHit)
+		{
+			PlayImpactEffect(WeaponTraceHit.Location);
+
+			//DrawDebugLine(GetWorld(), WeaponStart, WeaponTraceHit.Location, FColor::Red, false, 2.0f);
+			//DrawDebugPoint(GetWorld(), WeaponTraceHit.Location, 4.0f, FColor::Blue, false, 2.0f);
+		}
+	}
+
+	PlayWeaponRecoil();
 }
 
 void ACPlayerCharacter::DoMove(float Right, float Forward)

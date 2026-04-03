@@ -11,6 +11,9 @@ class UCameraComponent;
 class UInputAction;
 struct FInputActionValue;
 class ACWeaponBase;
+class USoundCue;
+class UParticleSystem;
+class UCPlayerAnimInstance;
 
 UCLASS(Abstract)
 class CLARITY_API ACPlayerCharacter : public ACharacter
@@ -49,6 +52,9 @@ protected:
 	/** shoot input action */
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* FireAction;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Animation")
+	UCPlayerAnimInstance* PlayerAnimInstance;
 
 	/* aiming a gun */
 	UPROPERTY(BlueprintReadOnly, Category = "Aim")
@@ -105,14 +111,48 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
 	float DefaultWalkingSpeed;
 
+	ACWeaponBase* CurrentWeapon;
+
 	FName WeaponSocketName;
+
+	FName BarrelSocketName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
 	TSubclassOf<ACWeaponBase> DefaultWeapon;
 
+	FVector CrosshairWorldPosition;
+
+	FVector CrosshairWorldDirection;
+
+	/* is crosshair translated successfully */
+	bool bScreenToWorld;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Shoot")
+	USoundCue* FiringAudio;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Shoot")
+	UParticleSystem* MuzzleFlash;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Shoot")
+	UParticleSystem* ImpactEffect;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Shoot")
+	UAnimMontage* FireMontage;
+
 	virtual void BeginPlay() override;
 
+	void PlayFireSound();
+
+	void PlayMuzzleFlash(const FTransform SocketTransform);
+
+	void PlayImpactEffect(const FVector& ImpactPoint);
+
+	void PlayWeaponRecoil();
+
 	void SpawnWeapon();
+
+	/* converts crosshair screen position to world position (and direction)*/
+	bool GetCrosshairWorldProperties(FVector& WorldPosition, FVector& WorldDirection);
 
 	/* called for aiming timer */
 	void SetAimingFOV(bool IsAiming);
