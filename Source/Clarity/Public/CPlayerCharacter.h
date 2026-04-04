@@ -11,9 +11,8 @@ class UCameraComponent;
 class UInputAction;
 struct FInputActionValue;
 class ACWeaponBase;
-class USoundCue;
-class UParticleSystem;
 class UCPlayerAnimInstance;
+class UCActionComponent;
 
 UCLASS(Abstract)
 class CLARITY_API ACPlayerCharacter : public ACharacter
@@ -21,6 +20,10 @@ class CLARITY_API ACPlayerCharacter : public ACharacter
 	GENERATED_BODY()
 
 protected:
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UCActionComponent* ActionComponent;
+
 	/** camera boom positioning the camera behind the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	USpringArmComponent* CameraBoomComponent;
@@ -113,46 +116,18 @@ protected:
 
 	ACWeaponBase* CurrentWeapon;
 
+	/// \NOTE: will be transfered to specific system later
 	FName WeaponSocketName;
 
+	/// \NOTE: will be transfered to specific system later
 	FName BarrelSocketName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
 	TSubclassOf<ACWeaponBase> DefaultWeapon;
 
-	FVector CrosshairWorldPosition;
-
-	FVector CrosshairWorldDirection;
-
-	/* is crosshair translated successfully */
-	bool bScreenToWorld;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Shoot")
-	USoundCue* FiringAudio;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Shoot")
-	UParticleSystem* MuzzleFlash;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Shoot")
-	UParticleSystem* ImpactEffect;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Shoot")
-	UAnimMontage* FireMontage;
-
 	virtual void BeginPlay() override;
-
-	void PlayFireSound();
-
-	void PlayMuzzleFlash(const FTransform SocketTransform);
-
-	void PlayImpactEffect(const FVector& ImpactPoint);
-
-	void PlayWeaponRecoil();
-
+	
 	void SpawnWeapon();
-
-	/* converts crosshair screen position to world position (and direction)*/
-	bool GetCrosshairWorldProperties(FVector& WorldPosition, FVector& WorldDirection);
 
 	/* called for aiming timer */
 	void SetAimingFOV(bool IsAiming);
@@ -169,6 +144,7 @@ protected:
 	/** called for aiming input */
 	void Aim(const FInputActionValue& Value);
 
+	/// \NOTE: transfered (inner part) to action class
 	/** called for firing input */
 	void Fire(const FInputActionValue& Value);
 
@@ -198,4 +174,10 @@ public:
 
 	/** returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCameraComponent; }
+
+	/** returns current weapon **/
+	FORCEINLINE ACWeaponBase* GetCurrentWeapon() const { return CurrentWeapon; }
+
+	/** returns PLAYER's anim instance **/
+	FORCEINLINE UCPlayerAnimInstance* GetPlayerAnimInstance() const { return PlayerAnimInstance; }
 };
