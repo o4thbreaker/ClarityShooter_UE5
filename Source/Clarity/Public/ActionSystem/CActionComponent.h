@@ -46,7 +46,7 @@ public:
 
 	/* stops action with name provided */
 	UFUNCTION(BlueprintCallable, Category = "Action")
-	bool StopActionByTag(AActor* Instigator, FName ActionName);
+	bool StopActionByName(AActor* Instigator, FName ActionName);
 
 	UFUNCTION(BlueprintCallable, Category = "Action")
 	bool IsInActions(TSubclassOf<UCAction> ActionClassToCheck) const;

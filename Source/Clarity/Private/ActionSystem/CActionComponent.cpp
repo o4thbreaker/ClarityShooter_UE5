@@ -65,7 +65,7 @@ bool UCActionComponent::StartActionByName(AActor* Instigator, FName ActionName)
 	return false;
 }
 
-bool UCActionComponent::StopActionByTag(AActor* Instigator, FName ActionName)
+bool UCActionComponent::StopActionByName(AActor* Instigator, FName ActionName)
 {
 	for (UCAction* Action : Actions)
 	{

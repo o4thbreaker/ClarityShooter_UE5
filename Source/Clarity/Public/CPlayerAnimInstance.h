@@ -15,7 +15,6 @@ class CLARITY_API UCPlayerAnimInstance : public UAnimInstance
 	GENERATED_BODY()
 	
 protected:
-	
 	/* recoil to achieve (might be 0 when we're not shooting) */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Shoot")
 	FTransform TargetRecoil;

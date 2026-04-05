@@ -30,13 +30,9 @@ ACPlayerCharacter::ACPlayerCharacter()
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
 
-	/// \NOTE: sets defaults, better tweak it in derived blueprint
-	DefaultWalkingSpeed = 300.f;
-	AimingWalkingSpeed = 200.f;
-
 	GetCharacterMovement()->JumpZVelocity = 500.f;
 	GetCharacterMovement()->AirControl = 0.35f;
-	GetCharacterMovement()->MaxWalkSpeed = DefaultWalkingSpeed;
+	GetCharacterMovement()->MaxWalkSpeed = 300.0f;
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
@@ -57,7 +53,6 @@ ACPlayerCharacter::ACPlayerCharacter()
 	ActionComponent = CreateDefaultSubobject<UCActionComponent>(TEXT("ActionComponent"));
 
 	WeaponSocketName = FName(TEXT("RightHandSocket"));
-	BarrelSocketName = FName(TEXT("MuzzleFlash"));
 
 	// mouse sensitivity
 	NormalTurnRate = 1.0f;
@@ -70,11 +65,7 @@ ACPlayerCharacter::ACPlayerCharacter()
 	// set aiming setting
 	bIsAiming = false;
 
-	// set camera FOV settings
-	CameraDefaultFOV = FollowCameraComponent->FieldOfView;
-	CameraCurrentFOV = CameraDefaultFOV;
-	CameraAimingFOV = 40.0f;
-	CameraAimingSpeed = 20.0f;
+	/// \NOTE: camera's aim FOV is set in CAction_AimCamera;
 }
 
 void ACPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -83,25 +74,22 @@ void ACPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
 
 		// jumping
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
+		EnhancedInputComponent->BindAction(InputActions.JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
+		EnhancedInputComponent->BindAction(InputActions.JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
 		// moving
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ACPlayerCharacter::Move);
+		EnhancedInputComponent->BindAction(InputActions.MoveAction, ETriggerEvent::Triggered, this, &ACPlayerCharacter::Move);
 
 		// looking
-		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &ACPlayerCharacter::Look);
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ACPlayerCharacter::Look);
+		EnhancedInputComponent->BindAction(InputActions.MouseLookAction, ETriggerEvent::Triggered, this, &ACPlayerCharacter::Look);
+		EnhancedInputComponent->BindAction(InputActions.LookAction, ETriggerEvent::Triggered, this, &ACPlayerCharacter::Look);
 
 		// aiming
-		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Started, this, &ACPlayerCharacter::Aim);
-		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &ACPlayerCharacter::Aim);
+		EnhancedInputComponent->BindAction(InputActions.AimAction, ETriggerEvent::Started, this, &ACPlayerCharacter::Aim);
+		EnhancedInputComponent->BindAction(InputActions.AimAction, ETriggerEvent::Completed, this, &ACPlayerCharacter::Aim);
 
 		// firing
-		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &ACPlayerCharacter::Fire);
-		
-		/// \NOTE: if needed the full auto
-		//EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &ACPlayerCharacter::Fire);
+		EnhancedInputComponent->BindAction(InputActions.FireAction, ETriggerEvent::Started, this, &ACPlayerCharacter::Fire);
 	}
 	else
 	{
@@ -132,53 +120,11 @@ void ACPlayerCharacter::SpawnWeapon()
 		}
 	}
 }
-
-void ACPlayerCharacter::SetAimingFOV(bool IsAiming)
-{
-	TargetFOV = IsAiming ? CameraAimingFOV : CameraDefaultFOV;
-
-	GetWorldTimerManager().SetTimer(AimingTimerHandle, this, &ACPlayerCharacter::UpdateFOV, GetWorld()->GetDeltaSeconds(), true);
-}
-
-void ACPlayerCharacter::UpdateFOV()
-{
-	CameraCurrentFOV = FMath::FInterpTo(CameraCurrentFOV, TargetFOV, GetWorld()->GetDeltaSeconds(), CameraAimingSpeed);
-	FollowCameraComponent->SetFieldOfView(CameraCurrentFOV);
-
-	if (FMath::IsNearlyEqual(CameraCurrentFOV, TargetFOV, 0.1f))
-	{
-		GetWorldTimerManager().ClearTimer(AimingTimerHandle);
-	}
-}
-
 void ACPlayerCharacter::Move(const FInputActionValue& Value)
 {
 	FVector2D MovementVector = Value.Get<FVector2D>();
 	// route the input
 	DoMove(MovementVector.X, MovementVector.Y);
-}
-
-void ACPlayerCharacter::Look(const FInputActionValue& Value)
-{
-	FVector2D LookAxisVector = Value.Get<FVector2D>();
-	// route the input
-	DoLook(LookAxisVector.X, LookAxisVector.Y);
-}
-
-void ACPlayerCharacter::Aim(const FInputActionValue& Value)
-{
-	bIsAiming = Value.Get<bool>();
-
-	GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimingWalkingSpeed : DefaultWalkingSpeed;
-	GetCharacterMovement()->bOrientRotationToMovement = bIsAiming ? false : true;
-	GetCharacterMovement()->bUseControllerDesiredRotation = bIsAiming ? true : false;
-
-	SetAimingFOV(bIsAiming);
-}
-
-void ACPlayerCharacter::Fire(const FInputActionValue& Value)
-{
-	ActionComponent->StartActionByName(this, "Shoot");
 }
 
 void ACPlayerCharacter::DoMove(float Right, float Forward)
@@ -201,6 +147,13 @@ void ACPlayerCharacter::DoMove(float Right, float Forward)
 	}
 }
 
+void ACPlayerCharacter::Look(const FInputActionValue& Value)
+{
+	FVector2D LookAxisVector = Value.Get<FVector2D>();
+	// route the input
+	DoLook(LookAxisVector.X, LookAxisVector.Y);
+}
+
 void ACPlayerCharacter::DoLook(float Yaw, float Pitch)
 {
 	if (GetController())
@@ -214,16 +167,21 @@ void ACPlayerCharacter::DoLook(float Yaw, float Pitch)
 	}
 }
 
-void ACPlayerCharacter::DoJumpStart()
+void ACPlayerCharacter::Aim(const FInputActionValue& Value)
 {
-	Jump();
+	bIsAiming = Value.Get<bool>();
+
+	if (bIsAiming)
+	{
+		ActionComponent->StartActionByName(this, "Aim");
+	}
+	else
+	{
+		ActionComponent->StopActionByName(this, "Aim");
+	}
 }
 
-void ACPlayerCharacter::DoJumpEnd()
+void ACPlayerCharacter::Fire(const FInputActionValue& Value)
 {
-	StopJumping();
+	ActionComponent->StartActionByName(this, "Shoot");
 }
-
-
-
-

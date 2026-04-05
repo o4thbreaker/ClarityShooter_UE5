@@ -14,29 +14,17 @@ class ACWeaponBase;
 class UCPlayerAnimInstance;
 class UCActionComponent;
 
-UCLASS(Abstract)
-class CLARITY_API ACPlayerCharacter : public ACharacter
+USTRUCT(BlueprintType)
+struct FCharacterInputActions
 {
 	GENERATED_BODY()
 
-protected:
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	UCActionComponent* ActionComponent;
-
-	/** camera boom positioning the camera behind the character */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	USpringArmComponent* CameraBoomComponent;
-
-	/** follow camera */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	UCameraComponent* FollowCameraComponent;
-
-	/** jump input Action */
+public:
+	/** jump input action */
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* JumpAction;
 
-	/** move input Action */
+	/** move input action */
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* MoveAction;
 
@@ -55,29 +43,41 @@ protected:
 	/** shoot input action */
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* FireAction;
+};
+
+UCLASS(Abstract)
+class CLARITY_API ACPlayerCharacter : public ACharacter
+{
+	GENERATED_BODY()
+
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UCActionComponent* ActionComponent;
+
+	/** camera boom positioning the camera behind the character */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	USpringArmComponent* CameraBoomComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UCameraComponent* FollowCameraComponent;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Animation")
 	UCPlayerAnimInstance* PlayerAnimInstance;
 
-	/* aiming a gun */
+	UPROPERTY(EditAnywhere, Category = "Input")
+	FCharacterInputActions InputActions;
+
 	UPROPERTY(BlueprintReadOnly, Category = "Aim")
 	bool bIsAiming;
-
-	/* FOV setting for default */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
-	float CameraDefaultFOV;
-
-	/* FOV setting for current */
-	float CameraCurrentFOV;
-
-	/* FOV setting for aiming */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
-	float CameraAimingFOV;
-
-	/* control interpolation speed */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
-	float CameraAimingSpeed;
 	
+	ACWeaponBase* CurrentWeapon;
+
+	FName WeaponSocketName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
+	TSubclassOf<ACWeaponBase> DefaultWeapon;
+
+#pragma region Sensitivity Values
 	/* default horizontal rate sensitivity */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
 	float NormalTurnRate;
@@ -99,81 +99,46 @@ protected:
 
 	/* current vertical sesitivity */
 	float MouseYSensitivity;
-
-	/* target FOV to zoom into */
-	float TargetFOV;
-
-	/* timer to handle zooming */
-	FTimerHandle AimingTimerHandle;
-
-	/* walking speed when aiming */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
-	float AimingWalkingSpeed;
-
-	/* default speed when aiming */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
-	float DefaultWalkingSpeed;
-
-	ACWeaponBase* CurrentWeapon;
-
-	/// \NOTE: will be transfered to specific system later
-	FName WeaponSocketName;
-
-	/// \NOTE: will be transfered to specific system later
-	FName BarrelSocketName;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
-	TSubclassOf<ACWeaponBase> DefaultWeapon;
-
-	virtual void BeginPlay() override;
+#pragma endregion
 	
+	virtual void BeginPlay() override;
+
 	void SpawnWeapon();
 
-	/* called for aiming timer */
-	void SetAimingFOV(bool IsAiming);
-
-	/* interpolates the FOV */
-	void UpdateFOV();
-
+#pragma region Input Methods
 	/** called for movement input */
 	void Move(const FInputActionValue& Value);
 
 	/** called for looking input */
 	void Look(const FInputActionValue& Value);
 
+	/// \TODO: separate logic from input (Move and DoMove as example)
 	/** called for aiming input */
 	void Aim(const FInputActionValue& Value);
 
-	/// \NOTE: transfered (inner part) to action class
+	/// \TODO: separate logic from input (Move and DoMove as example)
 	/** called for firing input */
 	void Fire(const FInputActionValue& Value);
+#pragma endregion
 
 public:
 	ACPlayerCharacter();
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	/** handles move inputs from either controls or UI interfaces */
+	/** handles move logic separate from input */
 	UFUNCTION(BlueprintCallable, Category = "Input")
 	virtual void DoMove(float Right, float Forward);
 
-	/** handles look inputs from either controls or UI interfaces */
+	/** handles look logic separate from input */
 	UFUNCTION(BlueprintCallable, Category = "Input")
 	virtual void DoLook(float Yaw, float Pitch);
 
-	/** handles jump pressed inputs from either controls or UI interfaces */
-	UFUNCTION(BlueprintCallable, Category = "Input")
-	virtual void DoJumpStart();
-
-	/** handles jump pressed inputs from either controls or UI interfaces */
-	UFUNCTION(BlueprintCallable, Category = "Input")
-	virtual void DoJumpEnd();
-
 	/** returns CameraBoom subobject **/
-	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoomComponent; }
+	FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoomComponent; }
 
 	/** returns FollowCamera subobject **/
-	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCameraComponent; }
+	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCameraComponent; }
 
 	/** returns current weapon **/
 	FORCEINLINE ACWeaponBase* GetCurrentWeapon() const { return CurrentWeapon; }

@@ -4,9 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Weapons/CWeaponData.h"
 #include "CWeaponBase.generated.h"
-
-class USkeletalMeshComponent;
 
 UCLASS()
 class CLARITY_API ACWeaponBase : public AActor
@@ -19,10 +18,12 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Data")
+	UCWeaponData* WeaponData;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 	USkeletalMeshComponent* WeaponMesh;
 
 public:
-
 	FORCEINLINE USkeletalMeshComponent* GetMesh() const { return WeaponMesh; };
 };
