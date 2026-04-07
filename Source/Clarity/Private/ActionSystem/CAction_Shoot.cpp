@@ -8,6 +8,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "CPlayerAnimInstance.h"
 #include "Sound/SoundCue.h"
+#include "Weapons/CWeaponSlotsComponent.h"
 
 UCAction_Shoot::UCAction_Shoot()
 {
@@ -19,16 +20,17 @@ void UCAction_Shoot::StartAction_Implementation(AActor* Instigator)
 {
 	Super::StartAction_Implementation(Instigator);
 
-	/// \TODO: switch to base character interface or weapon component to make more flexible
-	ACPlayerCharacter* PlayerCharacter = Cast<ACPlayerCharacter>(Instigator);
+	UCWeaponSlotsComponent* OwnerWeaponSlotsComponent = Instigator->FindComponentByClass<UCWeaponSlotsComponent>();
+
+	if (!IsValid(OwnerWeaponSlotsComponent)) return;
 
 	PlayFireSound(Instigator);
 
-	const USkeletalMeshSocket* BarrelSocket = PlayerCharacter->GetCurrentWeapon()->GetMesh()->GetSocketByName(BarrelSocketName);
+	const USkeletalMeshSocket* BarrelSocket = OwnerWeaponSlotsComponent->GetCurrentWeapon()->GetMesh()->GetSocketByName(BarrelSocketName);
 
 	if (!BarrelSocket) return;
 
-	const FTransform SocketTransform = BarrelSocket->GetSocketTransform(PlayerCharacter->GetCurrentWeapon()->GetMesh());
+	const FTransform SocketTransform = BarrelSocket->GetSocketTransform(OwnerWeaponSlotsComponent->GetCurrentWeapon()->GetMesh());
 
 	PlayMuzzleFlash(Instigator, SocketTransform);
 

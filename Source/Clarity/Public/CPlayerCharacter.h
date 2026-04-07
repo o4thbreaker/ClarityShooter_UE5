@@ -13,6 +13,7 @@ struct FInputActionValue;
 class ACWeaponBase;
 class UCPlayerAnimInstance;
 class UCActionComponent;
+class UCWeaponSlotsComponent;
 
 USTRUCT(BlueprintType)
 struct FCharacterInputActions
@@ -52,6 +53,9 @@ class CLARITY_API ACPlayerCharacter : public ACharacter
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UCWeaponSlotsComponent* WeaponSlotsComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UCActionComponent* ActionComponent;
 
 	/** camera boom positioning the camera behind the character */
@@ -69,13 +73,6 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Aim")
 	bool bIsAiming;
-	
-	ACWeaponBase* CurrentWeapon;
-
-	FName WeaponSocketName;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
-	TSubclassOf<ACWeaponBase> DefaultWeapon;
 
 #pragma region Sensitivity Values
 	/* default horizontal rate sensitivity */
@@ -100,10 +97,6 @@ protected:
 	/* current vertical sesitivity */
 	float MouseYSensitivity;
 #pragma endregion
-	
-	virtual void BeginPlay() override;
-
-	void SpawnWeapon();
 
 #pragma region Input Methods
 	/** called for movement input */
@@ -120,6 +113,8 @@ protected:
 	/** called for firing input */
 	void Fire(const FInputActionValue& Value);
 #pragma endregion
+
+	virtual void BeginPlay() override;
 
 public:
 	ACPlayerCharacter();
@@ -139,9 +134,6 @@ public:
 
 	/** returns FollowCamera subobject **/
 	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCameraComponent; }
-
-	/** returns current weapon **/
-	FORCEINLINE ACWeaponBase* GetCurrentWeapon() const { return CurrentWeapon; }
 
 	/** returns PLAYER's anim instance **/
 	FORCEINLINE UCPlayerAnimInstance* GetPlayerAnimInstance() const { return PlayerAnimInstance; }

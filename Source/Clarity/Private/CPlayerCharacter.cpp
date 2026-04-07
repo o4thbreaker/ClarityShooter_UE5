@@ -13,6 +13,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "CPlayerAnimInstance.h"
 #include "ActionSystem/CActionComponent.h"
+#include "Weapons/CWeaponSlotsComponent.h"
 
 ACPlayerCharacter::ACPlayerCharacter()
 {
@@ -52,7 +53,8 @@ ACPlayerCharacter::ACPlayerCharacter()
 	// ====== Action Component ======
 	ActionComponent = CreateDefaultSubobject<UCActionComponent>(TEXT("ActionComponent"));
 
-	WeaponSocketName = FName(TEXT("RightHandSocket"));
+	// ====== Weapon Slots Component ======
+	WeaponSlotsComponent = CreateDefaultSubobject<UCWeaponSlotsComponent>(TEXT("WeaponSlotsComponent"));
 
 	// mouse sensitivity
 	NormalTurnRate = 1.0f;
@@ -104,22 +106,9 @@ void ACPlayerCharacter::BeginPlay()
 	// initialize animation instance
 	PlayerAnimInstance = Cast<UCPlayerAnimInstance>(GetMesh()->GetAnimInstance());
 
-	SpawnWeapon();
+	WeaponSlotsComponent->SpawnWeapon();
 }
 
-void ACPlayerCharacter::SpawnWeapon()
-{
-	CurrentWeapon = GetWorld()->SpawnActor<ACWeaponBase>(DefaultWeapon);
-
-	if (CurrentWeapon)
-	{
-		const USkeletalMeshSocket* RightHandSocket = GetMesh()->GetSocketByName(WeaponSocketName);
-		if (RightHandSocket)
-		{
-			RightHandSocket->AttachActor(Cast<AActor>(CurrentWeapon), GetMesh());
-		}
-	}
-}
 void ACPlayerCharacter::Move(const FInputActionValue& Value)
 {
 	FVector2D MovementVector = Value.Get<FVector2D>();
