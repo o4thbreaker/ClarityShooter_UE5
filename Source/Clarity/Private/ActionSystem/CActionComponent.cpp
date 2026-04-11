@@ -45,16 +45,16 @@ void UCActionComponent::RemoveAction(AActor* Instigator, UCAction* ActionToRemov
 	Actions.Remove(ActionToRemove);
 }
 
-bool UCActionComponent::StartActionByName(AActor* Instigator, FName ActionName)
+bool UCActionComponent::StartActionByTag(AActor* Instigator, FGameplayTag ActionTag)
 {
 	for (UCAction* Action : Actions)
 	{
-		if (Action && Action->ActionName == ActionName)
+		if (Action && Action->ActionTag == ActionTag)
 		{
 			if (!Action->CanStartAction(Instigator))
 			{
 				FString InstigatorName = Instigator ? Instigator->GetName() : "None";
-				UE_LOG(LogTemp, Warning, TEXT("Failed to start action %s for %s"), *ActionName.ToString(), *InstigatorName);
+				UE_LOG(LogTemp, Warning, TEXT("Failed to start action %s for %s"), *Action->ActionName.ToString(), *InstigatorName);
 				continue;
 			}
 			Action->StartAction(Instigator);
@@ -65,11 +65,11 @@ bool UCActionComponent::StartActionByName(AActor* Instigator, FName ActionName)
 	return false;
 }
 
-bool UCActionComponent::StopActionByName(AActor* Instigator, FName ActionName)
+bool UCActionComponent::StopActionByTag(AActor* Instigator, FGameplayTag ActionTag)
 {
 	for (UCAction* Action : Actions)
 	{
-		if (Action && Action->ActionName == ActionName)
+		if (Action && Action->ActionTag == ActionTag)
 		{
 			if (Action->IsRunning())
 			{

@@ -42,11 +42,11 @@ public:
 	/* starts action with name provided */
 	/// \TODO: change to FGameplayTag by creating different script struct
 	UFUNCTION(BlueprintCallable, Category = "Action")
-	bool StartActionByName(AActor* Instigator, FName ActionName);
+	bool StartActionByTag(AActor* Instigator, FGameplayTag ActionTag);
 
 	/* stops action with name provided */
 	UFUNCTION(BlueprintCallable, Category = "Action")
-	bool StopActionByName(AActor* Instigator, FName ActionName);
+	bool StopActionByTag(AActor* Instigator, FGameplayTag ActionTag);
 
 	UFUNCTION(BlueprintCallable, Category = "Action")
 	bool IsInActions(TSubclassOf<UCAction> ActionClassToCheck) const;

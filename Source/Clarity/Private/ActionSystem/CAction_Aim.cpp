@@ -7,7 +7,6 @@
 
 UCAction_Aim::UCAction_Aim()
 {
-	DefaultWalkingSpeed = 300.f;
 	AimingWalkingSpeed = 200.f;
 }
 
@@ -31,7 +30,7 @@ void UCAction_Aim::StopAction_Implementation(AActor* Instigator)
 
 	if (ensure(Character))
 	{
-		Character->GetCharacterMovement()->MaxWalkSpeed = DefaultWalkingSpeed;
+		Character->GetCharacterMovement()->MaxWalkSpeed = Character->GetCharacterMovement()->MaxWalkSpeed;
 		Character->GetCharacterMovement()->bOrientRotationToMovement = true;
 		Character->GetCharacterMovement()->bUseControllerDesiredRotation = false;
 	}

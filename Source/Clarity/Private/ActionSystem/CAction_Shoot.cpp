@@ -9,10 +9,24 @@
 #include "CPlayerAnimInstance.h"
 #include "Sound/SoundCue.h"
 #include "Weapons/CWeaponSlotsComponent.h"
+#include "ActionSystem/CActionComponent.h"
+#include "CGameplayTags.h"
 
 UCAction_Shoot::UCAction_Shoot()
 {
 	BarrelSocketName = FName(TEXT("MuzzleFlash"));
+}
+
+bool UCAction_Shoot::CanStartAction_Implementation(AActor* Instigator)
+{
+	if (!Super::CanStartAction_Implementation(Instigator)) return false;
+
+	OwnerWeaponSlotsComponent = Instigator->FindComponentByClass<UCWeaponSlotsComponent>();
+	if (!IsValid(OwnerWeaponSlotsComponent)) return false;
+
+	Weapon = OwnerWeaponSlotsComponent->GetCurrentWeapon();
+
+	return ActionComponent->ActiveGameplayTags.HasAll(RequiredTags) && IsValid(Weapon) && Weapon->CanFire();
 }
 
 // Fire
@@ -20,23 +34,21 @@ void UCAction_Shoot::StartAction_Implementation(AActor* Instigator)
 {
 	Super::StartAction_Implementation(Instigator);
 
-	UCWeaponSlotsComponent* OwnerWeaponSlotsComponent = Instigator->FindComponentByClass<UCWeaponSlotsComponent>();
-
-	if (!IsValid(OwnerWeaponSlotsComponent)) return;
-
-	ACWeaponBase* CurrentWeapon = OwnerWeaponSlotsComponent->GetCurrentWeapon();
-
 	PlayFireSound(Instigator);
 
-	const USkeletalMeshSocket* BarrelSocket = CurrentWeapon->GetMesh()->GetSocketByName(BarrelSocketName);
+	// handle the ammo logic
+	if (!Weapon->TryConsumeAmmo())
+	{
+		StopAction_Implementation(Instigator);
+		return;
+	}
 
+	const USkeletalMeshSocket* BarrelSocket = Weapon->GetMesh()->GetSocketByName(BarrelSocketName);
 	if (!BarrelSocket) return;
 
-	const FTransform SocketTransform = BarrelSocket->GetSocketTransform(CurrentWeapon->GetMesh());
+	const FTransform SocketTransform = BarrelSocket->GetSocketTransform(Weapon->GetMesh());
 
 	PlayMuzzleFlash(Instigator, SocketTransform);
-
-	CurrentWeapon->SetCurrentAmmoCount(CurrentWeapon->GetCurrentAmmoCount() - 1);
 
 	bScreenToWorld = GetCrosshairWorldProperties(CrosshairWorldPosition, CrosshairWorldDirection);
 
@@ -73,6 +85,16 @@ void UCAction_Shoot::StartAction_Implementation(AActor* Instigator)
 	}
 
 	PlayWeaponRecoil(Instigator);
+
+	// add blocking tag after the fire
+	ActionComponent->ActiveGameplayTags.AddTag(CGameplayTags::FireCooldown);
+
+	// set timer to handle remove the fire cooldown timer
+	FTimerHandle FireRateCooldownHandle;
+
+	// i use lambda because too lazy to make whole new function
+	GetWorld()->GetTimerManager().SetTimer(FireRateCooldownHandle, [this]() {ActionComponent->ActiveGameplayTags.RemoveTag(CGameplayTags::FireCooldown); }, 
+		Weapon->GetWeaponData()->FireRate, false);
 
 	StopAction(Instigator);
 }

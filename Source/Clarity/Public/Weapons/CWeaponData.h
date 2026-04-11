@@ -34,6 +34,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Stats")
 	float Damage;
 
+	/* fire rate of the weapon. set it in seconds as it is used for shoot cooldown */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Stats")
 	float FireRate;
 

@@ -6,6 +6,8 @@
 #include "Weapons/CWeaponBase.h"
 #include "CPlayerCharacter.h"
 #include "CPlayerAnimInstance.h"
+#include "CGameplayTags.h"
+#include "ActionSystem/CActionComponent.h"
 
 UCAction_Reload::UCAction_Reload()
 {
@@ -45,7 +47,7 @@ void UCAction_Reload::StartAction_Implementation(AActor* Instigator)
 
 void UCAction_Reload::ReloadWeapon(AActor* Instigator, ACWeaponBase* Weapon)
 {
-	Weapon->SetCurrentAmmoCount(Weapon->GetWeaponData()->MagazineSize);
+	Weapon->Reload();
 
 	StopAction_Implementation(Instigator);
 }

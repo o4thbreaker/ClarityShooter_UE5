@@ -16,4 +16,6 @@ class CLARITY_API ACGameModeBase : public AGameModeBase
 	
 public:
 	ACGameModeBase();
+
+	virtual void OnActorKilled(AActor* VictimActor, AActor* KillerActor);
 };

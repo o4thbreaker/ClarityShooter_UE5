@@ -19,13 +19,10 @@ class CLARITY_API UCAction_Aim : public UCAction
 public:
 	UCAction_Aim();
 
+	virtual void StartAction_Implementation(AActor* Instigator) override;
+	virtual void StopAction_Implementation(AActor* Instigator) override;
+
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
 	float AimingWalkingSpeed;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
-	float DefaultWalkingSpeed;
-
-	virtual void StartAction_Implementation(AActor* Instigator) override;
-	virtual void StopAction_Implementation(AActor* Instigator) override;
 };

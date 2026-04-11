@@ -14,6 +14,7 @@ class ACWeaponBase;
 class UCPlayerAnimInstance;
 class UCActionComponent;
 class UCWeaponSlotsComponent;
+class UCAttributeComponent;
 
 USTRUCT(BlueprintType)
 struct FCharacterInputActions
@@ -22,32 +23,36 @@ struct FCharacterInputActions
 
 public:
 	/** jump input action */
-	UPROPERTY(EditAnywhere, Category = "Input")
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* JumpAction;
 
 	/** move input action */
-	UPROPERTY(EditAnywhere, Category = "Input")
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* MoveAction;
 
 	/** look input action */
-	UPROPERTY(EditAnywhere, Category = "Input")
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* LookAction;
 
 	/** mouse look input action */
-	UPROPERTY(EditAnywhere, Category = "Input")
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* MouseLookAction;
 
 	/** aim input action */
-	UPROPERTY(EditAnywhere, Category = "Input")
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* AimAction;
 
 	/** shoot input action */
-	UPROPERTY(EditAnywhere, Category = "Input")
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* FireAction;
 
 	/** reload input action */
-	UPROPERTY(EditAnywhere, Category = "Input")
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* ReloadAction;
+
+	/** sprint input action */
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	UInputAction* SprintAction;
 };
 
 UCLASS(Abstract)
@@ -61,6 +66,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UCActionComponent* ActionComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UCAttributeComponent* AttributeComponent; 
 
 	/** camera boom positioning the camera behind the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
@@ -77,6 +85,9 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Aim")
 	bool bIsAiming;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Sprint")
+	bool bIsSprinting;
 
 #pragma region Sensitivity Values
 	/* default horizontal rate sensitivity */
@@ -120,6 +131,10 @@ protected:
 	/// \TODO: separate logic from input (Move and DoMove as example)
 	/** called for firing input */
 	void Reload(const FInputActionValue& Value);
+
+	/// \TODO: separate logic from input (Move and DoMove as example)
+	/** called for sprinting input */
+	void Sprint(const FInputActionValue& Value);
 
 #pragma endregion
 

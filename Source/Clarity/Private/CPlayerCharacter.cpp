@@ -13,6 +13,8 @@
 #include "CPlayerAnimInstance.h"
 #include "ActionSystem/CActionComponent.h"
 #include "Weapons/CWeaponSlotsComponent.h"
+#include "CGameplayTags.h"
+#include "CAttributeComponent.h"
 
 ACPlayerCharacter::ACPlayerCharacter()
 {
@@ -55,6 +57,9 @@ ACPlayerCharacter::ACPlayerCharacter()
 	// ====== Weapon Slots Component ======
 	WeaponSlotsComponent = CreateDefaultSubobject<UCWeaponSlotsComponent>(TEXT("WeaponSlotsComponent"));
 
+	// ====== Attribute Component ======
+	AttributeComponent = CreateDefaultSubobject<UCAttributeComponent>(TEXT("AttributeComponent"));
+
 	// mouse sensitivity
 	NormalTurnRate = 1.0f;
 	NormalLookUpRate = 1.0f;
@@ -94,6 +99,10 @@ void ACPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 		// reloading
 		EnhancedInputComponent->BindAction(InputActions.ReloadAction, ETriggerEvent::Started, this, &ACPlayerCharacter::Reload);
+
+		// sprinting
+		EnhancedInputComponent->BindAction(InputActions.SprintAction, ETriggerEvent::Started, this, &ACPlayerCharacter::Sprint);
+		EnhancedInputComponent->BindAction(InputActions.SprintAction, ETriggerEvent::Completed, this, &ACPlayerCharacter::Sprint);
 	}
 	else
 	{
@@ -164,20 +173,34 @@ void ACPlayerCharacter::Aim(const FInputActionValue& Value)
 
 	if (bIsAiming)
 	{
-		ActionComponent->StartActionByName(this, "Aim");
+		ActionComponent->StartActionByTag(this, CGameplayTags::AimAction);
 	}
 	else
 	{
-		ActionComponent->StopActionByName(this, "Aim");
+		ActionComponent->StopActionByTag(this, CGameplayTags::AimAction);
 	}
 }
 
 void ACPlayerCharacter::Fire(const FInputActionValue& Value)
 {
-	ActionComponent->StartActionByName(this, "Shoot");
+	ActionComponent->StartActionByTag(this, CGameplayTags::FireAction);
 }
 
 void ACPlayerCharacter::Reload(const FInputActionValue& Value)
 {
-	ActionComponent->StartActionByName(this, "Reload");
+	ActionComponent->StartActionByTag(this, CGameplayTags::ReloadAction);
+}
+
+void ACPlayerCharacter::Sprint(const FInputActionValue& Value)
+{
+	bIsSprinting = Value.Get<bool>();
+	
+	if (bIsSprinting)
+	{
+		ActionComponent->StartActionByTag(this, CGameplayTags::SprintAction);
+	}
+	else
+	{
+		ActionComponent->StopActionByTag(this, CGameplayTags::SprintAction);
+	}
 }

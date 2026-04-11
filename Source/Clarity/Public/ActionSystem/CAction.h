@@ -18,7 +18,7 @@ class CLARITY_API UCAction : public UObject
 
 public:
 	/* tag of the action */
-	/// \FIXME: can't be applied now, need to create special struct for data
+	UPROPERTY(EditDefaultsOnly, Category = "Action")
 	FGameplayTag ActionTag;
 
 	/* tag of the action */

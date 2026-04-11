@@ -6,8 +6,11 @@
 #include "ActionSystem/CAction.h"
 #include "CAction_Shoot.generated.h"
 
+class UCWeaponSlotsComponent;
+class ACWeaponBase;
+
 /**
- * 
+ *
  */
 UCLASS()
 class CLARITY_API UCAction_Shoot : public UCAction
@@ -18,6 +21,7 @@ public:
 	UCAction_Shoot();
 
 	virtual void StartAction_Implementation(AActor* Instigator) override;
+	virtual bool CanStartAction_Implementation(AActor* Instigator) override;
 
 protected:
 
@@ -29,6 +33,9 @@ protected:
 
 	/* is crosshair translated successfully */
 	bool bScreenToWorld;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Action")
+	FGameplayTagContainer RequiredTags;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Shoot")
 	USoundCue* FiringAudio;
@@ -48,4 +55,11 @@ protected:
 	void PlayImpactEffect(AActor* Instigator, const FVector& ImpactPoint);
 
 	void PlayWeaponRecoil(AActor* Instigator);
+
+private:
+	UPROPERTY()
+	UCWeaponSlotsComponent* OwnerWeaponSlotsComponent;
+
+	UPROPERTY()
+	ACWeaponBase* Weapon;
 };

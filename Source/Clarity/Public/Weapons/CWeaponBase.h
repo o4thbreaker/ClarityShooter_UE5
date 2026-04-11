@@ -7,6 +7,8 @@
 #include "Weapons/CWeaponData.h"
 #include "CWeaponBase.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAmmoChanged, int32, AmmoValue);
+
 UCLASS()
 class CLARITY_API ACWeaponBase : public AActor
 {
@@ -28,6 +30,8 @@ protected:
 	int32 CurrentAmmoCount;
 
 public:
+	FOnAmmoChanged OnAmmoChanged;
+
 	FORCEINLINE USkeletalMeshComponent* GetMesh() const { return WeaponMesh; };
 
 	FORCEINLINE int32 GetCurrentAmmoCount() const { return CurrentAmmoCount; };
@@ -35,4 +39,10 @@ public:
 	FORCEINLINE UCWeaponData* GetWeaponData() const { return WeaponData; };
 
 	FORCEINLINE void SetCurrentAmmoCount(int32 NewAmmoCount) { CurrentAmmoCount = NewAmmoCount; };
+
+	FORCEINLINE bool CanFire() const;
+
+	bool TryConsumeAmmo();
+
+	virtual void Reload();
 };

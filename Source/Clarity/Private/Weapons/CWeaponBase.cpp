@@ -20,3 +20,25 @@ void ACWeaponBase::BeginPlay()
 	}
 }
 
+bool ACWeaponBase::CanFire() const
+{
+	return CurrentAmmoCount > 0;
+}
+
+bool ACWeaponBase::TryConsumeAmmo()
+{
+	if (!CanFire()) return false;
+
+	CurrentAmmoCount--;
+	OnAmmoChanged.Broadcast(CurrentAmmoCount);
+
+	return true;
+}
+
+void ACWeaponBase::Reload()
+{
+	// sets the full magazine by default
+	CurrentAmmoCount = WeaponData->MagazineSize;
+	OnAmmoChanged.Broadcast(CurrentAmmoCount);
+}
+

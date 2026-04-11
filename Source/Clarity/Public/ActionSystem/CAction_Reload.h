@@ -19,13 +19,13 @@ class CLARITY_API UCAction_Reload : public UCAction
 public:
 	UCAction_Reload();
 
+	virtual void StartAction_Implementation(AActor* Instigator) override;
+
 protected:
 	FTimerHandle ReloadTimerHandle;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation")
 	float RefillTime;
-
-	virtual void StartAction_Implementation(AActor* Instigator) override;
 
 private:
 	UFUNCTION()
