@@ -3,7 +3,7 @@
 
 #include "ActionSystem/CAction_Shoot.h"
 #include "CPlayerCharacter.h"
-#include "CWeaponBase.h"
+#include "Weapons/CWeaponBase.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Kismet/GameplayStatics.h"
 #include "CPlayerAnimInstance.h"
@@ -24,15 +24,19 @@ void UCAction_Shoot::StartAction_Implementation(AActor* Instigator)
 
 	if (!IsValid(OwnerWeaponSlotsComponent)) return;
 
+	ACWeaponBase* CurrentWeapon = OwnerWeaponSlotsComponent->GetCurrentWeapon();
+
 	PlayFireSound(Instigator);
 
-	const USkeletalMeshSocket* BarrelSocket = OwnerWeaponSlotsComponent->GetCurrentWeapon()->GetMesh()->GetSocketByName(BarrelSocketName);
+	const USkeletalMeshSocket* BarrelSocket = CurrentWeapon->GetMesh()->GetSocketByName(BarrelSocketName);
 
 	if (!BarrelSocket) return;
 
-	const FTransform SocketTransform = BarrelSocket->GetSocketTransform(OwnerWeaponSlotsComponent->GetCurrentWeapon()->GetMesh());
+	const FTransform SocketTransform = BarrelSocket->GetSocketTransform(CurrentWeapon->GetMesh());
 
 	PlayMuzzleFlash(Instigator, SocketTransform);
+
+	CurrentWeapon->SetCurrentAmmoCount(CurrentWeapon->GetCurrentAmmoCount() - 1);
 
 	bScreenToWorld = GetCrosshairWorldProperties(CrosshairWorldPosition, CrosshairWorldDirection);
 

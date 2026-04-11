@@ -44,6 +44,10 @@ public:
 	/** shoot input action */
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* FireAction;
+
+	/** reload input action */
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* ReloadAction;
 };
 
 UCLASS(Abstract)
@@ -112,6 +116,11 @@ protected:
 	/// \TODO: separate logic from input (Move and DoMove as example)
 	/** called for firing input */
 	void Fire(const FInputActionValue& Value);
+
+	/// \TODO: separate logic from input (Move and DoMove as example)
+	/** called for firing input */
+	void Reload(const FInputActionValue& Value);
+
 #pragma endregion
 
 	virtual void BeginPlay() override;

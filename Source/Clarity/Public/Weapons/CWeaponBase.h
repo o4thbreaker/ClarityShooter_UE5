@@ -18,12 +18,21 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Data")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Data")
 	UCWeaponData* WeaponData;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	USkeletalMeshComponent* WeaponMesh;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon Stats")
+	int32 CurrentAmmoCount;
 
 public:
 	FORCEINLINE USkeletalMeshComponent* GetMesh() const { return WeaponMesh; };
+
+	FORCEINLINE int32 GetCurrentAmmoCount() const { return CurrentAmmoCount; };
+
+	FORCEINLINE UCWeaponData* GetWeaponData() const { return WeaponData; };
+
+	FORCEINLINE void SetCurrentAmmoCount(int32 NewAmmoCount) { CurrentAmmoCount = NewAmmoCount; };
 };

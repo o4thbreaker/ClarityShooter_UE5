@@ -2,7 +2,7 @@
 
 
 #include "Weapons/CWeaponSlotsComponent.h"
-#include "CWeaponBase.h"
+#include "Weapons/CWeaponBase.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "GameFramework/Character.h"
 

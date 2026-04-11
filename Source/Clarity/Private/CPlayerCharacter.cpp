@@ -8,7 +8,6 @@
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-#include "CWeaponBase.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Kismet/GameplayStatics.h"
 #include "CPlayerAnimInstance.h"
@@ -92,6 +91,9 @@ void ACPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 		// firing
 		EnhancedInputComponent->BindAction(InputActions.FireAction, ETriggerEvent::Started, this, &ACPlayerCharacter::Fire);
+
+		// reloading
+		EnhancedInputComponent->BindAction(InputActions.ReloadAction, ETriggerEvent::Started, this, &ACPlayerCharacter::Reload);
 	}
 	else
 	{
@@ -173,4 +175,9 @@ void ACPlayerCharacter::Aim(const FInputActionValue& Value)
 void ACPlayerCharacter::Fire(const FInputActionValue& Value)
 {
 	ActionComponent->StartActionByName(this, "Shoot");
+}
+
+void ACPlayerCharacter::Reload(const FInputActionValue& Value)
+{
+	ActionComponent->StartActionByName(this, "Reload");
 }
