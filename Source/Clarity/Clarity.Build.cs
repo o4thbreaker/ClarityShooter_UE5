@@ -19,7 +19,8 @@ public class Clarity : ModuleRules
 			"GameplayStateTreeModule",
 			"UMG",
 			"Slate",
-			"GameplayTags"
+			"GameplayTags",
+            "GameplayTasks"
         });
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });

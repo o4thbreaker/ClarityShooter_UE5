@@ -11,6 +11,7 @@
 #include "Weapons/CWeaponSlotsComponent.h"
 #include "ActionSystem/CActionComponent.h"
 #include "CGameplayTags.h"
+#include "CAttributeComponent.h"
 
 UCAction_Shoot::UCAction_Shoot()
 {
@@ -59,8 +60,12 @@ void UCAction_Shoot::StartAction_Implementation(AActor* Instigator)
 
 		/// \TODO: fix the magic number
 		FVector End = Start + CrosshairWorldDirection * 60000.0f;
+		
+		FCollisionQueryParams Params;
+		Params.AddIgnoredActor(Instigator);
+		Params.AddIgnoredActor(Weapon);
 
-		GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECollisionChannel::ECC_Visibility);
+		GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECollisionChannel::ECC_GameTraceChannel1, Params);
 
 		if (HitResult.bBlockingHit)
 		{
@@ -73,14 +78,24 @@ void UCAction_Shoot::StartAction_Implementation(AActor* Instigator)
 		FHitResult WeaponTraceHit;
 
 		const FVector WeaponStart = SocketTransform.GetLocation();
-		const FVector WeaponEnd = HitResult.Location;
+		FVector WeaponEnd = HitResult.bBlockingHit ? HitResult.Location : End;
 
-		GetWorld()->LineTraceSingleByChannel(WeaponTraceHit, WeaponStart, WeaponEnd, ECollisionChannel::ECC_Visibility);
+		// ECC_GameTraceChannel1 = Bullet
+		GetWorld()->LineTraceSingleByChannel(WeaponTraceHit, WeaponStart, WeaponEnd, ECollisionChannel::ECC_GameTraceChannel1, Params);
 		if (WeaponTraceHit.bBlockingHit)
 		{
 			PlayImpactEffect(Instigator, WeaponTraceHit.Location);
-			//DrawDebugLine(GetWorld(), WeaponStart, WeaponTraceHit.Location, FColor::Red, false, 2.0f);
-			//DrawDebugPoint(GetWorld(), WeaponTraceHit.Location, 4.0f, FColor::Blue, false, 2.0f);
+
+			AActor* HitActor = WeaponTraceHit.GetActor();
+			UE_LOG(LogTemp, Log, TEXT("%s"), *HitActor->GetName());
+			if (IsValid(HitActor))
+			{
+				UCAttributeComponent* AttributeComponent = UCAttributeComponent::GetAttributes(HitActor);
+				if (AttributeComponent)
+				{
+					AttributeComponent->ApplyHealthChange(Instigator, -Weapon->GetWeaponData()->Damage);
+				}
+			}
 		}
 	}
 
