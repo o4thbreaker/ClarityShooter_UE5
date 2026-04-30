@@ -12,6 +12,7 @@
 #include "ActionSystem/CActionComponent.h"
 #include "CGameplayTags.h"
 #include "CAttributeComponent.h"
+#include "CPlayerController.h"
 
 UCAction_Shoot::UCAction_Shoot()
 {
@@ -35,14 +36,14 @@ void UCAction_Shoot::StartAction_Implementation(AActor* Instigator)
 {
 	Super::StartAction_Implementation(Instigator);
 
-	PlayFireSound(Instigator);
-
 	// handle the ammo logic
 	if (!Weapon->TryConsumeAmmo())
 	{
 		StopAction_Implementation(Instigator);
 		return;
 	}
+
+	PlayFireSound(Instigator);
 
 	const USkeletalMeshSocket* BarrelSocket = Weapon->GetMesh()->GetSocketByName(BarrelSocketName);
 	if (!BarrelSocket) return;
@@ -51,7 +52,9 @@ void UCAction_Shoot::StartAction_Implementation(AActor* Instigator)
 
 	PlayMuzzleFlash(Instigator, SocketTransform);
 
-	bScreenToWorld = GetCrosshairWorldProperties(CrosshairWorldPosition, CrosshairWorldDirection);
+	// we get position and direction of crosshair. if it is player, it will return its origin on screen and direction
+	// if it is AI, it will return origin of AI's weapon and direction towards target
+	bScreenToWorld = GetFireOriginAndDirection(Instigator, CrosshairWorldPosition, CrosshairWorldDirection);
 
 	if (bScreenToWorld)
 	{
@@ -147,6 +150,21 @@ void UCAction_Shoot::PlayWeaponRecoil(AActor* Instigator)
 	if (ensure(PlayerCharacter->GetPlayerAnimInstance()))
 	{
 		PlayerCharacter->GetPlayerAnimInstance()->DoProceduralRecoil(1.5f);
+	}
+}
+
+bool UCAction_Shoot::GetFireOriginAndDirection(AActor* Instigator, FVector& OutOrigin, FVector& OutDirection)
+{
+	if (Instigator->GetInstigatorController<ACPlayerController>())
+	{
+		// Player Logic
+		return GetCrosshairWorldProperties(OutOrigin, OutDirection);
+	}
+	else
+	{
+		/// \TODO: AI Logic
+
+		return false;
 	}
 }
 

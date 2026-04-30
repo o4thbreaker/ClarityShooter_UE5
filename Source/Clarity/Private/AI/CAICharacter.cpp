@@ -17,6 +17,8 @@ ACAICharacter::ACAICharacter()
 	AttributeComponent = CreateDefaultSubobject<UCAttributeComponent>(TEXT("AttributeComponent"));
 	ActionComponent = CreateDefaultSubobject<UCActionComponent>(TEXT("ActionComponent"));
 
+	bIsAiming = false;
+
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
 

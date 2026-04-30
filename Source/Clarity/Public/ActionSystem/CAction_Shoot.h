@@ -46,6 +46,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Shoot")
 	UParticleSystem* ImpactEffect;
 
+	bool GetFireOriginAndDirection(AActor* Instigator, FVector& OutOrigin, FVector& OutDirection);
+
 	bool GetCrosshairWorldProperties(FVector& WorldPosition, FVector& WorldDirection);
 
 	void PlayFireSound(AActor* Instigator);

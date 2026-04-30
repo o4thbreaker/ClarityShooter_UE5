@@ -28,6 +28,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	UCActionComponent* ActionComponent;
 
+	UPROPERTY(BlueprintReadOnly, Category = "Aim")
+	bool bIsAiming;
+
 	virtual void BeginPlay() override;
 
 	virtual void PostInitializeComponents() override;
