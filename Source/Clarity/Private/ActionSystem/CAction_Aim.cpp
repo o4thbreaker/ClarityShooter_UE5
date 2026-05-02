@@ -8,6 +8,7 @@
 UCAction_Aim::UCAction_Aim()
 {
 	AimingWalkingSpeed = 200.f;
+	BufferSpeed = 0.f;
 }
 
 void UCAction_Aim::StartAction_Implementation(AActor* Instigator)
@@ -18,6 +19,8 @@ void UCAction_Aim::StartAction_Implementation(AActor* Instigator)
 
 	if (ensure(Character))
 	{
+		BufferSpeed = Character->GetCharacterMovement()->MaxWalkSpeed;
+
 		Character->GetCharacterMovement()->MaxWalkSpeed = AimingWalkingSpeed;
 		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 		Character->GetCharacterMovement()->bUseControllerDesiredRotation = true;
@@ -30,7 +33,7 @@ void UCAction_Aim::StopAction_Implementation(AActor* Instigator)
 
 	if (ensure(Character))
 	{
-		Character->GetCharacterMovement()->MaxWalkSpeed = Character->GetCharacterMovement()->MaxWalkSpeed;
+		Character->GetCharacterMovement()->MaxWalkSpeed = BufferSpeed;
 		Character->GetCharacterMovement()->bOrientRotationToMovement = true;
 		Character->GetCharacterMovement()->bUseControllerDesiredRotation = false;
 	}

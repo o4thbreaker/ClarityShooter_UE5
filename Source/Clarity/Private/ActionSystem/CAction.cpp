@@ -38,13 +38,21 @@ void UCAction::StopAction_Implementation(AActor* Instigator)
 bool UCAction::CanStartAction_Implementation(AActor* Instigator)
 {
 	// if action is already running
-	if (bIsRunning) return false;
+	if (bIsRunning)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Can't start %s because it is already running."), *GetNameSafe(this));
+		return false;
+	}
 
 	UCActionComponent* Component = GetOwningComponent();
 
 	// if owner has any of blocked tags
-	if (Component->ActiveGameplayTags.HasAny(BlockedTags)) return false;
-
+	if (Component->ActiveGameplayTags.HasAny(BlockedTags))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Can't start %s because owner has one or more of blocked tags."), *GetNameSafe(this));
+		return false;
+	}
+		
 	// otherwise
 	return true;
 }

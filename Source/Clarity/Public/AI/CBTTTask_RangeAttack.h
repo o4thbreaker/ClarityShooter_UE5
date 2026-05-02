@@ -14,4 +14,6 @@ class CLARITY_API UCBTTTask_RangeAttack : public UBTTaskNode
 {
 	GENERATED_BODY()
 	
+	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
+
 };

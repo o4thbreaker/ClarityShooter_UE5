@@ -25,4 +25,7 @@ public:
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Movement")
 	float AimingWalkingSpeed;
+
+	/* needs to hold the default walking speed */
+	float BufferSpeed;
 };

@@ -9,6 +9,7 @@
 class UPawnSensingComponent;
 class UCAttributeComponent;
 class UCActionComponent;
+class UCWeaponSlotsComponent;
 
 UCLASS(Abstract)
 class CLARITY_API ACAICharacter : public ACharacter
@@ -18,18 +19,30 @@ class CLARITY_API ACAICharacter : public ACharacter
 public:
 	ACAICharacter();
 
+	FORCEINLINE AActor* GetCurrentTarget() const { return CurrentTarget; }
+	FORCEINLINE void SetCurrentTarget(AActor* NewTarget) { CurrentTarget = NewTarget; }
+
+	FORCEINLINE bool GetIsAiming() const { return bIsAiming; }
+	FORCEINLINE void SetIsAiming(bool NewAiming) { bIsAiming = NewAiming; }
+
 protected:
-	UPROPERTY(VisibleAnywhere, Category = "Components")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UPawnSensingComponent* PawnSensingComponent;
 
-	UPROPERTY(VisibleAnywhere, Category = "Components")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UCAttributeComponent* AttributeComponent;
 
-	UPROPERTY(VisibleAnywhere, Category = "Components")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UCActionComponent* ActionComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UCWeaponSlotsComponent* WeaponSlotsComponent;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Aim")
 	bool bIsAiming;
+
+	UPROPERTY()
+	AActor* CurrentTarget;
 
 	virtual void BeginPlay() override;
 

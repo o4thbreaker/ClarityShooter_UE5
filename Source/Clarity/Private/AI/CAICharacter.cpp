@@ -10,12 +10,14 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Weapons/CWeaponSlotsComponent.h"
 
 ACAICharacter::ACAICharacter()
 {
 	PawnSensingComponent = CreateDefaultSubobject<UPawnSensingComponent>(TEXT("PawnSensingComponent"));
 	AttributeComponent = CreateDefaultSubobject<UCAttributeComponent>(TEXT("AttributeComponent"));
 	ActionComponent = CreateDefaultSubobject<UCActionComponent>(TEXT("ActionComponent"));
+	WeaponSlotsComponent = CreateDefaultSubobject<UCWeaponSlotsComponent>(TEXT("WeaponSlotsComponent"));
 
 	bIsAiming = false;
 
@@ -25,7 +27,8 @@ ACAICharacter::ACAICharacter()
 void ACAICharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	WeaponSlotsComponent->SpawnWeapon();	
 }
 
 void ACAICharacter::PostInitializeComponents()

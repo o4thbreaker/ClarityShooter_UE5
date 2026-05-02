@@ -13,6 +13,7 @@
 #include "CGameplayTags.h"
 #include "CAttributeComponent.h"
 #include "CPlayerController.h"
+#include "AI/CAICharacter.h"
 
 UCAction_Shoot::UCAction_Shoot()
 {
@@ -24,11 +25,20 @@ bool UCAction_Shoot::CanStartAction_Implementation(AActor* Instigator)
 	if (!Super::CanStartAction_Implementation(Instigator)) return false;
 
 	OwnerWeaponSlotsComponent = Instigator->FindComponentByClass<UCWeaponSlotsComponent>();
-	if (!IsValid(OwnerWeaponSlotsComponent)) return false;
+	if (!IsValid(OwnerWeaponSlotsComponent))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Couldn't find WeaponSlotsComponent. Aborting Shoot Action."));
+		return false;
+	}
 
 	Weapon = OwnerWeaponSlotsComponent->GetCurrentWeapon();
+	if (!IsValid(Weapon))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Couldn't find attached Weapon. Aborting Shoot Action."));
+		return false;
+	}
 
-	return ActionComponent->ActiveGameplayTags.HasAll(RequiredTags) && IsValid(Weapon) && Weapon->CanFire();
+	return ActionComponent->ActiveGameplayTags.HasAll(RequiredTags) && Weapon->CanFire();
 }
 
 // Fire
@@ -147,7 +157,7 @@ void UCAction_Shoot::PlayWeaponRecoil(AActor* Instigator)
 {
 	ACPlayerCharacter* PlayerCharacter = Cast<ACPlayerCharacter>(Instigator);
 
-	if (ensure(PlayerCharacter->GetPlayerAnimInstance()))
+	if (PlayerCharacter && PlayerCharacter->GetPlayerAnimInstance())
 	{
 		PlayerCharacter->GetPlayerAnimInstance()->DoProceduralRecoil(1.5f);
 	}
@@ -162,9 +172,30 @@ bool UCAction_Shoot::GetFireOriginAndDirection(AActor* Instigator, FVector& OutO
 	}
 	else
 	{
-		/// \TODO: AI Logic
+		//AI Logic
+		ACAICharacter* AIOwner = Cast<ACAICharacter>(Instigator);
+		if (!ensure(AIOwner))
+		{
+			return false;
+		}
 
-		return false;
+		AActor* TargetActor = AIOwner->GetCurrentTarget();
+		if (TargetActor == nullptr)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("AI has no target"));
+			return false;
+		}
+
+		UE_LOG(LogTemp, Log, TEXT("Target for AI is: %s"), *GetNameSafe(TargetActor));
+
+		/// \FIXME: probably better to cache it
+		const USkeletalMeshSocket* BarrelSocket = Weapon->GetMesh()->GetSocketByName(BarrelSocketName);
+		FTransform SocketTransform = BarrelSocket->GetSocketTransform(Weapon->GetMesh());
+
+		OutOrigin = SocketTransform.GetLocation();
+		OutDirection = (TargetActor->GetActorLocation() - OutOrigin).GetSafeNormal();
+
+		return true;
 	}
 }
 
