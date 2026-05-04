@@ -9,18 +9,28 @@
 #include "ActionSystem/CAction_Shoot.h"
 #include "BehaviorTree/BlackboardComponent.h" 
 #include "AI/CAICharacter.h"
+#include "Weapons/CWeaponSlotsComponent.h"
+#include "Weapons/CWeaponBase.h"
 
+UCBTTTask_RangeAttack::UCBTTTask_RangeAttack()
+{
+	MagazineThresholdPercentage = 10.0f;
+
+	bNotifyTick = true;
+}
 
 EBTNodeResult::Type UCBTTTask_RangeAttack::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	AAIController* MyController = OwnerComp.GetAIOwner();
 
-	/// \WARNING: hardcoded to ACAICharacter
-	ACAICharacter* Owner = Cast<ACAICharacter>(MyController->GetPawn());
-
 	if (ensure(MyController))
 	{
-		if (Owner == nullptr)
+		FRangeAttackDataMemory* Memory = CastInstanceNodeMemory<FRangeAttackDataMemory>(NodeMemory);
+
+		/// \WARNING: hardcoded to ACAICharacter
+		Memory->Owner = Cast<ACAICharacter>(MyController->GetPawn());
+
+		if (Memory->Owner == nullptr)
 		{
 			return EBTNodeResult::Failed;
 		}
@@ -31,17 +41,96 @@ EBTNodeResult::Type UCBTTTask_RangeAttack::ExecuteTask(UBehaviorTreeComponent& O
 			return EBTNodeResult::Failed;
 		}*/
 
-		UCActionComponent* ActionComponent = Owner->FindComponentByClass<UCActionComponent>();
+		Memory->OwnerActionComponent = Memory->Owner->FindComponentByClass<UCActionComponent>();
 
-		if (ActionComponent == nullptr)
+		if (Memory->OwnerActionComponent == nullptr )
 		{
 			return EBTNodeResult::Failed;
 		}
 
-		Owner->SetCurrentTarget(Cast<AActor>(OwnerComp.GetBlackboardComponent()->GetValueAsObject("TargetActor")));
+		Memory->OwnerWeaponSlotsComponent = Memory->Owner->FindComponentByClass<UCWeaponSlotsComponent>();
+		if (Memory->OwnerWeaponSlotsComponent == nullptr)
+		{
+			return EBTNodeResult::Failed;
+		}
+
+		Memory->Owner->SetCurrentTarget(Cast<AActor>(OwnerComp.GetBlackboardComponent()->GetValueAsObject("TargetActor")));
 		
-		return ActionComponent->StartActionByTag(Owner, CGameplayTags::FireAction) ? EBTNodeResult::Succeeded : EBTNodeResult::Failed;
+		Memory->OwnerActionComponent->StartActionByTag(Memory->Owner, CGameplayTags::FireAction);
+
+		return EBTNodeResult::InProgress;
 	}
 
 	return EBTNodeResult::Failed;
+}
+
+void UCBTTTask_RangeAttack::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
+{
+	FRangeAttackDataMemory* Memory = CastInstanceNodeMemory<FRangeAttackDataMemory>(NodeMemory);
+
+	if (!IsMemoryValid(OwnerComp, NodeMemory, Memory)) return;
+
+	if (!Memory->OwnerActionComponent->ActiveGameplayTags.HasTag(CGameplayTags::FireCooldown))
+	{
+		// weapon is not on a cooldown
+		ACWeaponBase* Weapon = Memory->OwnerWeaponSlotsComponent->GetCurrentWeapon();
+		if (!Weapon)
+		{
+			// no weapon attached
+			UE_LOG(LogTemp, Warning, TEXT("No Weapon attached. Aborting task."));
+			FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
+			return;
+		}
+
+		// calculate the remaigning percentage of the gun
+		float CurrentPercentage = (Weapon->GetCurrentAmmoCount() / (float)Weapon->GetWeaponData()->MagazineSize) * 100.0f;
+		if (CurrentPercentage > MagazineThresholdPercentage)
+		{
+			// we still can shoot
+
+			if (!Memory->OwnerActionComponent->StartActionByTag(Memory->Owner, CGameplayTags::FireAction))
+			{
+				// for some reason we couldn't start the action, so we had to finish earlier than planned
+				UE_LOG(LogTemp, Warning, TEXT("Couldn't start Shoot for %s. Aborting task."), *OwnerComp.GetOwner()->GetName());
+				FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
+			}
+		}
+		else
+		{
+			// we have fewer ammo than allowed, succesfully retreat
+			FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
+		}
+	}
+		
+}
+
+uint16 UCBTTTask_RangeAttack::GetInstanceMemorySize() const
+{
+	return sizeof(FRangeAttackDataMemory);
+}
+
+bool UCBTTTask_RangeAttack::IsMemoryValid(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, FRangeAttackDataMemory* Memory)
+{
+	if (!IsValid(Memory->Owner))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Owner is nullptr or pending to kill. Aborting task."));
+		FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
+		return false;
+	}
+
+	if (!IsValid(Memory->OwnerActionComponent))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No ActionComponent attached. Aborting task."));
+		FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
+		return false;
+	}
+
+	if (!IsValid(Memory->OwnerWeaponSlotsComponent))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No WeaponSlotsComponent attached. Aborting task."));
+		FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
+		return false;
+	}
+
+	return true;
 }
