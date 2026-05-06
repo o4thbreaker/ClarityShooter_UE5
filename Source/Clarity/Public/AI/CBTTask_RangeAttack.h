@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "BehaviorTree/BTTaskNode.h"
-#include "CBTTTask_RangeAttack.generated.h"
+#include "CBTTask_RangeAttack.generated.h"
 
 class ACAICharacter;
 class UCActionComponent;
@@ -24,17 +24,20 @@ struct FRangeAttackDataMemory
  * 
  */
 UCLASS()
-class CLARITY_API UCBTTTask_RangeAttack : public UBTTaskNode
+class CLARITY_API UCBTTask_RangeAttack : public UBTTaskNode
 {
 	GENERATED_BODY()
 	
 public:
-	UCBTTTask_RangeAttack();
+	UCBTTask_RangeAttack();
 
 protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI", meta = (ClampMin = "0.0", ClampMax = "100.0", UIMin = "0.0", UIMax = "100.0"))
 	float MagazineThresholdPercentage;
+
+	UPROPERTY(EditAnywhere, Category = "AI");
+	FBlackboardKeySelector TargetActorKey;
 
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 

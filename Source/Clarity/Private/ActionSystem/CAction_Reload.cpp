@@ -4,68 +4,79 @@
 #include "ActionSystem/CAction_Reload.h"
 #include "Weapons/CWeaponSlotsComponent.h"
 #include "Weapons/CWeaponBase.h"
-#include "CPlayerCharacter.h"
-#include "CPlayerAnimInstance.h"
 #include "CGameplayTags.h"
 #include "ActionSystem/CActionComponent.h"
+#include "GameFramework/Character.h"
 
 UCAction_Reload::UCAction_Reload()
 {
 	RefillTime = 2.0f;
 }
 
-void UCAction_Reload::StartAction_Implementation(AActor* Instigator)
+bool UCAction_Reload::CanStartAction_Implementation(AActor* Instigator)
 {
-	Super::StartAction_Implementation(Instigator);
+	Super::CanStartAction_Implementation(Instigator);
 
 	UCWeaponSlotsComponent* OwnerWeaponSlotsComponent = Instigator->FindComponentByClass<UCWeaponSlotsComponent>();
 	if (!IsValid(OwnerWeaponSlotsComponent))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Couldn't find WeaponSlotsComponent in %s!"), *GetNameSafe(this));
 		StopAction_Implementation(Instigator);
-		return;
+		return false;
 	}
 
-	ACWeaponBase* CurrentWeapon = OwnerWeaponSlotsComponent->GetCurrentWeapon();
-	if (!IsValid(CurrentWeapon))
+	Weapon = OwnerWeaponSlotsComponent->GetCurrentWeapon();
+	if (!IsValid(Weapon))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Couldn't find CurrentWeapon in %s!"), *GetNameSafe(this));
+		UE_LOG(LogTemp, Warning, TEXT("Couldn't find Weapon in %s!"), *GetNameSafe(this));
 		StopAction_Implementation(Instigator);
-		return;
+		return false;
 	}
 
-	if (CurrentWeapon->GetCurrentAmmoCount() < CurrentWeapon->GetWeaponData()->MagazineSize)
+	if (Weapon->GetCurrentAmmoCount() >= Weapon->GetWeaponData()->MagazineSize)
 	{
-		PlayReloadMontage(Instigator, CurrentWeapon);
+		UE_LOG(LogTemp, Log, TEXT("Can't start reloading due to full magazine. Current ammo: %d"), Weapon->GetCurrentAmmoCount());
+		return false;
 	}
-	else
-	{
-		UE_LOG(LogTemp, Log, TEXT("Stopping the action due to full magazine. Current ammo: %d"), CurrentWeapon->GetCurrentAmmoCount());
-		StopAction_Implementation(Instigator);
-	} 
+
+	return true;
 }
 
-void UCAction_Reload::ReloadWeapon(AActor* Instigator, ACWeaponBase* Weapon)
+void UCAction_Reload::StartAction_Implementation(AActor* Instigator)
+{
+	Super::StartAction_Implementation(Instigator);
+
+	PlayReloadMontage(Instigator);
+}
+
+void UCAction_Reload::ReloadWeapon(AActor* Instigator)
 {
 	Weapon->Reload();
 
 	StopAction_Implementation(Instigator);
 }
 
-void UCAction_Reload::PlayReloadMontage(AActor* Instigator, ACWeaponBase* Weapon)
+void UCAction_Reload::PlayReloadMontage(AActor* Instigator)
 {
-	ACPlayerCharacter* PlayerCharacter = Cast<ACPlayerCharacter>(Instigator);
-
-	if (ensure(PlayerCharacter->GetPlayerAnimInstance()))
+	ACharacter* Character = Cast<ACharacter>(Instigator);
+	
+	if (ensure(Character))
 	{
+		UAnimInstance* AnimInstance = Character->GetMesh()->GetAnimInstance();
+		if (AnimInstance == nullptr)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Couldn't get AnimInstance from Character!"));
+			return;
+		}
+
 		if (Weapon->GetWeaponData()->ReloadMontage)
 		{
-			PlayerCharacter->GetPlayerAnimInstance()->Montage_Play(Weapon->GetWeaponData()->ReloadMontage);
+			AnimInstance->Montage_Play(Weapon->GetWeaponData()->ReloadMontage);
 
 			if (!GetWorld()->GetTimerManager().IsTimerActive(ReloadTimerHandle))
 			{
 				FTimerDelegate Delegate;
-				Delegate.BindUObject(this, &UCAction_Reload::ReloadWeapon, Instigator, Weapon);
+				Delegate.BindUObject(this, &UCAction_Reload::ReloadWeapon, Instigator);
 
 				GetWorld()->GetTimerManager().SetTimer(ReloadTimerHandle, Delegate, RefillTime, false);
 			}	

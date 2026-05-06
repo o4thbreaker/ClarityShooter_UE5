@@ -2,10 +2,18 @@
 
 
 #include "AI/CAIController.h"
+#include "AI/CAICharacter.h"
 
-void ACAIController::BeginPlay()
+void ACAIController::OnPossess(APawn* InPawn)
 {
-	Super::BeginPlay();
+	Super::OnPossess(InPawn);
+
+	ACAICharacter* AICharacter = Cast<ACAICharacter>(InPawn);
+	if (ensure(AICharacter))
+	{
+		AICharacter->Initialize();
+	}
+
 	if (ensureMsgf(BehaviorTree, TEXT("Behaviour Tree is nullptr. Please assgin BehaviourTree in your AIController")))
 	{
 		RunBehaviorTree(BehaviorTree);

@@ -19,6 +19,10 @@ class CLARITY_API ACAICharacter : public ACharacter
 public:
 	ACAICharacter();
 
+	/* Function that is used to initialize weapon and such stuff before BT starts 
+	(a little bit of crutch to make the ai get the weapon sooner than bt starts) */
+	void Initialize();
+
 	FORCEINLINE AActor* GetCurrentTarget() const { return CurrentTarget; }
 	FORCEINLINE void SetCurrentTarget(AActor* NewTarget) { CurrentTarget = NewTarget; }
 

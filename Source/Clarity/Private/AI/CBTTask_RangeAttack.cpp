@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "AI/CBTTTask_RangeAttack.h"
+#include "AI/CBTTask_RangeAttack.h"
 #include "AIController.h"
 #include "GameFramework/Character.h"
 #include "ActionSystem/CActionComponent.h"
@@ -12,14 +12,14 @@
 #include "Weapons/CWeaponSlotsComponent.h"
 #include "Weapons/CWeaponBase.h"
 
-UCBTTTask_RangeAttack::UCBTTTask_RangeAttack()
+UCBTTask_RangeAttack::UCBTTask_RangeAttack()
 {
 	MagazineThresholdPercentage = 10.0f;
 
 	bNotifyTick = true;
 }
 
-EBTNodeResult::Type UCBTTTask_RangeAttack::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
+EBTNodeResult::Type UCBTTask_RangeAttack::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	AAIController* MyController = OwnerComp.GetAIOwner();
 
@@ -54,7 +54,7 @@ EBTNodeResult::Type UCBTTTask_RangeAttack::ExecuteTask(UBehaviorTreeComponent& O
 			return EBTNodeResult::Failed;
 		}
 
-		Memory->Owner->SetCurrentTarget(Cast<AActor>(OwnerComp.GetBlackboardComponent()->GetValueAsObject("TargetActor")));
+		Memory->Owner->SetCurrentTarget(Cast<AActor>(OwnerComp.GetBlackboardComponent()->GetValueAsObject(TargetActorKey.SelectedKeyName)));
 		
 		Memory->OwnerActionComponent->StartActionByTag(Memory->Owner, CGameplayTags::FireAction);
 
@@ -64,7 +64,7 @@ EBTNodeResult::Type UCBTTTask_RangeAttack::ExecuteTask(UBehaviorTreeComponent& O
 	return EBTNodeResult::Failed;
 }
 
-void UCBTTTask_RangeAttack::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
+void UCBTTask_RangeAttack::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
 	FRangeAttackDataMemory* Memory = CastInstanceNodeMemory<FRangeAttackDataMemory>(NodeMemory);
 
@@ -104,12 +104,12 @@ void UCBTTTask_RangeAttack::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* N
 		
 }
 
-uint16 UCBTTTask_RangeAttack::GetInstanceMemorySize() const
+uint16 UCBTTask_RangeAttack::GetInstanceMemorySize() const
 {
 	return sizeof(FRangeAttackDataMemory);
 }
 
-bool UCBTTTask_RangeAttack::IsMemoryValid(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, FRangeAttackDataMemory* Memory)
+bool UCBTTask_RangeAttack::IsMemoryValid(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, FRangeAttackDataMemory* Memory)
 {
 	if (!IsValid(Memory->Owner))
 	{

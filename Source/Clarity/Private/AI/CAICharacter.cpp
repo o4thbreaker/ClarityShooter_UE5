@@ -24,11 +24,16 @@ ACAICharacter::ACAICharacter()
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
 
+void ACAICharacter::Initialize()
+{
+	/// \NOTE: fill here anything that BT has to know (gets called from Controller)
+
+	WeaponSlotsComponent->SpawnWeapon();
+}
+
 void ACAICharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
-	WeaponSlotsComponent->SpawnWeapon();	
 }
 
 void ACAICharacter::PostInitializeComponents()
@@ -61,13 +66,15 @@ void ACAICharacter::OnHealthChanged(AActor* InstigatorActor, UCAttributeComponen
 				AIController->GetBrainComponent()->StopLogic(TEXT("Killed"));
 			}
 
-			/// \TODO: add collision profile
-			GetMesh()->SetSimulatePhysics(true);
+			GetMesh()->SetCollisionProfileName("Ragdoll");
+			GetMesh()->SetAllBodiesSimulatePhysics(true);
+
 			GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 			GetCharacterMovement()->DisableMovement();	
+
+			SetLifeSpan(10.0f);
 		}
 	}
-
 }
 
 void ACAICharacter::OnPawnSeen(APawn* SeenPawn)

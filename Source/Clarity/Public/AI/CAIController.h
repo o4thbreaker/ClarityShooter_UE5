@@ -17,6 +17,6 @@ class CLARITY_API ACAIController : public AAIController
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "AI")
 	UBehaviorTree* BehaviorTree;
-
-	virtual void BeginPlay() override;	
+	
+	virtual void OnPossess(APawn* InPawn) override;
 };

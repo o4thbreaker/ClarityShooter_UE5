@@ -19,18 +19,22 @@ class CLARITY_API UCAction_Reload : public UCAction
 public:
 	UCAction_Reload();
 
+	virtual bool CanStartAction_Implementation(AActor* Instigator) override;
 	virtual void StartAction_Implementation(AActor* Instigator) override;
 
 protected:
 	FTimerHandle ReloadTimerHandle;
+
+	UPROPERTY()
+	ACWeaponBase* Weapon;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation")
 	float RefillTime;
 
 private:
 	UFUNCTION()
-	void ReloadWeapon(AActor* Instigator, ACWeaponBase* Weapon);
+	void ReloadWeapon(AActor* Instigator);
 
 	UFUNCTION()
-	void PlayReloadMontage(AActor* Instigator, ACWeaponBase* Weapon);
+	void PlayReloadMontage(AActor* Instigator);
 };

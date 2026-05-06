@@ -14,6 +14,11 @@ class CLARITY_API UCBTTask_StartAiming : public UBTTaskNode
 {
 	GENERATED_BODY()
 
+protected:
+
+	UPROPERTY(EditAnywhere, Category = "AI")
+	FBlackboardKeySelector TargetActorKey;
+
 	/// \TODO: refactor to stop calling the same functionality
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 	

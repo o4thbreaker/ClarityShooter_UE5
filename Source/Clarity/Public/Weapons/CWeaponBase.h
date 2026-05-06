@@ -18,7 +18,6 @@ public:
 	ACWeaponBase();
 
 protected:
-	virtual void BeginPlay() override;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Data")
 	UCWeaponData* WeaponData;
@@ -28,6 +27,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon Stats")
 	int32 CurrentAmmoCount;
+
+	virtual void BeginPlay() override;
+	virtual void PostInitializeComponents() override;
 
 public:
 	FOnAmmoChanged OnAmmoChanged;

@@ -7,13 +7,17 @@ ACWeaponBase::ACWeaponBase()
 {
 	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
 	SetRootComponent(WeaponMesh);
-
 }
 
 void ACWeaponBase::BeginPlay()
 {
 	Super::BeginPlay();
-	
+}
+
+void ACWeaponBase::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
 	if (ensureAlways(WeaponData))
 	{
 		CurrentAmmoCount = WeaponData->MagazineSize;
