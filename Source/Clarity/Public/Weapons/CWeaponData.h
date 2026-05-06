@@ -24,9 +24,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Info")
 	TSubclassOf<ACWeaponBase> WeaponClass;
 
-	/// \NOTE: is this neccessary? or the fire is procedural?
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Animation")
-	UAnimMontage* FireMontage;
+	/// \NOTE: recoil is procedural for now
+	//UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Animation")
+	//UAnimMontage* FireMontage;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Animation")
 	UAnimMontage* ReloadMontage;
@@ -40,5 +40,4 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Stats")
 	int32 MagazineSize;
-
 };

@@ -39,7 +39,12 @@ EBTNodeResult::Type UCBTTask_StopAiming::ExecuteTask(UBehaviorTreeComponent& Own
 		Owner->SetCurrentTarget(nullptr);
 		Owner->SetIsAiming(false);
 
-		return ActionComponent->StopActionByTag(Owner, CGameplayTags::AimAction) ? EBTNodeResult::Succeeded : EBTNodeResult::Failed;
+		ActionComponent->StopActionByTag(Owner, CGameplayTags::AimAction);
+
+		// no need to return failed if we couldn't stop the aiming. in any case it is success
+		// if aiming action was stopped -> success
+		// if aiming action could not be stopped -> it already have been stopped somewhere else -> success
+		return EBTNodeResult::Succeeded;
 	}
 	return EBTNodeResult::Failed;
 }

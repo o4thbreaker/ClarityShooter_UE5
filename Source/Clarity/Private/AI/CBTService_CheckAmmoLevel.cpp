@@ -6,77 +6,39 @@
 #include "AIController.h"
 #include "Weapons/CWeaponSlotsComponent.h"
 #include "Weapons/CWeaponBase.h"
-#include "AI/CBTAmmoObserver.h"
 
-UCBTService_CheckAmmoLevel::UCBTService_CheckAmmoLevel()
+void UCBTService_CheckAmmoLevel::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
-	bNotifyBecomeRelevant = true;
-	bNotifyCeaseRelevant = true;
-	bNotifyTick = false;
-}
+	UBlackboardComponent* BlackboardComponent = OwnerComp.GetBlackboardComponent();
 
-void UCBTService_CheckAmmoLevel::OnBecomeRelevant(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
-{
-	UE_LOG(LogTemp, Log, TEXT("UCBTService_CheckAmmoLevel::OnBecomeRelevant called"));
-	Super::OnBecomeRelevant(OwnerComp, NodeMemory);
-
-	FCheckAmmoLevelMemory* Memory = CastInstanceNodeMemory<FCheckAmmoLevelMemory>(NodeMemory);
-	if (!ensure(Memory)) return;
+	Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);
 
 	AAIController* MyController = OwnerComp.GetAIOwner();
 	if (ensure(MyController))
-	{
-		// we instantiate the observer to controller because observer should die only when controller dies
-		Memory->Observer = NewObject<UCBTAmmoObserver>(MyController);
-
-		// fill the observer's data: blackboard component, weapon reference and low ammo percentage and key selector
-		Memory->Observer->BlackboardComponent = OwnerComp.GetBlackboardComponent();
-		if (Memory->Observer->BlackboardComponent == nullptr) return;
-	
+	{	
 		APawn* AIPawn = MyController->GetPawn();
 		if (ensure(AIPawn))
 		{
 			UCWeaponSlotsComponent* WeaponSlotsComponent = AIPawn->FindComponentByClass<UCWeaponSlotsComponent>();
-			if (WeaponSlotsComponent == nullptr) return;
-			
-			Memory->Observer->Weapon = WeaponSlotsComponent->GetCurrentWeapon();
-			if (Memory->Observer->Weapon == nullptr) return;
+			if (WeaponSlotsComponent == nullptr)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Couldn't find WeaponSlotsComponent on AI. Aborting service!"));
+				return;
+			}
 
-			Memory->Observer->LowAmmoPercentage = LowAmmoPercentage;
-			Memory->Observer->LowAmmoKeyName = LowAmmoKey.SelectedKeyName;
-			
-			Memory->Observer->OnAmmoChanged(Memory->Observer->Weapon->GetCurrentAmmoCount());
-			Memory->Observer->Weapon->OnAmmoChanged.AddDynamic(Memory->Observer, &UCBTAmmoObserver::OnAmmoChanged);
+			ACWeaponBase* Weapon = WeaponSlotsComponent->GetCurrentWeapon();
+			if (Weapon == nullptr)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Couldn't find current weapon on AI. Aborting service!"));
+				return;
+			}
+
+			if (ensureMsgf(Weapon->GetWeaponData(), TEXT("WeaponData for %s, that is used by %s is not provided. Please provide it in Weapon's Blueprint"), *GetNameSafe(Weapon), *GetNameSafe(AIPawn)))
+			{
+				float CurrentAmmoPercentage = (Weapon->GetCurrentAmmoCount() / (float)Weapon->GetWeaponData()->MagazineSize) * 100.0f;
+
+				BlackboardComponent->SetValueAsBool(LowAmmoKey.SelectedKeyName, CurrentAmmoPercentage <= LowAmmoPercentage);
+			}
 		}
 	}
-}
-
-void UCBTService_CheckAmmoLevel::OnCeaseRelevant(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
-{
-	UE_LOG(LogTemp, Log, TEXT("UCBTService_CheckAmmoLevel::OnCeaseRelevant called"));
-	Super::OnCeaseRelevant(OwnerComp, NodeMemory);
-
-	FCheckAmmoLevelMemory* Memory = CastInstanceNodeMemory<FCheckAmmoLevelMemory>(NodeMemory);
-
-	if (IsValid(Memory->Observer))
-	{
-		if (IsValid(Memory->Observer->Weapon))
-		{
-			Memory->Observer->Weapon->OnAmmoChanged.RemoveDynamic(Memory->Observer, &UCBTAmmoObserver::OnAmmoChanged);
-		}
-	}
-}
-
-void UCBTService_CheckAmmoLevel::AddReferencedObjects(UObject* InThis, FReferenceCollector& Collector)
-{
-	/// \NOTE: this is needed to make sure that the observer we created gets garbage collected properly
-	///        Since it's not a UPROPERTY, we need to add it here
-	UCBTService_CheckAmmoLevel* This = CastChecked<UCBTService_CheckAmmoLevel>(InThis);
-
-	Super::AddReferencedObjects(InThis, Collector);
-}
-
-uint16 UCBTService_CheckAmmoLevel::GetInstanceMemorySize() const
-{
-	return sizeof(FCheckAmmoLevelMemory);
 }

@@ -62,16 +62,9 @@ void UCAction_Reload::PlayReloadMontage(AActor* Instigator)
 	
 	if (ensure(Character))
 	{
-		UAnimInstance* AnimInstance = Character->GetMesh()->GetAnimInstance();
-		if (AnimInstance == nullptr)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Couldn't get AnimInstance from Character!"));
-			return;
-		}
-
 		if (Weapon->GetWeaponData()->ReloadMontage)
 		{
-			AnimInstance->Montage_Play(Weapon->GetWeaponData()->ReloadMontage);
+			Character->PlayAnimMontage(Weapon->GetWeaponData()->ReloadMontage, 1.0f, FName("Default"));
 
 			if (!GetWorld()->GetTimerManager().IsTimerActive(ReloadTimerHandle))
 			{
