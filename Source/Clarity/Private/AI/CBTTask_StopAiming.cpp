@@ -7,13 +7,14 @@
 #include "ActionSystem/CActionComponent.h"
 #include "CGameplayTags.h"
 #include "AI/CAICharacter.h"
+#include "AI/CAIController.h"
 #include "BehaviorTree/BlackboardComponent.h" 
 
 EBTNodeResult::Type UCBTTask_StopAiming::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-	AAIController* MyController = OwnerComp.GetAIOwner();
+	/// \WARNING: hardcoded to ACAI, which is fine (i guess)
 
-	/// \WARNING: hardcoded to ACAICharacter
+	ACAIController* MyController = Cast<ACAIController>(OwnerComp.GetAIOwner());
 	ACAICharacter* Owner = Cast<ACAICharacter>(MyController->GetPawn());
 
 	if (ensure(MyController))
@@ -36,7 +37,7 @@ EBTNodeResult::Type UCBTTask_StopAiming::ExecuteTask(UBehaviorTreeComponent& Own
 			return EBTNodeResult::Failed;
 		}
 
-		Owner->SetCurrentTarget(nullptr);
+		MyController->SetTargetActor(nullptr);
 		Owner->SetIsAiming(false);
 
 		ActionComponent->StopActionByTag(Owner, CGameplayTags::AimAction);

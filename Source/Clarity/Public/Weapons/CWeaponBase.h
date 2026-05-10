@@ -17,6 +17,24 @@ class CLARITY_API ACWeaponBase : public AActor
 public:	
 	ACWeaponBase();
 
+	FOnAmmoChanged OnAmmoChanged;
+
+	/* maybe should be in Weapon Data, but it is the same for all the weapons */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Data")
+	FName BarrelSocketName;
+
+	bool TryConsumeAmmo();
+
+	virtual void Reload();
+
+	FORCEINLINE bool CanFire() const;
+
+	FORCEINLINE void SetCurrentAmmoCount(int32 NewAmmoCount) { CurrentAmmoCount = NewAmmoCount; };
+	FORCEINLINE int32 GetCurrentAmmoCount() const { return CurrentAmmoCount; };
+
+	FORCEINLINE USkeletalMeshComponent* GetMesh() const { return WeaponMesh; };
+
+	FORCEINLINE UCWeaponData* GetWeaponData() const { return WeaponData; };
 protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Data")
@@ -31,20 +49,4 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void PostInitializeComponents() override;
 
-public:
-	FOnAmmoChanged OnAmmoChanged;
-
-	FORCEINLINE USkeletalMeshComponent* GetMesh() const { return WeaponMesh; };
-
-	FORCEINLINE int32 GetCurrentAmmoCount() const { return CurrentAmmoCount; };
-
-	FORCEINLINE UCWeaponData* GetWeaponData() const { return WeaponData; };
-
-	FORCEINLINE void SetCurrentAmmoCount(int32 NewAmmoCount) { CurrentAmmoCount = NewAmmoCount; };
-
-	FORCEINLINE bool CanFire() const;
-
-	bool TryConsumeAmmo();
-
-	virtual void Reload();
 };

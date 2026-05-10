@@ -7,13 +7,14 @@
 #include "ActionSystem/CActionComponent.h"
 #include "CGameplayTags.h"
 #include "AI/CAICharacter.h"
+#include "AI/CAIController.h"
 #include "BehaviorTree/BlackboardComponent.h" 
 
 EBTNodeResult::Type UCBTTask_StartAiming::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-	AAIController* MyController = OwnerComp.GetAIOwner();
+	/// \WARNING: hardcoded to ACAI, which if fine (i guess)
 
-	/// \WARNING: hardcoded to ACAICharacter
+	ACAIController* MyController = Cast<ACAIController>(OwnerComp.GetAIOwner());
 	ACAICharacter* Owner = Cast<ACAICharacter>(MyController->GetPawn());
 
 	if (ensure(MyController))
@@ -29,6 +30,12 @@ EBTNodeResult::Type UCBTTask_StartAiming::ExecuteTask(UBehaviorTreeComponent& Ow
 			return EBTNodeResult::Failed;
 		}*/
 
+		if (Owner->GetIsAiming())
+		{
+			// if we're already aiming that's fine
+			return EBTNodeResult::Succeeded;
+		}
+
 		UCActionComponent* ActionComponent = Owner->FindComponentByClass<UCActionComponent>();
 
 		if (ActionComponent == nullptr)
@@ -36,7 +43,7 @@ EBTNodeResult::Type UCBTTask_StartAiming::ExecuteTask(UBehaviorTreeComponent& Ow
 			return EBTNodeResult::Failed;
 		}
 
-		Owner->SetCurrentTarget(Cast<AActor>(OwnerComp.GetBlackboardComponent()->GetValueAsObject(TargetActorKey.SelectedKeyName)));
+		MyController->SetTargetActor(Cast<AActor>(OwnerComp.GetBlackboardComponent()->GetValueAsObject(TargetActorKey.SelectedKeyName)));
 		Owner->SetIsAiming(true);
 
 		return ActionComponent->StartActionByTag(Owner, CGameplayTags::AimAction) ? EBTNodeResult::Succeeded : EBTNodeResult::Failed;

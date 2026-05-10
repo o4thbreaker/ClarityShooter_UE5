@@ -9,6 +9,7 @@
 #include "ActionSystem/CAction_Shoot.h"
 #include "BehaviorTree/BlackboardComponent.h" 
 #include "AI/CAICharacter.h"
+#include "AI/CAIController.h"
 #include "Weapons/CWeaponSlotsComponent.h"
 #include "Weapons/CWeaponBase.h"
 
@@ -21,7 +22,7 @@ UCBTTask_RangeAttack::UCBTTask_RangeAttack()
 
 EBTNodeResult::Type UCBTTask_RangeAttack::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-	AAIController* MyController = OwnerComp.GetAIOwner();
+	ACAIController* MyController = Cast<ACAIController>(OwnerComp.GetAIOwner());
 
 	if (ensure(MyController))
 	{
@@ -53,9 +54,15 @@ EBTNodeResult::Type UCBTTask_RangeAttack::ExecuteTask(UBehaviorTreeComponent& Ow
 		{
 			return EBTNodeResult::Failed;
 		}
-
-		Memory->Owner->SetCurrentTarget(Cast<AActor>(OwnerComp.GetBlackboardComponent()->GetValueAsObject(TargetActorKey.SelectedKeyName)));
 		
+		/// \WARNING: we assume that the target is already set by SetAiming task 
+		
+		if (!MyController->GetCurrentTarget())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("No target set. Aborting task."));
+			return EBTNodeResult::Failed;
+		}
+
 		Memory->OwnerActionComponent->StartActionByTag(Memory->Owner, CGameplayTags::FireAction);
 
 		return EBTNodeResult::InProgress;

@@ -8,13 +8,11 @@
 #include "AIController.h"
 #include "BrainComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "BehaviorTree/BlackboardComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Weapons/CWeaponSlotsComponent.h"
 
 ACAICharacter::ACAICharacter()
 {
-	PawnSensingComponent = CreateDefaultSubobject<UPawnSensingComponent>(TEXT("PawnSensingComponent"));
 	AttributeComponent = CreateDefaultSubobject<UCAttributeComponent>(TEXT("AttributeComponent"));
 	ActionComponent = CreateDefaultSubobject<UCActionComponent>(TEXT("ActionComponent"));
 	WeaponSlotsComponent = CreateDefaultSubobject<UCWeaponSlotsComponent>(TEXT("WeaponSlotsComponent"));
@@ -40,7 +38,6 @@ void ACAICharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
-	PawnSensingComponent->OnSeePawn.AddDynamic(this, &ACAICharacter::OnPawnSeen);
 	AttributeComponent->OnHealthChanged.AddDynamic(this, &ACAICharacter::OnHealthChanged);
 }
 
@@ -52,10 +49,12 @@ void ACAICharacter::OnHealthChanged(AActor* InstigatorActor, UCAttributeComponen
 		DrawDebugString(GetWorld(), GetActorLocation() + FVector(0, 10, 0), OuchString, nullptr, FColor::Red, 1.5f, true);
 		UE_LOG(LogTemp, Log, TEXT("%f"), Delta);
 
-		if (InstigatorActor && InstigatorActor != this)
-		{
-			SetTargetActor(InstigatorActor);
-		}
+		/// \TODO: refactor to a callback to Damage Sense
+
+		//if (InstigatorActor && InstigatorActor != this)
+		//{
+		//	SetTargetActor(InstigatorActor);
+		//}
 
 		if (NewHealth <= 0.0f)
 		{
@@ -77,18 +76,17 @@ void ACAICharacter::OnHealthChanged(AActor* InstigatorActor, UCAttributeComponen
 	}
 }
 
-void ACAICharacter::OnPawnSeen(APawn* SeenPawn)
+void ACAICharacter::GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const
 {
-	SetTargetActor(SeenPawn);
-}
-
-void ACAICharacter::SetTargetActor(AActor* NewTarget)
-{
-	AAIController* AIController = Cast<AAIController>(GetController());
-
-	if (AIController)
+	if (GetMesh()->DoesSocketExist(TEXT("EyesSocket")))
 	{
-		AIController->GetBlackboardComponent()->SetValueAsObject(TEXT("TargetActor"), NewTarget);
+		OutLocation = GetMesh()->GetSocketLocation(TEXT("EyesSocket"));
+		OutRotation = GetMesh()->GetSocketRotation(TEXT("EyesSocket"));
+	}
+	else
+	{
+		OutLocation = GetActorLocation() + FVector(0, 0, BaseEyeHeight);
+		OutRotation = GetActorRotation();
 	}
 }
 

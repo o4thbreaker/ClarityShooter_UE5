@@ -8,6 +8,9 @@
 
 class ACWeaponBase;
 class UAnimMontage;
+class UParticleSystem;
+class USoundCue;
+
 /**
  * 
  */
@@ -30,6 +33,15 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Animation")
 	UAnimMontage* ReloadMontage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Effects")
+	UParticleSystem* MuzzleFlash;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Effects")
+	UParticleSystem* ImpactEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Audio")
+	USoundCue* FiringAudio;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Stats")
 	float Damage;

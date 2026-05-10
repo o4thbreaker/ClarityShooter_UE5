@@ -18,33 +18,15 @@ class CLARITY_API UCAction_Shoot : public UCAction
 	GENERATED_BODY()
 	
 public:
-	UCAction_Shoot();
-
 	virtual void StartAction_Implementation(AActor* Instigator) override;
 	virtual bool CanStartAction_Implementation(AActor* Instigator) override;
 
 protected:
-
-	FName BarrelSocketName;
-
-	FVector CrosshairWorldPosition;
-
-	FVector CrosshairWorldDirection;
-
 	/* is crosshair translated successfully */
-	bool bScreenToWorld;
+	bool bIsCrosshairTranslated;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Action")
 	FGameplayTagContainer RequiredTags;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Shoot")
-	USoundCue* FiringAudio;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Shoot")
-	UParticleSystem* MuzzleFlash;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Shoot")
-	UParticleSystem* ImpactEffect;
 
 	bool GetFireOriginAndDirection(AActor* Instigator, FVector& OutOrigin, FVector& OutDirection);
 

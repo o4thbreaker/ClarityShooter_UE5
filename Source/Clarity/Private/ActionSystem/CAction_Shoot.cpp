@@ -13,12 +13,7 @@
 #include "CGameplayTags.h"
 #include "CAttributeComponent.h"
 #include "CPlayerController.h"
-#include "AI/CAICharacter.h"
-
-UCAction_Shoot::UCAction_Shoot()
-{
-	BarrelSocketName = FName(TEXT("MuzzleFlash"));
-}
+#include "AI/CAIController.h"
 
 bool UCAction_Shoot::CanStartAction_Implementation(AActor* Instigator)
 {
@@ -55,22 +50,21 @@ void UCAction_Shoot::StartAction_Implementation(AActor* Instigator)
 
 	PlayFireSound(Instigator);
 
-	const USkeletalMeshSocket* BarrelSocket = Weapon->GetMesh()->GetSocketByName(BarrelSocketName);
-	if (!BarrelSocket) return;
-
-	const FTransform SocketTransform = BarrelSocket->GetSocketTransform(Weapon->GetMesh());
-
+	const FTransform SocketTransform = Weapon->GetMesh()->GetSocketTransform(Weapon->BarrelSocketName);
 	PlayMuzzleFlash(Instigator, SocketTransform);
 
 	// we get position and direction of crosshair. if it is player, it will return its origin on screen and direction
 	// if it is AI, it will return origin of AI's weapon and direction towards target
-	bScreenToWorld = GetFireOriginAndDirection(Instigator, CrosshairWorldPosition, CrosshairWorldDirection);
+	FVector CrosshairWorldPosition;
+	FVector CrosshairWorldDirection;
 
-	if (bScreenToWorld)
+	bIsCrosshairTranslated = GetFireOriginAndDirection(Instigator, CrosshairWorldPosition, CrosshairWorldDirection);
+
+	if (bIsCrosshairTranslated)
 	{
+		// from crosshair to direction of crosshair
 		FHitResult HitResult;
 		FVector Start = CrosshairWorldPosition;
-
 		/// \TODO: fix the magic number
 		FVector End = Start + CrosshairWorldDirection * 60000.0f;
 		
@@ -88,6 +82,7 @@ void UCAction_Shoot::StartAction_Implementation(AActor* Instigator)
 			DrawDebugPoint(GetWorld(), HitResult.Location, 4.0f, FColor::Blue, false, 2.0f);
 		}
 
+		/* trace from weapon to hit location */
 		FHitResult WeaponTraceHit;
 
 		const FVector WeaponStart = SocketTransform.GetLocation();
@@ -97,7 +92,8 @@ void UCAction_Shoot::StartAction_Implementation(AActor* Instigator)
 		GetWorld()->LineTraceSingleByChannel(WeaponTraceHit, WeaponStart, WeaponEnd, ECollisionChannel::ECC_GameTraceChannel1, Params);
 		if (WeaponTraceHit.bBlockingHit)
 		{
-			PlayImpactEffect(Instigator, WeaponTraceHit.Location);
+			DrawDebugLine(GetWorld(), WeaponStart, WeaponEnd, FColor::Yellow, false, 2.0f);
+			DrawDebugPoint(GetWorld(), WeaponTraceHit.Location, 4.0f, FColor::Magenta, false, 2.0f);
 
 			AActor* HitActor = WeaponTraceHit.GetActor();
 			UE_LOG(LogTemp, Log, TEXT("%s"), *HitActor->GetName());
@@ -129,6 +125,8 @@ void UCAction_Shoot::StartAction_Implementation(AActor* Instigator)
 
 void UCAction_Shoot::PlayFireSound(AActor* Instigator)
 {
+	USoundCue* FiringAudio = Weapon->GetWeaponData()->FiringAudio;
+
 	if (FiringAudio)
 	{
 		UGameplayStatics::PlaySoundAtLocation(GetWorld(), FiringAudio, Instigator->GetActorLocation(),
@@ -138,17 +136,17 @@ void UCAction_Shoot::PlayFireSound(AActor* Instigator)
 
 void UCAction_Shoot::PlayMuzzleFlash(AActor* Instigator, const FTransform SocketTransform)
 {
-	if (MuzzleFlash)
+	if (Weapon->GetWeaponData()->MuzzleFlash)
 	{
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), MuzzleFlash, SocketTransform);
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), Weapon->GetWeaponData()->MuzzleFlash, SocketTransform);
 	}
 }
 
 void UCAction_Shoot::PlayImpactEffect(AActor* Instigator, const FVector& ImpactPoint)
 {
-	if (ImpactEffect)
+	if (Weapon->GetWeaponData()->ImpactEffect)
 	{
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactEffect, ImpactPoint);
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), Weapon->GetWeaponData()->ImpactEffect, ImpactPoint);
 	}
 }
 
@@ -173,13 +171,14 @@ bool UCAction_Shoot::GetFireOriginAndDirection(AActor* Instigator, FVector& OutO
 	else
 	{
 		//AI Logic
-		ACAICharacter* AIOwner = Cast<ACAICharacter>(Instigator);
-		if (!ensure(AIOwner))
+		ACAIController* AIController = Cast<ACAIController>(Instigator->GetInstigatorController());
+		if (!AIController)
 		{
+			UE_LOG(LogTemp, Warning, TEXT("Instigator on Shoot_Action is not a valid ACAIController"));
 			return false;
 		}
 
-		AActor* TargetActor = AIOwner->GetCurrentTarget();
+		AActor* TargetActor = AIController->GetCurrentTarget();
 		if (TargetActor == nullptr)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("AI has no target"));
@@ -188,11 +187,9 @@ bool UCAction_Shoot::GetFireOriginAndDirection(AActor* Instigator, FVector& OutO
 
 		UE_LOG(LogTemp, Log, TEXT("Target for AI is: %s"), *GetNameSafe(TargetActor));
 
-		/// \FIXME: probably better to cache it
-		const USkeletalMeshSocket* BarrelSocket = Weapon->GetMesh()->GetSocketByName(BarrelSocketName);
-		FTransform SocketTransform = BarrelSocket->GetSocketTransform(Weapon->GetMesh());
+		OutOrigin = Weapon->GetMesh()->GetSocketTransform(Weapon->BarrelSocketName).GetLocation();
 
-		OutOrigin = SocketTransform.GetLocation();
+		/// \TODO: maybe create a better aiming system for AI
 		OutDirection = (TargetActor->GetActorLocation() - OutOrigin).GetSafeNormal();
 
 		return true;
