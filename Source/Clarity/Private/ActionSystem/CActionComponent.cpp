@@ -4,11 +4,6 @@
 #include "ActionSystem/CActionComponent.h"
 #include "ActionSystem/CAction.h"
 
-UCActionComponent::UCActionComponent()
-{
-	
-}
-
 void UCActionComponent::BeginPlay()
 {
 	Super::BeginPlay();

@@ -7,6 +7,7 @@
 #include "CAction_Reload.generated.h"
 
 class ACWeaponBase;
+class UCWeaponSlotsComponent;
 
 /**
  * 
@@ -19,6 +20,8 @@ class CLARITY_API UCAction_Reload : public UCAction
 public:
 	UCAction_Reload();
 
+	virtual void Initialize(UCActionComponent* NewActionComponent) override;
+
 	virtual bool CanStartAction_Implementation(AActor* Instigator) override;
 	virtual void StartAction_Implementation(AActor* Instigator) override;
 
@@ -26,7 +29,7 @@ protected:
 	FTimerHandle ReloadTimerHandle;
 
 	UPROPERTY()
-	ACWeaponBase* Weapon;
+	UCWeaponSlotsComponent* WeaponSlotsComponent;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation")
 	float RefillTime;

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "CShooterInterface.h"
 #include "CPlayerCharacter.generated.h"
 
 class USpringArmComponent;
@@ -56,7 +57,7 @@ public:
 };
 
 UCLASS(Abstract)
-class CLARITY_API ACPlayerCharacter : public ACharacter
+class CLARITY_API ACPlayerCharacter : public ACharacter, public ICShooterInterface
 {
 	GENERATED_BODY()
 
@@ -152,6 +153,8 @@ public:
 	/** handles look logic separate from input */
 	UFUNCTION(BlueprintCallable, Category = "Input")
 	virtual void DoLook(float Yaw, float Pitch);
+
+	virtual bool GetAimOriginAndDirection(FVector& OutWorldPosition, FVector& OutWorldDirection) const override;
 
 	/** returns CameraBoom subobject **/
 	FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoomComponent; }

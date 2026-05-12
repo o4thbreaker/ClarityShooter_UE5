@@ -5,11 +5,12 @@
 #include "Perception/PawnSensingComponent.h"
 #include "ActionSystem/CActionComponent.h"
 #include "CAttributeComponent.h"
-#include "AIController.h"
+#include "AI/CAIController.h"
 #include "BrainComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Weapons/CWeaponSlotsComponent.h"
+#include "Weapons/CWeaponBase.h"
 
 ACAICharacter::ACAICharacter()
 {
@@ -27,6 +28,36 @@ void ACAICharacter::Initialize()
 	/// \NOTE: fill here anything that BT has to know (gets called from Controller)
 
 	WeaponSlotsComponent->SpawnWeapon();
+}
+
+bool ACAICharacter::GetAimOriginAndDirection(FVector& OutOrigin, FVector& OutDirection) const
+{
+	ACAIController* AIController = Cast<ACAIController>(GetController());
+
+	if (!ensure(AIController)) return false;
+
+	AActor* TargetActor = AIController->GetCurrentTarget();
+	if (TargetActor == nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AI has no target"));
+		return false;
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("Target for AI is: %s"), *GetNameSafe(TargetActor));
+
+	ACWeaponBase* Weapon = WeaponSlotsComponent->GetCurrentWeapon();
+	if (Weapon == nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AI has no weapon"));
+		return false;
+	}
+
+	OutOrigin = Weapon->GetMesh()->GetSocketTransform(Weapon->BarrelSocketName).GetLocation();
+
+	/// \TODO: maybe create a better aiming system for AI
+	OutDirection = (TargetActor->GetActorLocation() - OutOrigin).GetSafeNormal();
+
+	return true;
 }
 
 void ACAICharacter::BeginPlay()
@@ -59,7 +90,7 @@ void ACAICharacter::OnHealthChanged(AActor* InstigatorActor, UCAttributeComponen
 		if (NewHealth <= 0.0f)
 		{
 			// stop bt
-			AAIController* AIController = Cast<AAIController>(GetController());	
+			ACAIController* AIController = Cast<ACAIController>(GetController());
 			if (AIController)
 			{
 				AIController->GetBrainComponent()->StopLogic(TEXT("Killed"));

@@ -17,8 +17,6 @@ class CLARITY_API UCActionComponent : public UActorComponent
 	GENERATED_BODY()
 
 public:	
-	UCActionComponent();
-
 	/* active tags */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Action")
 	FGameplayTagContainer ActiveGameplayTags;

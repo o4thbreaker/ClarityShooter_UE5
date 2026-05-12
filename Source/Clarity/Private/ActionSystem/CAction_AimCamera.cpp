@@ -4,6 +4,7 @@
 #include "ActionSystem/CAction_AimCamera.h"
 #include "CPlayerCharacter.h"
 #include "Camera/CameraComponent.h"
+#include "ActionSystem/CActionComponent.h" 
 
 UCAction_AimCamera::UCAction_AimCamera()
 {
@@ -13,11 +14,14 @@ UCAction_AimCamera::UCAction_AimCamera()
 	CameraAimingSpeed = 20.0f;
 }
 
+void UCAction_AimCamera::Initialize(UCActionComponent* NewActionComponent)
+{
+	Super::Initialize(NewActionComponent);
+	OwnerPlayerCharacter = Cast<ACPlayerCharacter>(NewActionComponent->GetOwner());
+}
+
 bool UCAction_AimCamera::CanStartAction_Implementation(AActor* Instigator)
 {
-	// if owner is not valid or not player character, return false
-	OwnerPlayerCharacter = Cast<ACPlayerCharacter>(Instigator);
-
 	return Super::CanStartAction_Implementation(Instigator) && ensureAlways(OwnerPlayerCharacter);
 }
 

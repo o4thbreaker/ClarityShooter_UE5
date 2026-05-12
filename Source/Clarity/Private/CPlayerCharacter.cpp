@@ -10,6 +10,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Kismet/GameplayStatics.h"
+#include "CPlayerController.h"
 #include "CPlayerAnimInstance.h"
 #include "ActionSystem/CActionComponent.h"
 #include "Weapons/CWeaponSlotsComponent.h"
@@ -165,6 +166,23 @@ void ACPlayerCharacter::DoLook(float Yaw, float Pitch)
 		AddControllerYawInput(Yaw * MouseXSensitivity);
 		AddControllerPitchInput(Pitch * MouseYSensitivity);
 	}
+}
+
+bool ACPlayerCharacter::GetAimOriginAndDirection(FVector& OutWorldPosition, FVector& OutWorldDirection) const
+{
+	FVector2D ViewportSize;
+
+	// get screen size
+	if (GEngine && GEngine->GameViewport)
+	{
+		GEngine->GameViewport->GetViewportSize(ViewportSize);
+	}
+
+	// calculate crosshair location on screen (in the middle)
+	FVector2D CrosshairLocation(ViewportSize.X / 2.0f, ViewportSize.Y / 2.0f);
+
+	// try to convert data from screen to world and save to WorldPosition and WorldDirection
+	return UGameplayStatics::DeprojectScreenToWorld(GetController<ACPlayerController>(), CrosshairLocation, OutWorldPosition, OutWorldDirection);
 }
 
 void ACPlayerCharacter::Aim(const FInputActionValue& Value)

@@ -13,23 +13,27 @@ UCAction_Reload::UCAction_Reload()
 	RefillTime = 2.0f;
 }
 
+void UCAction_Reload::Initialize(UCActionComponent* NewActionComponent)
+{
+	Super::Initialize(NewActionComponent);
+
+	WeaponSlotsComponent = NewActionComponent->GetOwner()->FindComponentByClass<UCWeaponSlotsComponent>();
+}
+
 bool UCAction_Reload::CanStartAction_Implementation(AActor* Instigator)
 {
 	Super::CanStartAction_Implementation(Instigator);
 
-	UCWeaponSlotsComponent* OwnerWeaponSlotsComponent = Instigator->FindComponentByClass<UCWeaponSlotsComponent>();
-	if (!IsValid(OwnerWeaponSlotsComponent))
+	if (!IsValid(WeaponSlotsComponent))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Couldn't find WeaponSlotsComponent in %s!"), *GetNameSafe(this));
-		StopAction_Implementation(Instigator);
 		return false;
 	}
 
-	Weapon = OwnerWeaponSlotsComponent->GetCurrentWeapon();
+	ACWeaponBase* Weapon = WeaponSlotsComponent->GetCurrentWeapon();
 	if (!IsValid(Weapon))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Couldn't find Weapon in %s!"), *GetNameSafe(this));
-		StopAction_Implementation(Instigator);
 		return false;
 	}
 
@@ -51,7 +55,7 @@ void UCAction_Reload::StartAction_Implementation(AActor* Instigator)
 
 void UCAction_Reload::ReloadWeapon(AActor* Instigator)
 {
-	Weapon->Reload();
+	WeaponSlotsComponent->GetCurrentWeapon()->Reload();
 
 	StopAction_Implementation(Instigator);
 }
@@ -62,7 +66,8 @@ void UCAction_Reload::PlayReloadMontage(AActor* Instigator)
 	
 	if (ensure(Character))
 	{
-		if (Weapon->GetWeaponData()->ReloadMontage)
+		ACWeaponBase* Weapon = WeaponSlotsComponent->GetCurrentWeapon();
+		if (Weapon && Weapon->GetWeaponData()->ReloadMontage)
 		{
 			Character->PlayAnimMontage(Weapon->GetWeaponData()->ReloadMontage, 1.0f, FName("Default"));
 

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "CShooterInterface.h"
 #include "CAICharacter.generated.h"
 
 class UCAttributeComponent;
@@ -11,7 +12,7 @@ class UCActionComponent;
 class UCWeaponSlotsComponent;
 
 UCLASS(Abstract)
-class CLARITY_API ACAICharacter : public ACharacter
+class CLARITY_API ACAICharacter : public ACharacter, public ICShooterInterface
 {
 	GENERATED_BODY()
 
@@ -21,6 +22,8 @@ public:
 	/* Function that is used to initialize weapon and such stuff before BT starts 
 	(a little bit of crutch to make the ai get the weapon sooner than bt starts) */
 	void Initialize();
+
+	virtual bool GetAimOriginAndDirection(FVector& OutOrigin, FVector& OutDirection) const override;
 
 	FORCEINLINE bool GetIsAiming() const { return bIsAiming; }
 	FORCEINLINE void SetIsAiming(bool bNewIsAiming) { bIsAiming = bNewIsAiming; }

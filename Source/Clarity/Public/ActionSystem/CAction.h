@@ -29,7 +29,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Action")
 	bool bIsAutoStart;
 
-	void Initialize(UCActionComponent* NewActionComponent);
+	virtual void Initialize(UCActionComponent* NewActionComponent);
 
 	/* will be implemented in child classes */
 	UFUNCTION(BlueprintNativeEvent, Category = "Action")

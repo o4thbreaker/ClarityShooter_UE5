@@ -19,9 +19,14 @@ class CLARITY_API UCAction_AimCamera : public UCAction_Aim
 public:
 	UCAction_AimCamera();
 
+	virtual void Initialize(UCActionComponent* NewActionComponent) override;
+
+	virtual void StartAction_Implementation(AActor* Instigator) override;
+	virtual void StopAction_Implementation(AActor* Instigator) override;
+	virtual bool CanStartAction_Implementation(AActor* Instigator) override;
+
 protected:
 
-	/* caches in CanStart */
 	UPROPERTY(BlueprintReadOnly, Category = "Owner")
 	ACPlayerCharacter* OwnerPlayerCharacter;
 
@@ -45,8 +50,4 @@ protected:
 
 	/* interpolates the FOV */
 	void ResetFOV();
-
-	virtual void StartAction_Implementation(AActor* Instigator) override;
-	virtual void StopAction_Implementation(AActor* Instigator) override;
-	virtual bool CanStartAction_Implementation(AActor* Instigator) override;
 };
