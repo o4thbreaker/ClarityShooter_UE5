@@ -7,6 +7,7 @@
 #include "CAction_AimCamera.generated.h"
 
 class ACPlayerCharacter;
+class UCCameraModifier_Aim;
 
 /**
  * Action that handles aiming PLAYER's camera
@@ -36,18 +37,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
 	float CameraAimingFOV;
 
+	/* in/out speed (in seconds) */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
 	float CameraAimingSpeed;
 
-	/* FOV setting for current */
-	float CameraCurrentFOV;
-
-	/* timer to handle zooming */
-	FTimerHandle AimingTimerHandle;
-
-	/* interpolates the FOV */
-	void UpdateFOV();
-
-	/* interpolates the FOV */
-	void ResetFOV();
+private:
+	UCCameraModifier_Aim* Modifier;
 };

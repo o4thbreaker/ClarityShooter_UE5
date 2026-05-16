@@ -10,6 +10,7 @@
 class UCAttributeComponent;
 class UCActionComponent;
 class UCWeaponSlotsComponent;
+class ACSmartObject;
 
 UCLASS(Abstract)
 class CLARITY_API ACAICharacter : public ACharacter, public ICShooterInterface
@@ -27,6 +28,7 @@ public:
 
 	FORCEINLINE bool GetIsAiming() const { return bIsAiming; }
 	FORCEINLINE void SetIsAiming(bool bNewIsAiming) { bIsAiming = bNewIsAiming; }
+	FORCEINLINE ACSmartObject* GetSmartObject() const { return SmartObject; }
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
@@ -37,6 +39,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UCWeaponSlotsComponent* WeaponSlotsComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
+	ACSmartObject* SmartObject;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Aim")
 	bool bIsAiming;

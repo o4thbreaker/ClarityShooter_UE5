@@ -15,6 +15,8 @@ void UCBTService_CheckAttackRange::TickNode(UBehaviorTreeComponent& OwnerComp, u
 	{
 		AActor* TargetActor = Cast<AActor>(BlackboardComponent->GetValueAsObject(TargetActorKey.SelectedKeyName));
 
+		UE_LOG(LogTemp, Warning, TEXT("Target Actor: %s"), *GetNameSafe(TargetActor));
+
 		if (TargetActor)
 		{
 			AAIController* MyController = OwnerComp.GetAIOwner();
@@ -27,7 +29,7 @@ void UCBTService_CheckAttackRange::TickNode(UBehaviorTreeComponent& OwnerComp, u
 				{
 					float DistanceTo = FVector::Distance(AIPawn->GetActorLocation(), TargetActor->GetActorLocation());
 
-					bool IsInRange = DistanceTo <= AttackRange;
+					bool IsInRange = DistanceTo < AttackRange;
 					bool HasLineOfSight = false;
 
 					if (IsInRange)

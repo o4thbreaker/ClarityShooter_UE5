@@ -5,23 +5,45 @@
 #include "CPlayerCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "ActionSystem/CActionComponent.h" 
+#include "Kismet/GameplayStatics.h"
+#include "Camera/PlayerCameraManager.h"
+#include "CCameraModifier_Aim.h"
 
 UCAction_AimCamera::UCAction_AimCamera()
 {
 	CameraDefaultFOV = 90.0f;
-	CameraCurrentFOV = CameraDefaultFOV;
 	CameraAimingFOV = 40.0f;
-	CameraAimingSpeed = 20.0f;
+	CameraAimingSpeed = 0.3f;
 }
 
 void UCAction_AimCamera::Initialize(UCActionComponent* NewActionComponent)
 {
 	Super::Initialize(NewActionComponent);
+
+	/// \WARNING: may cause issues because of Inititalize gets called on BeginPlay 
+	///           and PlayerController might be null by that point
+
 	OwnerPlayerCharacter = Cast<ACPlayerCharacter>(NewActionComponent->GetOwner());
+
+	CameraDefaultFOV = OwnerPlayerCharacter->GetFollowCamera()->FieldOfView;
+
+	APlayerController* PlayerController = Cast<APlayerController>(OwnerPlayerCharacter->GetController());
+	if (PlayerController)
+	{
+		APlayerCameraManager* CameraManager = PlayerController->PlayerCameraManager;
+		if (!Modifier)
+		{
+			Modifier = Cast<UCCameraModifier_Aim>(CameraManager->AddNewCameraModifier(UCCameraModifier_Aim::StaticClass()));
+		}
+		Modifier->InitializeFOVData(CameraDefaultFOV, CameraAimingFOV, CameraAimingSpeed);
+		Modifier->DisableModifier();
+	}
 }
 
 bool UCAction_AimCamera::CanStartAction_Implementation(AActor* Instigator)
 {
+	if (!Modifier) return false;
+
 	return Super::CanStartAction_Implementation(Instigator) && ensureAlways(OwnerPlayerCharacter);
 }
 
@@ -29,43 +51,15 @@ void UCAction_AimCamera::StartAction_Implementation(AActor* Instigator)
 {
 	Super::StartAction_Implementation(Instigator);
 
-	GetWorld()->GetTimerManager().SetTimer(AimingTimerHandle, this, &UCAction_AimCamera::UpdateFOV, GetWorld()->GetDeltaSeconds(), true);
+	Modifier->EnableModifier();
 }
 
 void UCAction_AimCamera::StopAction_Implementation(AActor* Instigator)
 {
-	if (GetWorld()->GetTimerManager().IsTimerActive(AimingTimerHandle))
+	if (Modifier)
 	{
-		GetWorld()->GetTimerManager().ClearTimer(AimingTimerHandle);
+		Modifier->DisableModifier();
 	}
-	
-	GetWorld()->GetTimerManager().SetTimer(AimingTimerHandle, this, &UCAction_AimCamera::ResetFOV, GetWorld()->GetDeltaSeconds(), true);
 
 	Super::StopAction_Implementation(Instigator);
-}
-
-void UCAction_AimCamera::UpdateFOV()
-{
-	if (!IsValid(OwnerPlayerCharacter)) return;
-
-	CameraCurrentFOV = FMath::FInterpTo(CameraCurrentFOV, CameraAimingFOV, GetWorld()->GetDeltaSeconds(), CameraAimingSpeed);
-	OwnerPlayerCharacter->GetFollowCamera()->SetFieldOfView(CameraCurrentFOV);
-
-	if (FMath::IsNearlyEqual(CameraCurrentFOV, CameraAimingFOV, 0.1f))
-	{
-		GetWorld()->GetTimerManager().ClearTimer(AimingTimerHandle);
-	}
-}
-
-void UCAction_AimCamera::ResetFOV()
-{
-	if (!IsValid(OwnerPlayerCharacter)) return;
-
-	CameraCurrentFOV = FMath::FInterpTo(CameraCurrentFOV, CameraDefaultFOV, GetWorld()->GetDeltaSeconds(), CameraAimingSpeed);
-	OwnerPlayerCharacter->GetFollowCamera()->SetFieldOfView(CameraCurrentFOV);
-
-	if (FMath::IsNearlyEqual(CameraCurrentFOV, CameraDefaultFOV, 0.1f))
-	{
-		GetWorld()->GetTimerManager().ClearTimer(AimingTimerHandle);
-	}
 }
