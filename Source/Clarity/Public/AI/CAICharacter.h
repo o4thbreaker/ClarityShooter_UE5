@@ -5,30 +5,70 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "CShooterInterface.h"
+#include "Perception/AISightTargetInterface.h"
+#include "Clarity.h"
 #include "CAICharacter.generated.h"
 
 class UCAttributeComponent;
 class UCActionComponent;
 class UCWeaponSlotsComponent;
 class ACSmartObject;
+class UBehaviorTree;
+class ACAIController;
+
+USTRUCT(BlueprintType)
+struct FAnimStates
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(BlueprintReadWrite, Category = "Animation")
+	bool bIsCrouching = false;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Animation")
+	bool bIsCombat = false;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Animation")
+	bool bIsShooting = false;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Animation")
+	bool bIsAiming = false;
+};
+
 
 UCLASS(Abstract)
-class CLARITY_API ACAICharacter : public ACharacter, public ICShooterInterface
+class CLARITY_API ACAICharacter : public ACharacter, public ICShooterInterface, public IAISightTargetInterface
 {
 	GENERATED_BODY()
 
 public:
 	ACAICharacter();
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI")
+	ACSmartObject* SmartObject;
+
+	/// \TODO: better to refactor later due to architectural issues 
+	UPROPERTY(BlueprintReadOnly, Category = "AI")
+	ACAIController* AIController;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Animation")
+	FAnimStates AnimState;
+
 	/* Function that is used to initialize weapon and such stuff before BT starts 
 	(a little bit of crutch to make the ai get the weapon sooner than bt starts) */
 	void Initialize();
 
+	bool IsHostile(AActor* Other);
+
 	virtual bool GetAimOriginAndDirection(FVector& OutOrigin, FVector& OutDirection) const override;
 
-	FORCEINLINE bool GetIsAiming() const { return bIsAiming; }
-	FORCEINLINE void SetIsAiming(bool bNewIsAiming) { bIsAiming = bNewIsAiming; }
-	FORCEINLINE ACSmartObject* GetSmartObject() const { return SmartObject; }
+	FORCEINLINE virtual ECFaction GetFaction() const override { return Faction; }
+
+	FORCEINLINE bool GetIsAiming() const { return AnimState.bIsAiming; }
+	FORCEINLINE void SetIsAiming(bool bNewIsAiming) { AnimState.bIsAiming = bNewIsAiming; }
+	FORCEINLINE void SetIsCrouching(bool bNewIsCrouching) { AnimState.bIsCrouching = bNewIsCrouching; }
+	FORCEINLINE void SetIsCombat(bool bNewIsCombat) { AnimState.bIsCombat = bNewIsCombat; }
+	FORCEINLINE UBehaviorTree* GetBehaviorTree() const { return BehaviorTree; }
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
@@ -39,12 +79,17 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UCWeaponSlotsComponent* WeaponSlotsComponent;
+	
+	/* will be run in Controller class */
+	UPROPERTY(EditDefaultsOnly, Category = "AI")
+	UBehaviorTree* BehaviorTree;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
-	ACSmartObject* SmartObject;
+	UPROPERTY(BlueprintReadOnly, Category = "AI")
+	FName PerceptionTarget;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Aim")
-	bool bIsAiming;
+	/// \TODO: might be better to refactor to the data asset
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI")
+	ECFaction Faction;
 
 	UFUNCTION()
 	void OnHealthChanged(AActor* InstigatorActor, UCAttributeComponent* OwningComp, float NewHealth, float Delta);
@@ -52,6 +97,9 @@ protected:
 	virtual void BeginPlay() override;
 
 	virtual void PostInitializeComponents() override;
+
+	/* Custom view target for perception component */
+	virtual bool CanBeSeenFrom(const FVector& ObserverLocation, FHitResult& OutHitResult, const AActor* IgnoreActor = nullptr) const;
 
 	virtual void GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const override;
 };

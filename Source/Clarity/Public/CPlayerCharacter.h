@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "CShooterInterface.h"
+#include "Clarity.h"
 #include "CPlayerCharacter.generated.h"
 
 class USpringArmComponent;
@@ -61,6 +62,32 @@ class CLARITY_API ACPlayerCharacter : public ACharacter, public ICShooterInterfa
 {
 	GENERATED_BODY()
 
+public:
+	ACPlayerCharacter();
+
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	/** handles move logic separate from input */
+	UFUNCTION(BlueprintCallable, Category = "Input")
+	virtual void DoMove(float Right, float Forward);
+
+	/** handles look logic separate from input */
+	UFUNCTION(BlueprintCallable, Category = "Input")
+	virtual void DoLook(float Yaw, float Pitch);
+
+	virtual bool GetAimOriginAndDirection(FVector& OutWorldPosition, FVector& OutWorldDirection) const override;
+
+	FORCEINLINE virtual ECFaction GetFaction() const override { return Faction; };
+
+	/** returns CameraBoom subobject **/
+	FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoomComponent; }
+
+	/** returns FollowCamera subobject **/
+	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCameraComponent; }
+
+	/** returns PLAYER's anim instance **/
+	FORCEINLINE UCPlayerAnimInstance* GetPlayerAnimInstance() const { return PlayerAnimInstance; }
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UCWeaponSlotsComponent* WeaponSlotsComponent;
@@ -83,6 +110,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Input")
 	FCharacterInputActions InputActions;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Faction")
+	ECFaction Faction;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Aim")
 	bool bIsAiming;
@@ -140,28 +170,4 @@ protected:
 #pragma endregion
 
 	virtual void BeginPlay() override;
-
-public:
-	ACPlayerCharacter();
-
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-	/** handles move logic separate from input */
-	UFUNCTION(BlueprintCallable, Category = "Input")
-	virtual void DoMove(float Right, float Forward);
-
-	/** handles look logic separate from input */
-	UFUNCTION(BlueprintCallable, Category = "Input")
-	virtual void DoLook(float Yaw, float Pitch);
-
-	virtual bool GetAimOriginAndDirection(FVector& OutWorldPosition, FVector& OutWorldDirection) const override;
-
-	/** returns CameraBoom subobject **/
-	FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoomComponent; }
-
-	/** returns FollowCamera subobject **/
-	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCameraComponent; }
-
-	/** returns PLAYER's anim instance **/
-	FORCEINLINE UCPlayerAnimInstance* GetPlayerAnimInstance() const { return PlayerAnimInstance; }
 };

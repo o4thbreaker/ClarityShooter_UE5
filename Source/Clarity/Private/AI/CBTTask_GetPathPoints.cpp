@@ -26,7 +26,7 @@ EBTNodeResult::Type UCBTTask_GetPathPoints::ExecuteTask(UBehaviorTreeComponent& 
 	ACAICharacter* AICharacter = Cast<ACAICharacter>(AIController->GetPawn());
 	if (!AICharacter) return EBTNodeResult::Failed;
 
-	ACSmartObject_PatrolPath* PatrolPath = Cast<ACSmartObject_PatrolPath>(AICharacter->GetSmartObject());
+	ACSmartObject_PatrolPath* PatrolPath = Cast<ACSmartObject_PatrolPath>(AICharacter->SmartObject);
 	if (!PatrolPath || PatrolPath->Locations.Num() < 1)
 	{
 		UE_LOG(LogTemp, Log, TEXT("No PatrolPath (or locations are not populated) on GetPathPoints Task"));

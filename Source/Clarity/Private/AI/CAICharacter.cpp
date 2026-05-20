@@ -18,9 +18,11 @@ ACAICharacter::ACAICharacter()
 	ActionComponent = CreateDefaultSubobject<UCActionComponent>(TEXT("ActionComponent"));
 	WeaponSlotsComponent = CreateDefaultSubobject<UCWeaponSlotsComponent>(TEXT("WeaponSlotsComponent"));
 
-	bIsAiming = false;
-
+	/* ========= DEFAULT VALUES ========= */
+	AnimState.bIsAiming = false;
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+	PerceptionTarget = "spine_02";
+	Faction = ECFaction::Enemy;
 }
 
 void ACAICharacter::Initialize()
@@ -28,36 +30,6 @@ void ACAICharacter::Initialize()
 	/// \NOTE: fill here anything that BT has to know (gets called from Controller)
 
 	WeaponSlotsComponent->SpawnWeapon();
-}
-
-bool ACAICharacter::GetAimOriginAndDirection(FVector& OutOrigin, FVector& OutDirection) const
-{
-	ACAIController* AIController = Cast<ACAIController>(GetController());
-
-	if (!ensure(AIController)) return false;
-
-	AActor* TargetActor = AIController->GetCurrentTarget();
-	if (TargetActor == nullptr)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("AI has no target"));
-		return false;
-	}
-
-	UE_LOG(LogTemp, Log, TEXT("Target for AI is: %s"), *GetNameSafe(TargetActor));
-
-	ACWeaponBase* Weapon = WeaponSlotsComponent->GetCurrentWeapon();
-	if (Weapon == nullptr)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("AI has no weapon"));
-		return false;
-	}
-
-	OutOrigin = Weapon->GetMesh()->GetSocketTransform(Weapon->BarrelSocketName).GetLocation();
-
-	/// \TODO: maybe create a better aiming system for AI
-	OutDirection = (TargetActor->GetActorLocation() - OutOrigin).GetSafeNormal();
-
-	return true;
 }
 
 void ACAICharacter::BeginPlay()
@@ -90,10 +62,12 @@ void ACAICharacter::OnHealthChanged(AActor* InstigatorActor, UCAttributeComponen
 		if (NewHealth <= 0.0f)
 		{
 			// stop bt
-			ACAIController* AIController = Cast<ACAIController>(GetController());
 			if (AIController)
 			{
 				AIController->GetBrainComponent()->StopLogic(TEXT("Killed"));
+				AIController->ClearFocus(EAIFocusPriority::LastFocusPriority);
+				//AIController->GetAIPerceptionComponent()->DestroyComponent(true);
+				//AIController->AIManager->RemoveAgent(AIController);
 			}
 
 			GetMesh()->SetCollisionProfileName("Ragdoll");
@@ -105,6 +79,39 @@ void ACAICharacter::OnHealthChanged(AActor* InstigatorActor, UCAttributeComponen
 			SetLifeSpan(10.0f);
 		}
 	}
+}
+
+bool ACAICharacter::CanBeSeenFrom(const FVector& ObserverLocation, FHitResult& OutHitResult, const AActor* IgnoreActor) const
+{
+	// function that makes AI look at other bones rather than the center of the mass
+	/// \NOTE: is not used for now, needs review
+
+	static const FName AILineOfSight = FName(TEXT("PawnLineOfSight"));
+	FHitResult HitResult;
+	FVector SocketLocation = GetMesh()->GetSocketLocation(PerceptionTarget);
+	FCollisionObjectQueryParams ObjectQueryParams = FCollisionObjectQueryParams(ECC_TO_BITFIELD(ECC_WorldStatic) | ECC_TO_BITFIELD(ECC_WorldDynamic));
+	FCollisionQueryParams Params = FCollisionQueryParams(AILineOfSight, true, IgnoreActor);
+
+	const bool bIsHitSocket = GetWorld()->LineTraceSingleByObjectType(HitResult, ObserverLocation, SocketLocation, ObjectQueryParams, Params);
+
+	if (bIsHitSocket == false || IsValid(HitResult.GetActor()) && HitResult.GetActor()->IsOwnedBy(this))
+	{
+		OutHitResult = HitResult;
+
+		return true;
+	}
+
+	// do the same but to ActorLocation()
+	const bool bIsHit = GetWorld()->LineTraceSingleByObjectType(HitResult, ObserverLocation, GetActorLocation(), ObjectQueryParams, Params);
+
+	if (bIsHit == false || IsValid(HitResult.GetActor()) && HitResult.GetActor()->IsOwnedBy(this))
+	{
+		OutHitResult = HitResult;
+
+		return true;
+	}
+
+	return false;
 }
 
 void ACAICharacter::GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const
@@ -120,4 +127,43 @@ void ACAICharacter::GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRot
 		OutRotation = GetActorRotation();
 	}
 }
+
+bool ACAICharacter::IsHostile(AActor* Other)
+{
+	if (ICShooterInterface* OtherShooterInterface = Cast<ICShooterInterface>(Other))
+	{
+		return Faction != OtherShooterInterface->GetFaction() && OtherShooterInterface->GetFaction() != ECFaction::Neutral;
+	}
+
+	return false;
+}
+
+bool ACAICharacter::GetAimOriginAndDirection(FVector& OutOrigin, FVector& OutDirection) const
+{
+	if (!ensure(AIController)) return false;
+
+	AActor* TargetActor = AIController->GetCurrentTarget();
+	if (TargetActor == nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AI has no target"));
+		return false;
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("Target for AI is: %s"), *GetNameSafe(TargetActor));
+
+	ACWeaponBase* Weapon = WeaponSlotsComponent->GetCurrentWeapon();
+	if (Weapon == nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AI has no weapon"));
+		return false;
+	}
+
+	OutOrigin = Weapon->GetMesh()->GetSocketTransform(Weapon->BarrelSocketName).GetLocation();
+
+	/// \TODO: maybe create a better aiming system for AI
+	OutDirection = (TargetActor->GetActorLocation() - OutOrigin).GetSafeNormal();
+
+	return true;
+}
+
 

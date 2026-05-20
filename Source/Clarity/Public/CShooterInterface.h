@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Clarity.h"
 #include "UObject/Interface.h"
 #include "CShooterInterface.generated.h"
 
@@ -22,6 +23,7 @@ class CLARITY_API ICShooterInterface
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-
 	virtual bool GetAimOriginAndDirection(FVector& OutOrigin, FVector& OutDirection) const = 0;
+
+	virtual ECFaction GetFaction() const = 0;
 };

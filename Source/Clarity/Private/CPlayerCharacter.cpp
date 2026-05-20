@@ -73,6 +73,8 @@ ACPlayerCharacter::ACPlayerCharacter()
 	bIsAiming = false;
 
 	/// \NOTE: camera's aim FOV is set in CAction_AimCamera;
+
+	Faction = ECFaction::Ally;
 }
 
 void ACPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
