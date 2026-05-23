@@ -10,7 +10,7 @@
 class ACAIController;
 
 /**
- * Task to select the best enemy
+ * Selects the best enemy based on EQS
  */
 UCLASS()
 class CLARITY_API UCBTTask_SelectCombatTarget : public UBTTaskNode

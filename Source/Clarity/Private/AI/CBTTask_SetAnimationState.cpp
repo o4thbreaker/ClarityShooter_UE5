@@ -14,7 +14,6 @@ UCBTTask_SetAnimationState::UCBTTask_SetAnimationState()
 	NodeName = "Set Animation State";
 
 	BlackboardKey.AddObjectFilter(this, *NodeName, AActor::StaticClass());
-	bIsAiming = false;
 	bInCombat = false;
 	bShouldFocus = false;
 	bInCombat = false;
@@ -29,7 +28,6 @@ EBTNodeResult::Type UCBTTask_SetAnimationState::ExecuteTask(UBehaviorTreeCompone
 	if (!ensure(MyCharacter)) return EBTNodeResult::Failed;
 
 	MyCharacter->SetIsCombat(bInCombat);
-	MyCharacter->SetIsAiming(bIsAiming);
 	MyCharacter->SetIsCrouching(bIsCrouching);
 
 	const UBlackboardComponent* MyBlackboard = OwnerComp.GetBlackboardComponent();

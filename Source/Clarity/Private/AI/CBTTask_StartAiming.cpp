@@ -44,7 +44,6 @@ EBTNodeResult::Type UCBTTask_StartAiming::ExecuteTask(UBehaviorTreeComponent& Ow
 		}
 
 		MyController->SetTargetActor(Cast<AActor>(OwnerComp.GetBlackboardComponent()->GetValueAsObject(TargetActorKey.SelectedKeyName)));
-		Owner->SetIsAiming(true);
 
 		return ActionComponent->StartActionByTag(Owner, CGameplayTags::AimAction) ? EBTNodeResult::Succeeded : EBTNodeResult::Failed;
 	}

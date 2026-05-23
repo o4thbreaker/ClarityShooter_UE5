@@ -30,9 +30,6 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, Category = "Animation")
 	bool bIsShooting = false;
-
-	UPROPERTY(BlueprintReadWrite, Category = "Animation")
-	bool bIsAiming = false;
 };
 
 
@@ -62,13 +59,14 @@ public:
 
 	virtual bool GetAimOriginAndDirection(FVector& OutOrigin, FVector& OutDirection) const override;
 
+	bool GetIsAiming() const;
+
 	FORCEINLINE virtual ECFaction GetFaction() const override { return Faction; }
 
-	FORCEINLINE bool GetIsAiming() const { return AnimState.bIsAiming; }
-	FORCEINLINE void SetIsAiming(bool bNewIsAiming) { AnimState.bIsAiming = bNewIsAiming; }
 	FORCEINLINE void SetIsCrouching(bool bNewIsCrouching) { AnimState.bIsCrouching = bNewIsCrouching; }
 	FORCEINLINE void SetIsCombat(bool bNewIsCombat) { AnimState.bIsCombat = bNewIsCombat; }
 	FORCEINLINE UBehaviorTree* GetBehaviorTree() const { return BehaviorTree; }
+	FORCEINLINE UCActionComponent* GetActionComponent() const { return ActionComponent; }
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")

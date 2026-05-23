@@ -18,9 +18,6 @@ public:
 	UCBTTask_SetAnimationState();
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Blackboard")
-	bool bIsAiming;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Blackboard")
 	bool bInCombat;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Blackboard")

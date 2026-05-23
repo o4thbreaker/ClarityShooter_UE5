@@ -11,6 +11,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Weapons/CWeaponSlotsComponent.h"
 #include "Weapons/CWeaponBase.h"
+#include "CGameplayTags.h"
 
 ACAICharacter::ACAICharacter()
 {
@@ -19,7 +20,6 @@ ACAICharacter::ACAICharacter()
 	WeaponSlotsComponent = CreateDefaultSubobject<UCWeaponSlotsComponent>(TEXT("WeaponSlotsComponent"));
 
 	/* ========= DEFAULT VALUES ========= */
-	AnimState.bIsAiming = false;
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 	PerceptionTarget = "spine_02";
 	Faction = ECFaction::Enemy;
@@ -164,6 +164,11 @@ bool ACAICharacter::GetAimOriginAndDirection(FVector& OutOrigin, FVector& OutDir
 	OutDirection = (TargetActor->GetActorLocation() - OutOrigin).GetSafeNormal();
 
 	return true;
+}
+
+bool ACAICharacter::GetIsAiming() const
+{
+	return ActionComponent->ActiveGameplayTags.HasTag(CGameplayTags::Aiming);
 }
 
 

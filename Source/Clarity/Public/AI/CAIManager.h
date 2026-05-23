@@ -15,6 +15,10 @@ class CLARITY_API ACAIManager : public AActor
 	GENERATED_BODY()
 	
 public:	
+	/* array of all agents that have the same faction as this manager*/
+	UPROPERTY(BlueprintReadonly, Category = "AI")
+	TArray<ACAIController*> Agents;
+
 	ACAIManager();
 
 	UFUNCTION()
@@ -25,14 +29,9 @@ public:
 	void NotifyAIState(ECAIState NewState);
 
 	UFUNCTION()
-	void RemoveAgent(ACAIController* AgentToRemove);
+	void RemoveAgent(ACAIController* AgentToRemove); 
 
 protected:
-
-	/* array of all agents that have the same faction as this manager*/
-	UPROPERTY(BlueprintReadonly, Category = "AI")
-	TArray<ACAIController*> Agents;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI")
 	ECFaction ManagerFaction;
 

@@ -43,7 +43,6 @@ void ACAIManager::CreateAgentsList()
 				}
 			}
 		}
-		
 	}
 }
 

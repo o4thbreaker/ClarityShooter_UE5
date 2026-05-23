@@ -38,7 +38,6 @@ EBTNodeResult::Type UCBTTask_StopAiming::ExecuteTask(UBehaviorTreeComponent& Own
 		}
 
 		MyController->SetTargetActor(nullptr);
-		Owner->SetIsAiming(false);
 
 		ActionComponent->StopActionByTag(Owner, CGameplayTags::AimAction);
 
