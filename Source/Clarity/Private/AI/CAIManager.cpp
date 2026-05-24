@@ -12,6 +12,12 @@
 ACAIManager::ACAIManager()
 {
 	PrimaryActorTick.bCanEverTick = false;
+
+	MaxStimulusTime_Combat = 10.f;
+	MaxStimulusTime_Search = 10.f;
+	SearchTimeStamp = 0.f;
+	AgentProvidingCoverFire = nullptr;
+	ApproacherIndex = 0;
 }
 
 void ACAIManager::BeginPlay()
@@ -40,6 +46,11 @@ void ACAIManager::CreateAgentsList()
 				{
 					Agents.AddUnique(Controller);
 					Controller->AIManager = this;
+
+					if (Controller->GetAICharacter()->CombatRole == ECCombatRole::Defender)
+					{
+						Defenders.AddUnique(Controller->GetAICharacter());
+					}
 				}
 			}
 		}
@@ -77,6 +88,37 @@ void ACAIManager::RemoveAgent(ACAIController* AgentToRemove)
 	if (IndexToRemove < 0) return;
 
 	Agents.RemoveSingle(AgentToRemove);
+
+	if (Defenders.Find(AgentToRemove->GetAICharacter()))
+	{
+		Defenders.RemoveSingle(AgentToRemove->GetAICharacter());
+	}
+}
+
+void ACAIManager::RequestCoverFire(bool ShouldProvideCoverFire, ACAICharacter* RequestInstigator)
+{
+	// if instigator is not valid or is not defender - return
+	if (!RequestInstigator || Defenders.Find(RequestInstigator) < 0) return;
+
+	if (ShouldProvideCoverFire)
+	{
+		// tell all the defenders
+		for (auto& Defender : Defenders) 
+		{
+			// if the defender is not providing cover fire and is holding cover - tell him to provide cover fire
+			if (Defender != RequestInstigator)
+			{
+				AgentProvidingCoverFire = Defender;
+				Defender->AIController->SetShouldShootFromCover(true);
+				break;
+			}
+		}
+		// cover man is found - return
+		return;
+	}
+
+	// if no one is providing cover fire - stop shooting from the previous one
+	AgentProvidingCoverFire->AIController->SetShouldShootFromCover(false);
 }
 
 void ACAIManager::RunSearchTimer()
@@ -93,7 +135,16 @@ void ACAIManager::RunCombatLoop()
 {
 	if (Engaged())
 	{
-		/// \TODO: run approaching cover task
+		// Approach
+		if (Defenders.Num() > 0)
+		{
+			Defenders[ApproacherIndex]->AIController->GetBlackboardComponent()->SetValueAsEnum("CombatState", (uint8)ECCombatState::ApproachingCover);
+			// request cover fire while approaching cover
+			RequestCoverFire(true, Defenders[ApproacherIndex]);
+			// if index is not the last one - increment
+			ApproacherIndex = (ApproacherIndex + 1 <= Defenders.Num() - 1) ? ApproacherIndex++ : 0;
+		}
+
 		return;
 	}
 
@@ -116,7 +167,7 @@ bool ACAIManager::Engaged()
 		}
 
 		// if any of the agents has line of sight to target
-		if (Controller->GetBlackboardComponent()->GetValueAsObject("Target"))
+		if (Controller->GetTargetActor())
 		{
 			bIsEngaged = true;
 			break;

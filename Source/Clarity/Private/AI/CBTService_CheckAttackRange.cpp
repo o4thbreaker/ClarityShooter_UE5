@@ -13,6 +13,7 @@ void UCBTService_CheckAttackRange::TickNode(UBehaviorTreeComponent& OwnerComp, u
 
 	if (ensure(BlackboardComponent))
 	{
+		/// \NOTE: probably better to refactor with GetCurrentTarget
 		AActor* TargetActor = Cast<AActor>(BlackboardComponent->GetValueAsObject(TargetActorKey.SelectedKeyName));
 
 		UE_LOG(LogTemp, Warning, TEXT("Target Actor: %s"), *GetNameSafe(TargetActor));

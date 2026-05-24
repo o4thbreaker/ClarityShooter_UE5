@@ -36,7 +36,7 @@ EBTNodeResult::Type UCBTTask_SelectCombatTarget::ExecuteTask(UBehaviorTreeCompon
 void UCBTTask_SelectCombatTarget::EnemySeekerQueryFinished(TSharedPtr<FEnvQueryResult> Result)
 {
 	BestTarget = nullptr;
-	AIController->GetBlackboardComponent()->SetValueAsObject("TargetActor", nullptr);
+	AIController->SetTargetActor(nullptr);
 
 	float CurrentBestScore = 0.f;
 
@@ -66,6 +66,6 @@ void UCBTTask_SelectCombatTarget::EnemySeekerQueryFinished(TSharedPtr<FEnvQueryR
 
 	if (BestTarget)
 	{
-		AIController->GetBlackboardComponent()->SetValueAsObject("TargetActor", BestTarget);
+		AIController->SetTargetActor(BestTarget);
 	}
 }

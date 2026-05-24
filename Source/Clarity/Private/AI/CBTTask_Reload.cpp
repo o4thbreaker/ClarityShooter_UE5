@@ -3,10 +3,13 @@
 
 #include "AI/CBTTask_Reload.h"
 #include "GameFramework/Pawn.h"
-#include "AIController.h"
+#include "AI/CAIController.h"
+#include "AI/CAICharacter.h"
 #include "ActionSystem/CActionComponent.h"
 #include "ActionSystem/CAction.h"
 #include "CGameplayTags.h"
+#include "BehaviorTree/BlackboardComponent.h"
+#include "AI/CAIManager.h"
 
 UCBTTask_Reload::UCBTTask_Reload()
 {
@@ -15,29 +18,33 @@ UCBTTask_Reload::UCBTTask_Reload()
 
 EBTNodeResult::Type UCBTTask_Reload::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-	AAIController* MyController = OwnerComp.GetAIOwner();
+	ACAIController* MyController = Cast<ACAIController>(OwnerComp.GetAIOwner());
 
 	if (ensure(MyController))
 	{
 		FReloadDataMemory* Memory = CastInstanceNodeMemory<FReloadDataMemory>(NodeMemory);
 
-		APawn* Owner = Cast<APawn>(MyController->GetPawn());
-		if (Owner == nullptr)
+		if (MyController->GetAICharacter() == nullptr)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Couldn't get Character on AI. Aborting task!"));
 			return EBTNodeResult::Failed;
 		}
 
-		Memory->OwnerActionComponent = Owner->FindComponentByClass<UCActionComponent>();
+		Memory->OwnerActionComponent = MyController->GetAICharacter()->GetActionComponent();
 		if (Memory->OwnerActionComponent == nullptr)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Couldn't find ActionComponent on AI. Aborting task!"));
 			return EBTNodeResult::Failed;
 		}
-		if (!Memory->OwnerActionComponent->StartActionByTag(Owner, CGameplayTags::ReloadAction))
+
+		if (!Memory->OwnerActionComponent->StartActionByTag(MyController->GetAICharacter(), CGameplayTags::ReloadAction))
 		{
 			return EBTNodeResult::Failed;
 		}
+
+		// tell others to cover while reloading
+		MyController->SetShouldShootFromCover(false);
+		MyController->AIManager->RequestCoverFire(true, MyController->GetAICharacter());
 
 		Memory->OwnerActionComponent->OnActionStopped.AddDynamic(this, &UCBTTask_Reload::OnReloadFinished);
 

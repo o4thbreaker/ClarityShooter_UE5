@@ -32,7 +32,7 @@ EBTNodeResult::Type UCBTTask_SelectCover::ExecuteTask(UBehaviorTreeComponent& Ow
 void UCBTTask_SelectCover::CoverSeekerQueryFinished(TSharedPtr<FEnvQueryResult> Result)
 {
 	SelectedCover = nullptr;
-	AActor* Target = Cast<AActor>(AIController->GetBlackboardComponent()->GetValueAsObject("TargetActor"));
+	AActor* Target = AIController->GetTargetActor();
 
 	float CurrentBestScore = 0.f;
 	int32 Index = 0;
@@ -44,19 +44,28 @@ void UCBTTask_SelectCover::CoverSeekerQueryFinished(TSharedPtr<FEnvQueryResult> 
 		for (AActor*& Actor : DetectedActors)
 		{
 			ACCoverActor* Cover = Cast<ACCoverActor>(Actor);
-			if (Cover && Cover->GetDistanceTo(Target) >= DesiredDistance && Cover->bIsCoverAvailable && Cover->CurrentCharacter == nullptr)
+			if (Cover )
 			{
-				const float ActorToTargetDistance = AIController->GetAICharacter()->GetDistanceTo(Target);
-				const float CoverToTargetDistance = Cover->GetDistanceTo(Target);
-				const float AgentToCoverDistance = AIController->GetAICharacter()->GetDistanceTo(Cover);
-
-				/// \NOTE: check the Tactical Position Selection from Matthew Jack' book Game AI Pro
-				const float CalculatedDirectness = (ActorToTargetDistance - CoverToTargetDistance) / AgentToCoverDistance;
-
-				if (Result->GetItemScore(Index) > CurrentBestScore && CalculatedDirectness > DesiredDirectness)
+				if (Cover->GetDistanceTo(Target) >= DesiredDistance)
 				{
-					SelectedCover = Cover;
-					CurrentBestScore = Result->GetItemScore(Index);
+					if (Cover->bIsCoverAvailable)
+					{
+						if (Cover->CurrentCharacter == nullptr)
+						{
+							const float ActorToTargetDistance = AIController->GetAICharacter()->GetDistanceTo(Target);
+							const float CoverToTargetDistance = Cover->GetDistanceTo(Target);
+							const float AgentToCoverDistance = AIController->GetAICharacter()->GetDistanceTo(Cover);
+
+							/// \NOTE: check the Tactical Position Selection from Matthew Jack' book Game AI Pro
+							const float CalculatedDirectness = (ActorToTargetDistance - CoverToTargetDistance) / AgentToCoverDistance;
+
+							if (Result->GetItemScore(Index) > CurrentBestScore && CalculatedDirectness > DesiredDirectness)
+							{
+								SelectedCover = Cover;
+								CurrentBestScore = Result->GetItemScore(Index);
+							}
+						}
+					}
 				}
 			}
 			Index++;

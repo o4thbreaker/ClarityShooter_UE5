@@ -32,11 +32,12 @@ EBTNodeResult::Type UCBTTask_SetAnimationState::ExecuteTask(UBehaviorTreeCompone
 
 	const UBlackboardComponent* MyBlackboard = OwnerComp.GetBlackboardComponent();
 
-	AActor* Enemy = Cast<AActor>(MyBlackboard->GetValueAsObject(BlackboardKey.SelectedKeyName));
+	/// \NOTE: not GetTargetActor because target can be whatever we choose in editor
+	AActor* Target = Cast<AActor>(MyBlackboard->GetValueAsObject(BlackboardKey.SelectedKeyName));
 
-	if (Enemy)
+	if (Target)
 	{
-		bShouldFocus ? MyController->SetFocus(Enemy) : MyController->ClearFocus(EAIFocusPriority::LastFocusPriority);
+		bShouldFocus ? MyController->SetFocus(Target) : MyController->ClearFocus(EAIFocusPriority::LastFocusPriority);
 		return EBTNodeResult::Succeeded;
 	}
 

@@ -42,6 +42,9 @@ public:
 	ACAICharacter();
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI")
+	ECCombatRole CombatRole;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI")
 	ACSmartObject* SmartObject;
 
 	/// \TODO: better to refactor later due to architectural issues 

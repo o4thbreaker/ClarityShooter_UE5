@@ -15,6 +15,9 @@ ACCoverActor::ACCoverActor()
 	Collider->SetupAttachment(RootComponent);
 	Collider->OnComponentBeginOverlap.AddDynamic(this, &ACCoverActor::OnOverlapBegin);
 	Collider->OnComponentEndOverlap.AddDynamic(this, &ACCoverActor::OnOverlapEnd);
+
+	bIsCoverAvailable = true;
+	CurrentCharacter = nullptr;
 }
 
 void ACCoverActor::BeginPlay()

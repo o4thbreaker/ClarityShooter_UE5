@@ -30,7 +30,7 @@ enum class ECFaction : uint8
 
 /* global enum for combat state needed to dynamically decide what agent should do */
 UENUM(BlueprintType)
-enum class ECCombatStatae : uint8
+enum class ECCombatState : uint8
 {
 	SoftCover 				UMETA(DisplayName = "Soft Cover"),
 	ApproachingCover 		UMETA(DisplayName = "Approaching Cover"),
@@ -38,4 +38,13 @@ enum class ECCombatStatae : uint8
 	HoldCover 				UMETA(DisplayName = "Hold Cover"),
 	RetreatingToCover 		UMETA(DisplayName = "Retreating to Cover"),
 	Evade 					UMETA(DisplayName = "Evade"),
+};
+
+/* global enum for combat roles to divide behaviour. Probably will be refactored */
+UENUM(BlueprintType)
+enum class ECCombatRole : uint8
+{
+	Engager 					UMETA(DisplayName = "Engager"),
+	Defender 					UMETA(DisplayName = "Defender"),
+	Ambusher 					UMETA(DisplayName = "Ambusher"),
 };

@@ -12,6 +12,7 @@
 #include "Weapons/CWeaponSlotsComponent.h"
 #include "Weapons/CWeaponBase.h"
 #include "CGameplayTags.h"
+#include "AI/CAIManager.h"
 
 ACAICharacter::ACAICharacter()
 {
@@ -23,6 +24,7 @@ ACAICharacter::ACAICharacter()
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 	PerceptionTarget = "spine_02";
 	Faction = ECFaction::Enemy;
+	CombatRole = ECCombatRole::Engager;
 }
 
 void ACAICharacter::Initialize()
@@ -66,8 +68,8 @@ void ACAICharacter::OnHealthChanged(AActor* InstigatorActor, UCAttributeComponen
 			{
 				AIController->GetBrainComponent()->StopLogic(TEXT("Killed"));
 				AIController->ClearFocus(EAIFocusPriority::LastFocusPriority);
+				AIController->AIManager->RemoveAgent(AIController);
 				//AIController->GetAIPerceptionComponent()->DestroyComponent(true);
-				//AIController->AIManager->RemoveAgent(AIController);
 			}
 
 			GetMesh()->SetCollisionProfileName("Ragdoll");
@@ -142,7 +144,7 @@ bool ACAICharacter::GetAimOriginAndDirection(FVector& OutOrigin, FVector& OutDir
 {
 	if (!ensure(AIController)) return false;
 
-	AActor* TargetActor = AIController->GetCurrentTarget();
+	AActor* TargetActor = AIController->GetTargetActor();
 	if (TargetActor == nullptr)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("AI has no target"));

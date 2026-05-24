@@ -58,6 +58,9 @@ void ACAIController::BeginPlay()
 		FGameplayTag SubTag;
 		BTComponent->SetDynamicSubtree(SubTag, AICharacter->SmartObject->SubTree);
 	} 
+
+	// register combat role
+	GetBlackboardComponent()->SetValueAsEnum("CombatRole", (uint8)AICharacter->CombatRole);
 }
 
 void ACAIController::OnPossess(APawn* InPawn)
@@ -92,7 +95,11 @@ void ACAIController::OnPerception(AActor* SpottedActor, FAIStimulus Stimulus)
 
 			if (Stimulus.WasSuccessfullySensed())
 			{
-				SetTargetActor(SpottedActor);
+				if (GetBlackboardComponent()->GetValueAsEnum(TEXT("AIState")) != (uint8)ECAIState::Attack)
+				{
+					SetTargetActor(SpottedActor);
+				}
+
 				LastStimulusLocation = Stimulus.StimulusLocation;
 				StimulusTimeStamp = UKismetSystemLibrary::GetGameTimeInSeconds(GetWorld());
 			}
@@ -123,23 +130,6 @@ void ACAIController::OnPerception(AActor* SpottedActor, FAIStimulus Stimulus)
 		GetBlackboardComponent()->SetValueAsEnum(TEXT("AIState"), (uint8)ECAIState::Investigate);
 		GetBlackboardComponent()->SetValueAsVector(TEXT("MoveToLocation"), Stimulus.StimulusLocation);
 	}
-}
-
-void ACAIController::SetTargetActor(AActor* NewTarget)
-{
-	// if current state is not attacking
-	if (GetBlackboardComponent()->GetValueAsEnum(TEXT("AIState")) != (uint8)ECAIState::Attack)
-	{
-		GetBlackboardComponent()->SetValueAsObject(TEXT("TargetActor"), NewTarget);
-		//SetFocus(NewTarget);
-
-		Target = NewTarget;
-	}
-}
-
-AActor* ACAIController::GetCurrentTarget() const
-{
-	return Cast<AActor>(GetBlackboardComponent()->GetValueAsObject(TEXT("TargetActor")));
 }
 
 
@@ -189,5 +179,24 @@ void ACAIController::SetDetectionLevel()
 		GetBlackboardComponent()->SetValueAsEnum(TEXT("AIState"), (uint8)ECAIState::Investigate);
 		GetBlackboardComponent()->SetValueAsVector(TEXT("MoveToLocation"), LastStimulusLocation);
 	}
+}
+
+void ACAIController::SetShouldShootFromCover(bool ShouldShoot)
+{
+	if (GetBlackboardComponent()->GetValueAsEnum(TEXT("CombatState")) == (uint8)ECCombatState::HoldCover)
+	{
+		GetBlackboardComponent()->SetValueAsBool(TEXT("ShootFromCover"), ShouldShoot);
+	}
+}
+
+void ACAIController::SetTargetActor(AActor* NewTarget)
+{
+	GetBlackboardComponent()->SetValueAsObject(TEXT("TargetActor"), NewTarget);
+	Target = NewTarget;
+}
+
+AActor* ACAIController::GetTargetActor() const
+{
+	return Cast<AActor>(GetBlackboardComponent()->GetValueAsObject(TEXT("TargetActor")));
 }
 

@@ -19,6 +19,15 @@ public:
 	UPROPERTY(BlueprintReadonly, Category = "AI")
 	TArray<ACAIController*> Agents;
 
+	/* Array of agents that hold cover or repositioning */
+	TArray<ACAICharacter*> Defenders;
+
+	/* Agent that should provide cover fire for others */
+	ACAICharacter* AgentProvidingCoverFire;
+
+	/* One of the defenders that is currently repositioning */
+	int32 ApproacherIndex;
+
 	ACAIManager();
 
 	UFUNCTION()
@@ -30,6 +39,9 @@ public:
 
 	UFUNCTION()
 	void RemoveAgent(ACAIController* AgentToRemove); 
+
+	UFUNCTION(BlueprintCallable)
+	void RequestCoverFire(bool ShouldProvideCoverFire, ACAICharacter* RequestInstigator);
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI")

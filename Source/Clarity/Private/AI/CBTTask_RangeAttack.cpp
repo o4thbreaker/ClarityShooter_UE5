@@ -57,7 +57,7 @@ EBTNodeResult::Type UCBTTask_RangeAttack::ExecuteTask(UBehaviorTreeComponent& Ow
 		
 		/// \WARNING: we assume that the target is already set by SetAiming task 
 		
-		if (!MyController->GetCurrentTarget())
+		if (!MyController->GetTargetActor())
 		{
 			UE_LOG(LogTemp, Warning, TEXT("No target set. Aborting task."));
 			return EBTNodeResult::Failed;

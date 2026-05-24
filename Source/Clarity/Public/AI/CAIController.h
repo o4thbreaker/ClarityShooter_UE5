@@ -30,10 +30,15 @@ public:
 	UFUNCTION()
 	void OnPerception(AActor* SpottedActor, FAIStimulus Stimulus);
 
+	/* Sets TargetActor key */
 	UFUNCTION()
 	void SetTargetActor(AActor* NewTarget);
 
-	FORCEINLINE AActor* GetCurrentTarget() const;
+	/* Sets ShootFromCover key */
+	UFUNCTION(BlueprintCallable)
+	void SetShouldShootFromCover(bool ShouldShoot);
+
+	FORCEINLINE AActor* GetTargetActor() const;
 	FORCEINLINE float GetStimulusTimeStamp() const { return StimulusTimeStamp; };
 	FORCEINLINE ACAICharacter* GetAICharacter() const { return AICharacter; };
 

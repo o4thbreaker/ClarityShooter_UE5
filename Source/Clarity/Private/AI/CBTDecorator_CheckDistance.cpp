@@ -22,11 +22,12 @@ bool UCBTDecorator_CheckDistance::CalculateRawConditionValue(UBehaviorTreeCompon
 
 	if (!ensure(MyController) || !ensure(MyBlackboard)) return false;
 
-	AActor* Enemy = Cast<AActor>(MyBlackboard->GetValueAsObject(BlackboardKey.SelectedKeyName));
-	if (!Enemy) return false;
+	/// \NOTE: do not call GetCurrentTarget, because we can provide other targets, such as cover
+	AActor* Target = Cast<AActor>(MyBlackboard->GetValueAsObject(BlackboardKey.SelectedKeyName));
+	if (!Target) return false;
 
 	// if distance from this ai to enemt is greater than DistanceToCheck - return true
-	if (MyController->GetPawn()->GetDistanceTo(Enemy) >= DistanceToCheck) return true;
+	if (MyController->GetPawn()->GetDistanceTo(Target) >= DistanceToCheck) return true;
 
 	return false;
 }
