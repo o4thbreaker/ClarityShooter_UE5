@@ -3,7 +3,8 @@
 
 #include "AI/CBTService_CheckAmmoLevel.h"
 #include "BehaviorTree/BlackboardComponent.h"
-#include "AIController.h"
+#include "AI/CAIController.h"
+#include "AI/CAICharacter.h"
 #include "Weapons/CWeaponSlotsComponent.h"
 #include "Weapons/CWeaponBase.h"
 
@@ -13,13 +14,13 @@ void UCBTService_CheckAmmoLevel::TickNode(UBehaviorTreeComponent& OwnerComp, uin
 
 	Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);
 
-	AAIController* MyController = OwnerComp.GetAIOwner();
-	if (ensure(MyController))
+	ACAIController* AIController = Cast<ACAIController>(OwnerComp.GetAIOwner());
+	if (ensure(AIController))
 	{	
-		APawn* AIPawn = MyController->GetPawn();
-		if (ensure(AIPawn))
+		ACAICharacter* AICharacter = AIController->GetAICharacter();
+		if (ensure(AICharacter))
 		{
-			UCWeaponSlotsComponent* WeaponSlotsComponent = AIPawn->FindComponentByClass<UCWeaponSlotsComponent>();
+			UCWeaponSlotsComponent* WeaponSlotsComponent = AICharacter->GetWeaponSlotsComponent();
 			if (WeaponSlotsComponent == nullptr)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Couldn't find WeaponSlotsComponent on AI. Aborting service!"));
@@ -33,11 +34,15 @@ void UCBTService_CheckAmmoLevel::TickNode(UBehaviorTreeComponent& OwnerComp, uin
 				return;
 			}
 
-			if (ensureMsgf(Weapon->GetWeaponData(), TEXT("WeaponData for %s, that is used by %s is not provided. Please provide it in Weapon's Blueprint"), *GetNameSafe(Weapon), *GetNameSafe(AIPawn)))
+			if (ensureMsgf(Weapon->GetWeaponData(), TEXT("WeaponData for %s, that is used by %s is not provided. Please provide it in Weapon's Blueprint"), *GetNameSafe(Weapon), *GetNameSafe(AICharacter)))
 			{
 				float CurrentAmmoPercentage = (Weapon->GetCurrentAmmoCount() / (float)Weapon->GetWeaponData()->MagazineSize) * 100.0f;
+				uint8 CurrentCombatState = BlackboardComponent->GetValueAsEnum(TEXT("CombatState"));
 
-				BlackboardComponent->SetValueAsBool(LowAmmoKey.SelectedKeyName, CurrentAmmoPercentage <= LowAmmoPercentage);
+				if (CurrentAmmoPercentage <= LowAmmoPercentage && CurrentCombatState != (uint8)ECCombatState::NeedToReload)
+				{
+					BlackboardComponent->SetValueAsEnum(TEXT("CombatState"), (uint8)ECCombatState::NeedToReload);
+				}
 			}
 		}
 	}

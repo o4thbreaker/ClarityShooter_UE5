@@ -30,7 +30,7 @@ EBTNodeResult::Type UCBTTask_StopAiming::ExecuteTask(UBehaviorTreeComponent& Own
 			return EBTNodeResult::Failed;
 		}*/
 
-		UCActionComponent* ActionComponent = Owner->FindComponentByClass<UCActionComponent>();
+		UCActionComponent* ActionComponent = Owner->GetActionComponent();
 
 		if (ActionComponent == nullptr)
 		{

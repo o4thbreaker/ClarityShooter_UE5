@@ -42,14 +42,14 @@ EBTNodeResult::Type UCBTTask_RangeAttack::ExecuteTask(UBehaviorTreeComponent& Ow
 			return EBTNodeResult::Failed;
 		}*/
 
-		Memory->OwnerActionComponent = Memory->Owner->FindComponentByClass<UCActionComponent>();
+		Memory->OwnerActionComponent = Memory->Owner->GetActionComponent();
 
 		if (Memory->OwnerActionComponent == nullptr )
 		{
 			return EBTNodeResult::Failed;
 		}
 
-		Memory->OwnerWeaponSlotsComponent = Memory->Owner->FindComponentByClass<UCWeaponSlotsComponent>();
+		Memory->OwnerWeaponSlotsComponent = Memory->Owner->GetWeaponSlotsComponent();
 		if (Memory->OwnerWeaponSlotsComponent == nullptr)
 		{
 			return EBTNodeResult::Failed;

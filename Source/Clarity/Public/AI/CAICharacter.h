@@ -70,6 +70,7 @@ public:
 	FORCEINLINE void SetIsCombat(bool bNewIsCombat) { AnimState.bIsCombat = bNewIsCombat; }
 	FORCEINLINE UBehaviorTree* GetBehaviorTree() const { return BehaviorTree; }
 	FORCEINLINE UCActionComponent* GetActionComponent() const { return ActionComponent; }
+	FORCEINLINE UCWeaponSlotsComponent* GetWeaponSlotsComponent() const { return WeaponSlotsComponent; }
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")

@@ -3,7 +3,6 @@
 
 #include "AI/CBTTask_StartAiming.h"
 #include "AIController.h"
-#include "GameFramework/Character.h"
 #include "ActionSystem/CActionComponent.h"
 #include "CGameplayTags.h"
 #include "AI/CAICharacter.h"
@@ -36,7 +35,7 @@ EBTNodeResult::Type UCBTTask_StartAiming::ExecuteTask(UBehaviorTreeComponent& Ow
 			return EBTNodeResult::Succeeded;
 		}
 
-		UCActionComponent* ActionComponent = Owner->FindComponentByClass<UCActionComponent>();
+		UCActionComponent* ActionComponent = Owner->GetActionComponent();
 
 		if (ActionComponent == nullptr)
 		{

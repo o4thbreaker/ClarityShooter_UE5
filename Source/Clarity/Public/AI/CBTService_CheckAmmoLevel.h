@@ -23,7 +23,7 @@ protected:
 	float LowAmmoPercentage;
 
 	UPROPERTY(EditAnywhere, Category = "AI")
-	FBlackboardKeySelector LowAmmoKey;
+	FBlackboardKeySelector ReloadStateKey;
 
 	virtual void TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
 };

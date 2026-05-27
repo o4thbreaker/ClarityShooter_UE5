@@ -90,8 +90,8 @@ void UCAction_Shoot::StartAction_Implementation(AActor* Instigator)
 		{
 			PlayImpactEffect(Instigator, Weapon, HitResult.Location);
 
-			DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 2.0f);
-			DrawDebugPoint(GetWorld(), HitResult.Location, 4.0f, FColor::Blue, false, 2.0f);
+			//DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 2.0f);
+			//DrawDebugPoint(GetWorld(), HitResult.Location, 4.0f, FColor::Blue, false, 2.0f);
 		}
 
 		/* trace from weapon to hit location */
@@ -104,12 +104,13 @@ void UCAction_Shoot::StartAction_Implementation(AActor* Instigator)
 		GetWorld()->LineTraceSingleByChannel(WeaponTraceHit, WeaponStart, WeaponEnd, ECollisionChannel::ECC_GameTraceChannel1, Params);
 		if (WeaponTraceHit.bBlockingHit)
 		{
-			DrawDebugLine(GetWorld(), WeaponStart, WeaponEnd, FColor::Yellow, false, 2.0f);
+			//DrawDebugLine(GetWorld(), WeaponStart, WeaponEnd, FColor::Yellow, false, 2.0f);
 			DrawDebugPoint(GetWorld(), WeaponTraceHit.Location, 4.0f, FColor::Magenta, false, 2.0f);
 
 			AActor* HitActor = WeaponTraceHit.GetActor();
 			if (IsValid(HitActor))
 			{
+				UE_LOG(LogTemp, Log, TEXT("Hit: %s"), *WeaponTraceHit.BoneName.ToString());
 				UCAttributeComponent* AttributeComponent = UCAttributeComponent::GetAttributes(HitActor);
 				if (AttributeComponent)
 				{

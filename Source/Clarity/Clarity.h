@@ -38,6 +38,7 @@ enum class ECCombatState : uint8
 	HoldCover 				UMETA(DisplayName = "Hold Cover"),
 	RetreatingToCover 		UMETA(DisplayName = "Retreating to Cover"),
 	Evade 					UMETA(DisplayName = "Evade"),
+	NeedToReload 			UMETA(DisplayName = "Need to Reload"),
 };
 
 /* global enum for combat roles to divide behaviour. Probably will be refactored */

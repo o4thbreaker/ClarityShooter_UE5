@@ -46,25 +46,19 @@ void UCBTTask_SelectCover::CoverSeekerQueryFinished(TSharedPtr<FEnvQueryResult> 
 			ACCoverActor* Cover = Cast<ACCoverActor>(Actor);
 			if (Cover )
 			{
-				if (Cover->GetDistanceTo(Target) >= DesiredDistance)
+				if (Cover->GetDistanceTo(Target) >= DesiredDistance && Cover->bIsCoverAvailable && Cover->CurrentCharacter == nullptr)
 				{
-					if (Cover->bIsCoverAvailable)
+					const float ActorToTargetDistance = AIController->GetAICharacter()->GetDistanceTo(Target);
+					const float CoverToTargetDistance = Cover->GetDistanceTo(Target);
+					const float AgentToCoverDistance = AIController->GetAICharacter()->GetDistanceTo(Cover);
+
+					/// \NOTE: check the Tactical Position Selection from Matthew Jack' book Game AI Pro
+					const float CalculatedDirectness = (ActorToTargetDistance - CoverToTargetDistance) / AgentToCoverDistance;
+
+					if (Result->GetItemScore(Index) > CurrentBestScore && CalculatedDirectness > DesiredDirectness)
 					{
-						if (Cover->CurrentCharacter == nullptr)
-						{
-							const float ActorToTargetDistance = AIController->GetAICharacter()->GetDistanceTo(Target);
-							const float CoverToTargetDistance = Cover->GetDistanceTo(Target);
-							const float AgentToCoverDistance = AIController->GetAICharacter()->GetDistanceTo(Cover);
-
-							/// \NOTE: check the Tactical Position Selection from Matthew Jack' book Game AI Pro
-							const float CalculatedDirectness = (ActorToTargetDistance - CoverToTargetDistance) / AgentToCoverDistance;
-
-							if (Result->GetItemScore(Index) > CurrentBestScore && CalculatedDirectness > DesiredDirectness)
-							{
-								SelectedCover = Cover;
-								CurrentBestScore = Result->GetItemScore(Index);
-							}
-						}
+						SelectedCover = Cover;
+						CurrentBestScore = Result->GetItemScore(Index);
 					}
 				}
 			}
