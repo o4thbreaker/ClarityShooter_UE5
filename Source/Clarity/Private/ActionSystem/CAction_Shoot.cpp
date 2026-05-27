@@ -75,7 +75,7 @@ void UCAction_Shoot::StartAction_Implementation(AActor* Instigator)
 	if (bIsCrosshairTranslated)
 	{
 		// from crosshair to direction of crosshair
-		FHitResult HitResult;
+		FHitResult CrosshairHitResult;
 		FVector Start = CrosshairWorldPosition;
 		/// \TODO: fix the magic number
 		FVector End = Start + CrosshairWorldDirection * 60000.0f;
@@ -83,34 +83,42 @@ void UCAction_Shoot::StartAction_Implementation(AActor* Instigator)
 		FCollisionQueryParams Params;
 		Params.AddIgnoredActor(Instigator);
 		Params.AddIgnoredActor(Weapon);
+		// need to consider what part of body we hit
+		Params.bReturnPhysicalMaterial = true;
 
-		GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECollisionChannel::ECC_GameTraceChannel1, Params);
+		GetWorld()->LineTraceSingleByChannel(CrosshairHitResult, Start, End, ECollisionChannel::ECC_GameTraceChannel1, Params);
 
-		if (HitResult.bBlockingHit)
+		//DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 2.0f);
+		//DrawDebugPoint(GetWorld(), CrosshairHitResult.Location, 4.0f, FColor::Blue, false, 2.0f);
+		
+		if (CrosshairHitResult.bBlockingHit)
 		{
-			PlayImpactEffect(Instigator, Weapon, HitResult.Location);
-
-			//DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 2.0f);
-			//DrawDebugPoint(GetWorld(), HitResult.Location, 4.0f, FColor::Blue, false, 2.0f);
+			PlayImpactEffect(Instigator, Weapon, CrosshairHitResult.Location);
 		}
 
 		/* trace from weapon to hit location */
-		FHitResult WeaponTraceHit;
+		FHitResult WeaponHitResult;
 
 		const FVector WeaponStart = SocketTransform.GetLocation();
-		FVector WeaponEnd = HitResult.bBlockingHit ? HitResult.Location : End;
+		/// \NOTE: due to floating point precision WeaponEnd can be coincided exactly with the surface point from CrosshairHitResult
+		///		   and UE can sometimes not register the intersection
+		FVector WeaponEnd = CrosshairHitResult.bBlockingHit ? CrosshairHitResult.Location : End;
+
+		/// \NOTE: so we have to adjust it by small number to make a difference
+		FVector WeaponDirection = (WeaponEnd - WeaponStart).GetSafeNormal();
+		FVector AdjustedEnd = CrosshairHitResult.bBlockingHit ? CrosshairHitResult.Location + WeaponDirection * 10.0f : End;
 
 		// ECC_GameTraceChannel1 = Bullet
-		GetWorld()->LineTraceSingleByChannel(WeaponTraceHit, WeaponStart, WeaponEnd, ECollisionChannel::ECC_GameTraceChannel1, Params);
-		if (WeaponTraceHit.bBlockingHit)
-		{
-			//DrawDebugLine(GetWorld(), WeaponStart, WeaponEnd, FColor::Yellow, false, 2.0f);
-			DrawDebugPoint(GetWorld(), WeaponTraceHit.Location, 4.0f, FColor::Magenta, false, 2.0f);
+		GetWorld()->LineTraceSingleByChannel(WeaponHitResult, WeaponStart, AdjustedEnd, ECollisionChannel::ECC_GameTraceChannel1, Params);
 
-			AActor* HitActor = WeaponTraceHit.GetActor();
+		DrawDebugLine(GetWorld(), WeaponStart, AdjustedEnd, FColor::Yellow, false, 2.0f);
+		DrawDebugPoint(GetWorld(), WeaponHitResult.Location, 4.0f, FColor::Magenta, false, 2.0f);
+
+		if (WeaponHitResult.bBlockingHit)
+		{
+			AActor* HitActor = WeaponHitResult.GetActor();
 			if (IsValid(HitActor))
 			{
-				UE_LOG(LogTemp, Log, TEXT("Hit: %s"), *WeaponTraceHit.BoneName.ToString());
 				UCAttributeComponent* AttributeComponent = UCAttributeComponent::GetAttributes(HitActor);
 				if (AttributeComponent)
 				{
