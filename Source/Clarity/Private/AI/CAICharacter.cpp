@@ -13,12 +13,14 @@
 #include "Weapons/CWeaponBase.h"
 #include "CGameplayTags.h"
 #include "AI/CAIManager.h"
+#include "CHitReactionComponent.h"
 
 ACAICharacter::ACAICharacter()
 {
 	AttributeComponent = CreateDefaultSubobject<UCAttributeComponent>(TEXT("AttributeComponent"));
 	ActionComponent = CreateDefaultSubobject<UCActionComponent>(TEXT("ActionComponent"));
 	WeaponSlotsComponent = CreateDefaultSubobject<UCWeaponSlotsComponent>(TEXT("WeaponSlotsComponent"));
+	HitReactionComponent = CreateDefaultSubobject<UCHitReactionComponent>(TEXT("HitReactionComponent"));
 
 	/* ========= DEFAULT VALUES ========= */
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;

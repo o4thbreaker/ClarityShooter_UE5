@@ -15,6 +15,7 @@ class UCWeaponSlotsComponent;
 class ACSmartObject;
 class UBehaviorTree;
 class ACAIController;
+class UCHitReactionComponent;
 
 USTRUCT(BlueprintType)
 struct FAnimStates
@@ -81,6 +82,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UCWeaponSlotsComponent* WeaponSlotsComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UCHitReactionComponent* HitReactionComponent;
 	
 	/* will be run in Controller class */
 	UPROPERTY(EditDefaultsOnly, Category = "AI")

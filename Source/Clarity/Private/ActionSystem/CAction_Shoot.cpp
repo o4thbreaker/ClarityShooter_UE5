@@ -13,6 +13,7 @@
 #include "CGameplayTags.h"
 #include "CAttributeComponent.h"
 #include "CShooterInterface.h"
+#include "CHitReactionComponent.h"
 
 void UCAction_Shoot::Initialize(UCActionComponent* NewActionComponent)
 {
@@ -100,6 +101,7 @@ void UCAction_Shoot::StartAction_Implementation(AActor* Instigator)
 		FHitResult WeaponHitResult;
 
 		const FVector WeaponStart = SocketTransform.GetLocation();
+
 		/// \NOTE: due to floating point precision WeaponEnd can be coincided exactly with the surface point from CrosshairHitResult
 		///		   and UE can sometimes not register the intersection
 		FVector WeaponEnd = CrosshairHitResult.bBlockingHit ? CrosshairHitResult.Location : End;
@@ -123,6 +125,15 @@ void UCAction_Shoot::StartAction_Implementation(AActor* Instigator)
 				if (AttributeComponent)
 				{
 					AttributeComponent->ApplyHealthChange(Instigator, -Weapon->GetWeaponData()->Damage);
+
+					/// \WARNING:: testing only!!!! refactor later
+					UCHitReactionComponent* HitReactionComponent = Cast<UCHitReactionComponent>(HitActor->FindComponentByClass(UCHitReactionComponent::StaticClass()));
+
+					if (HitReactionComponent)
+					{
+						UE_LOG(LogTemp, Log, TEXT("HitBone to React: %s"), *WeaponHitResult.BoneName.ToString());
+						HitReactionComponent->HitReaction(WeaponHitResult);
+					}
 				}
 			}
 		}
