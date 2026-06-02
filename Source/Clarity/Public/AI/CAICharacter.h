@@ -98,7 +98,7 @@ protected:
 	ECFaction Faction;
 
 	UFUNCTION()
-	void OnHealthChanged(AActor* InstigatorActor, UCAttributeComponent* OwningComp, float NewHealth, float Delta);
+	void OnHealthChanged(AActor* InstigatorActor, UCAttributeComponent* OwningComp, float NewHealth, FHealthChangeInfo HealthChangeInfo);
 
 	virtual void BeginPlay() override;
 

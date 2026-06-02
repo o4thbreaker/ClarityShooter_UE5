@@ -6,7 +6,20 @@
 #include "Components/ActorComponent.h"
 #include "CAttributeComponent.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnHealthChanged, AActor*, Instigator, UCAttributeComponent*, OwningComponent, float, NewHealth, float, Delta);
+USTRUCT(BlueprintType)
+struct FHealthChangeInfo
+{
+	GENERATED_BODY()
+
+public:
+	float HealthDelta;
+
+	FHitResult Hit;
+	float KnockbackTime;
+	float KnockbackForce;
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnHealthChanged, AActor*, Instigator, UCAttributeComponent*, OwningComponent, float, NewHealth, FHealthChangeInfo, HealthChangeInfo);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class CLARITY_API UCAttributeComponent : public UActorComponent
@@ -20,7 +33,7 @@ public:
 	FOnHealthChanged OnHealthChanged;
 
 	UFUNCTION(BlueprintCallable, Category = "Attributes")
-	bool ApplyHealthChange(AActor* InstigatorActor, float Delta);
+	bool ApplyHealthChange(AActor* InstigatorActor, FHealthChangeInfo HeathChangeInfo);
 
 	UFUNCTION(BlueprintCallable)
 	bool Kill(AActor* InstigatorActor);
@@ -46,8 +59,8 @@ protected:
 	float MaxHealth;
 
 	UFUNCTION(NetMulticast, Reliable)
-	void MulticastHealthChanged(AActor* InstigatorActor, float NewHealth, float Delta);
+	void MulticastHealthChanged(AActor* InstigatorActor, float NewHealth, FHealthChangeInfo HeathChangeInfo);
 
-	virtual void BeginPlay() override;
-		
+	UFUNCTION(Category = "Attributes")
+	bool HandleDamage(AActor* InstigatorActor, FHealthChangeInfo HeathChangeInfo);
 };

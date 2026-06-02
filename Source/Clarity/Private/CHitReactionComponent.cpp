@@ -3,6 +3,7 @@
 #include "CHitReactionComponent.h"
 #include "PhysicsEngine/PhysicalAnimationComponent.h"
 #include "GameFramework/Character.h"
+#include "CAttributeComponent.h"
 
 UCHitReactionComponent::UCHitReactionComponent()
 {
@@ -12,7 +13,6 @@ UCHitReactionComponent::UCHitReactionComponent()
 	HitReactionTimeRemaining = 0.f;
 	CoreBodyName = FName("pelvis");
 	ProfileName = FName("HitReaction");
-	KnockbackTime = 1.0f;
 }
 
 void UCHitReactionComponent::BeginPlay()
@@ -27,15 +27,18 @@ void UCHitReactionComponent::BeginPlay()
 	if (!ensureAlwaysMsgf(PhysicalAnimationComponent, TEXT("PhysicalAnimationComponent is null")) || !ensureAlwaysMsgf(OwnerMeshComponent, TEXT("OwnerMeshComponent is null"))) return;
 
 	PhysicalAnimationComponent->SetSkeletalMeshComponent(OwnerMeshComponent);
+	PhysicalAnimationComponent->SetComponentTickEnabled(false);
+
+	UCAttributeComponent* OwnerAttributes = UCAttributeComponent::GetAttributes(GetOwner());
+	if (OwnerAttributes)
+	{
+		OwnerAttributes->OnHealthChanged.AddDynamic(this, &UCHitReactionComponent::OnOwnerHealthChanged);
+	}
 }
 
 void UCHitReactionComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	UE_LOG(LogTemp, Warning, TEXT("PAC Tick: BoneSpaceTransforms.Num() = %d, TimeRemaining = %f"),
-		OwnerMeshComponent->GetBoneSpaceTransforms().Num(),
-		HitReactionTimeRemaining);
 
 	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Yellow, FString::Printf(TEXT("%f"), HitReactionTimeRemaining));
 
@@ -50,6 +53,7 @@ void UCHitReactionComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 
 		OwnerMeshComponent->SetAllBodiesBelowSimulatePhysics(CoreBodyName, false, true);
 		SetComponentTickEnabled(false);
+		PhysicalAnimationComponent->SetComponentTickEnabled(false);
 		OwnerMeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	}
 	else
@@ -63,19 +67,15 @@ void UCHitReactionComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	}
 }
 
-void UCHitReactionComponent::HitReaction(FHitResult Hit)
+void UCHitReactionComponent::PerformHitReaction(FHitResult Hit, float KnockbackTime, float KnockbackForce)
 {
+	UE_LOG(LogTemp, Log, TEXT("HitBone to React: %s"), *Hit.BoneName.ToString());
+
 	SetComponentTickEnabled(true);
 
 	// setting it to lerp back to zero in tick
 	HitReactionTimeRemaining += KnockbackTime;
 
-	PendingHit = Hit;
-	GetWorld()->GetTimerManager().SetTimerForNextTick(this, &UCHitReactionComponent::ApplyHitPhysics);
-}
-
-void UCHitReactionComponent::ApplyHitPhysics()
-{
 	OwnerMeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
 	PhysicalAnimationComponent->ApplyPhysicalAnimationProfileBelow(CoreBodyName, ProfileName, false, false);
@@ -87,12 +87,14 @@ void UCHitReactionComponent::ApplyHitPhysics()
 	FName HitBoneName;
 
 	/// \TODO: maybe should be not pelvis but CoreBodyName but I have to make sure that FIXME is wrong
-	PendingHit.BoneName == FName("pelvis") ? HitBoneName = FName("spine_02") : HitBoneName = PendingHit.BoneName;
+	Hit.BoneName == FName("pelvis") ? HitBoneName = FName("spine_02") : HitBoneName = Hit.BoneName;
 
-	/// \TODO: fix the magic number
-	FVector ImpulseVector = (PendingHit.TraceEnd - PendingHit.TraceStart).GetSafeNormal() * 5000.f;
+	FVector ImpulseVector = (Hit.TraceEnd - Hit.TraceStart).GetSafeNormal() * KnockbackForce;
 	OwnerMeshComponent->AddImpulse(ImpulseVector, HitBoneName, true);
+	PhysicalAnimationComponent->SetComponentTickEnabled(true);
 }
 
-
-
+void UCHitReactionComponent::OnOwnerHealthChanged(AActor* InstigatorActor, UCAttributeComponent* OwningComp, float NewHealth, FHealthChangeInfo HealthChangeInfo)
+{
+	PerformHitReaction(HealthChangeInfo.Hit, HealthChangeInfo.KnockbackTime, HealthChangeInfo.KnockbackForce);
+}

@@ -12,7 +12,7 @@ class UParticleSystem;
 class USoundCue;
 
 /**
- * 
+ * Class that stores data for weapon
  */
 UCLASS()
 class CLARITY_API UCWeaponData : public UPrimaryDataAsset
@@ -20,16 +20,15 @@ class CLARITY_API UCWeaponData : public UPrimaryDataAsset
 	GENERATED_BODY()
 	
 public:
+	/// \NOTE: recoil is procedural for now
+	//UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Animation")
+	//UAnimMontage* FireMontage;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Info")
 	FName WeaponName;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Info")
 	TSubclassOf<ACWeaponBase> WeaponClass;
-
-	/// \NOTE: recoil is procedural for now
-	//UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Animation")
-	//UAnimMontage* FireMontage;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Animation")
 	UAnimMontage* ReloadMontage;
@@ -52,4 +51,16 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Stats")
 	int32 MagazineSize;
+
+	/* how long (in seconds) it takes for victim to return to the original state*/
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Stats")
+	float KnockbackTime;
+
+	/* how hard should victim react to the shot */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Stats")
+	float KnockbackForce;
+
+	/* how far should bullet go */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Stats")
+	float ShotRange;
 };

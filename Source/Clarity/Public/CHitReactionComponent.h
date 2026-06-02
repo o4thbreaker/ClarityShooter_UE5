@@ -21,14 +21,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HitReaction")
 	FName ProfileName;
 
-	/* Time to be part of body is being rag (in seconds)*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HitReaction")
-	float KnockbackTime;
-
 	UCHitReactionComponent();
 
-	UFUNCTION(BlueprintCallable, Category = "HitReaction")
-	void HitReaction(FHitResult Hit);
 
 protected:
 	UPROPERTY(BlueprintReadonly, Category = "Components")
@@ -41,12 +35,12 @@ protected:
 
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	UFUNCTION(BlueprintCallable, Category = "HitReaction")
+	void PerformHitReaction(FHitResult Hit, float KnockbackTime, float KnockbackForce);
+
+	UFUNCTION()
+	void OnOwnerHealthChanged(AActor* InstigatorActor, UCAttributeComponent* OwningComp, float NewHealth, FHealthChangeInfo HealthChangeInfo);
+
 private:
 	float HitReactionTimeRemaining;
-
-	FTimerHandle HitReactionTimerHandle;
-
-	FHitResult PendingHit;
-
-	void ApplyHitPhysics();
 };

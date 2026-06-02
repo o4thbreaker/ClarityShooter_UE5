@@ -48,13 +48,10 @@ void ACAICharacter::PostInitializeComponents()
 	AttributeComponent->OnHealthChanged.AddDynamic(this, &ACAICharacter::OnHealthChanged);
 }
 
-void ACAICharacter::OnHealthChanged(AActor* InstigatorActor, UCAttributeComponent* OwningComp, float NewHealth, float Delta)
+void ACAICharacter::OnHealthChanged(AActor* InstigatorActor, UCAttributeComponent* OwningComp, float NewHealth, FHealthChangeInfo HealthChangeInfo)
 {
-	if (Delta < 0.0f)
+	if (HealthChangeInfo.HealthDelta < 0.0f)
 	{
-		FString OuchString = FString::Printf(TEXT("OUCH: %f"), Delta);
-		DrawDebugString(GetWorld(), GetActorLocation() + FVector(0, 10, 0), OuchString, nullptr, FColor::Red, 1.5f, true);
-		UE_LOG(LogTemp, Log, TEXT("%f"), Delta);
 
 		/// \TODO: refactor to a callback to Damage Sense
 

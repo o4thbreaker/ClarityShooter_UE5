@@ -15,6 +15,8 @@
 #include "CShooterInterface.h"
 #include "CHitReactionComponent.h"
 
+static TAutoConsoleVariable<bool> CVarDrawDebugShootLines(TEXT("art.ShootDrawDebug"), false, TEXT("Enable Debug Lines for shooting"), ECVF_Cheat);
+
 void UCAction_Shoot::Initialize(UCActionComponent* NewActionComponent)
 {
 	Super::Initialize(NewActionComponent);
@@ -78,8 +80,7 @@ void UCAction_Shoot::StartAction_Implementation(AActor* Instigator)
 		// from crosshair to direction of crosshair
 		FHitResult CrosshairHitResult;
 		FVector Start = CrosshairWorldPosition;
-		/// \TODO: fix the magic number
-		FVector End = Start + CrosshairWorldDirection * 60000.0f;
+		FVector End = Start + CrosshairWorldDirection * Weapon->GetWeaponData()->ShotRange;
 		
 		FCollisionQueryParams Params;
 		Params.AddIgnoredActor(Instigator);
@@ -89,8 +90,12 @@ void UCAction_Shoot::StartAction_Implementation(AActor* Instigator)
 
 		GetWorld()->LineTraceSingleByChannel(CrosshairHitResult, Start, End, ECollisionChannel::ECC_GameTraceChannel1, Params);
 
-		//DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 2.0f);
-		//DrawDebugPoint(GetWorld(), CrosshairHitResult.Location, 4.0f, FColor::Blue, false, 2.0f);
+		bool bIsDrawDebug = CVarDrawDebugShootLines.GetValueOnGameThread();
+		if (bIsDrawDebug)
+		{
+			DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 2.0f);
+			DrawDebugPoint(GetWorld(), CrosshairHitResult.Location, 4.0f, FColor::Blue, false, 2.0f);
+		}
 		
 		if (CrosshairHitResult.bBlockingHit)
 		{
@@ -113,9 +118,12 @@ void UCAction_Shoot::StartAction_Implementation(AActor* Instigator)
 		// ECC_GameTraceChannel1 = Bullet
 		GetWorld()->LineTraceSingleByChannel(WeaponHitResult, WeaponStart, AdjustedEnd, ECollisionChannel::ECC_GameTraceChannel1, Params);
 
-		DrawDebugLine(GetWorld(), WeaponStart, AdjustedEnd, FColor::Yellow, false, 2.0f);
-		DrawDebugPoint(GetWorld(), WeaponHitResult.Location, 4.0f, FColor::Magenta, false, 2.0f);
-
+		if (bIsDrawDebug)
+		{
+			DrawDebugLine(GetWorld(), WeaponStart, AdjustedEnd, FColor::Yellow, false, 2.0f);
+			DrawDebugPoint(GetWorld(), WeaponHitResult.Location, 4.0f, FColor::Magenta, false, 2.0f);
+		}
+		
 		if (WeaponHitResult.bBlockingHit)
 		{
 			AActor* HitActor = WeaponHitResult.GetActor();
@@ -124,16 +132,13 @@ void UCAction_Shoot::StartAction_Implementation(AActor* Instigator)
 				UCAttributeComponent* AttributeComponent = UCAttributeComponent::GetAttributes(HitActor);
 				if (AttributeComponent)
 				{
-					AttributeComponent->ApplyHealthChange(Instigator, -Weapon->GetWeaponData()->Damage);
+					FHealthChangeInfo HealthChangeInfo;
+					HealthChangeInfo.HealthDelta = -Weapon->GetWeaponData()->Damage;
+					HealthChangeInfo.Hit = WeaponHitResult;
+					HealthChangeInfo.KnockbackForce = Weapon->GetWeaponData()->KnockbackForce;
+					HealthChangeInfo.KnockbackTime = Weapon->GetWeaponData()->KnockbackTime;
 
-					/// \WARNING:: testing only!!!! refactor later
-					UCHitReactionComponent* HitReactionComponent = Cast<UCHitReactionComponent>(HitActor->FindComponentByClass(UCHitReactionComponent::StaticClass()));
-
-					if (HitReactionComponent)
-					{
-						UE_LOG(LogTemp, Log, TEXT("HitBone to React: %s"), *WeaponHitResult.BoneName.ToString());
-						HitReactionComponent->HitReaction(WeaponHitResult);
-					}
+					AttributeComponent->ApplyHealthChange(Instigator, HealthChangeInfo);
 				}
 			}
 		}
