@@ -8,41 +8,34 @@
 
 UCAction_Sprint::UCAction_Sprint()
 {
-	SprintSpeed = 500.0f;
-	SprintInterpolationTime = 5.0f;
+	SprintSpeed = 600.0f;
+	BufferSpeed = 0.f;
 }
 
 void UCAction_Sprint::StartAction_Implementation(AActor* Instigator)
 {
 	Super::StartAction_Implementation(Instigator);
 
-	Owner = Cast<ACharacter>(Instigator);
+	ACharacter* Owner = Cast<ACharacter>(Instigator);
 
-	TargetSpeed = SprintSpeed;
-
-	if (!GetWorld()->GetTimerManager().IsTimerActive(SprintTimerHandle))
+	if (Owner)
 	{
-		GetWorld()->GetTimerManager().SetTimer(SprintTimerHandle, this, &UCAction_Sprint::Accelerate, GetWorld()->GetDeltaSeconds(), true);
+		// store original speed
+		BufferSpeed = Owner->GetCharacterMovement()->MaxWalkSpeed;
+
+		// accelerate
+		Owner->GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
 	}
 }
 
 void UCAction_Sprint::StopAction_Implementation(AActor* Instigator)
 {
-	TargetSpeed = Owner->GetCharacterMovement()->MaxWalkSpeed;
-	
-	Super::StopAction_Implementation(Instigator);
-}
+	ACharacter* Owner = Cast<ACharacter>(Instigator);
 
-void UCAction_Sprint::Accelerate()
-{
-	float CurrentSpeed = Owner->GetCharacterMovement()->MaxWalkSpeed;
-	float NewSpeed = FMath::FInterpTo(CurrentSpeed, TargetSpeed, GetWorld()->GetDeltaSeconds(), SprintInterpolationTime);
-
-	Owner->GetCharacterMovement()->MaxWalkSpeed = NewSpeed;
-
-	if (FMath::IsNearlyEqual(NewSpeed, TargetSpeed, 1.f))
+	if (Owner)
 	{
-		Owner->GetCharacterMovement()->MaxWalkSpeed = TargetSpeed;
-		GetWorld()->GetTimerManager().ClearTimer(SprintTimerHandle);
+		Owner->GetCharacterMovement()->MaxWalkSpeed = BufferSpeed;
 	}
+
+	Super::StopAction_Implementation(Instigator);
 }

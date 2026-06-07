@@ -24,17 +24,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Sprint")
 	float SprintSpeed;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Sprint")
-	float SprintInterpolationTime;
-
-	UPROPERTY()
-	ACharacter* Owner;
-
-	/* value to interpolate to (sprint or default)*/
-	float TargetSpeed;
-
-	FTimerHandle SprintTimerHandle;
-
-	UFUNCTION()
-	void Accelerate();
+	/* temporary value to store original speed*/
+	float BufferSpeed;
 };

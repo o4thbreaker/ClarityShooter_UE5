@@ -71,7 +71,6 @@ ACPlayerCharacter::ACPlayerCharacter()
 
 	// set aiming setting
 	bIsAiming = false;
-
 	/// \NOTE: camera's aim FOV is set in CAction_AimCamera;
 
 	Faction = ECFaction::Ally;
@@ -80,12 +79,8 @@ ACPlayerCharacter::ACPlayerCharacter()
 void ACPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	// set up action bindings
-	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
-
-		// jumping
-		EnhancedInputComponent->BindAction(InputActions.JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
-		EnhancedInputComponent->BindAction(InputActions.JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
-
+	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) 
+	{
 		// moving
 		EnhancedInputComponent->BindAction(InputActions.MoveAction, ETriggerEvent::Triggered, this, &ACPlayerCharacter::Move);
 
