@@ -4,39 +4,47 @@
 
 #include "CoreMinimal.h"
 #include "ActionSystem/CAction.h"
-#include "CAction_Sprint.generated.h"
+#include "CAction_ZoomCamera.generated.h"
 
-class UCAction_ZoomCamera;
+class ACPlayerCharacter;
+class UCCameraModifier_Zoom;
+class APlayerCameraManager;
 
 /**
- * 
+ * Action to zoom camera based on lerp equation
  */
 UCLASS()
-class CLARITY_API UCAction_Sprint : public UCAction
+class CLARITY_API UCAction_ZoomCamera : public UCAction
 {
 	GENERATED_BODY()
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
-	float CameraZoomedFOV;
+	float CameraZoomSpeed;
 
 	/* in/out speed (in seconds) */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
-	float CameraZoomSpeed;
+	float CameraZoomedFOV;
 
-	UCAction_Sprint();
+	UCAction_ZoomCamera();
 
 	virtual void Initialize(UCActionComponent* NewActionComponent) override;
 	virtual void StartAction_Implementation(AActor* Instigator) override;
 	virtual void StopAction_Implementation(AActor* Instigator) override;
-	
-protected:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Sprint")
-	float SprintSpeed;
+	virtual bool CanStartAction_Implementation(AActor* Instigator) override;
 
-	/* temporary value to store original speed*/
-	float BufferSpeed;
+protected:
+
+	UPROPERTY(BlueprintReadOnly, Category = "Owner")
+	ACPlayerCharacter* OwnerPlayerCharacter;
+
+	float CameraCurrentFOV;
+
+private:
+	UPROPERTY()
+	UCCameraModifier_Zoom* Modifier;
 
 	UPROPERTY()
-	UCAction_ZoomCamera* ZoomAction;
+	APlayerCameraManager* CameraManager;
+	
 };

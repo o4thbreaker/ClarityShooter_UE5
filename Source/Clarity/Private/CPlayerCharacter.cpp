@@ -69,8 +69,6 @@ ACPlayerCharacter::ACPlayerCharacter()
 	MouseXSensitivity = 0.0f;
 	MouseYSensitivity = 0.0f;
 
-	// set aiming setting
-	bIsAiming = false;
 	/// \NOTE: camera's aim FOV is set in CAction_AimCamera;
 
 	Faction = ECFaction::Ally;
@@ -156,6 +154,8 @@ void ACPlayerCharacter::DoLook(float Yaw, float Pitch)
 {
 	if (GetController())
 	{
+		bool bIsAiming = ActionComponent->ActiveGameplayTags.HasTag(CGameplayTags::Aiming);
+
 		MouseXSensitivity = bIsAiming ? AimTurnRate : NormalTurnRate;
 		MouseYSensitivity = bIsAiming ? AimLookUpRate : NormalLookUpRate;
 
@@ -184,9 +184,7 @@ bool ACPlayerCharacter::GetAimOriginAndDirection(FVector& OutWorldPosition, FVec
 
 void ACPlayerCharacter::Aim(const FInputActionValue& Value)
 {
-	bIsAiming = Value.Get<bool>();
-
-	if (bIsAiming)
+	if (Value.Get<bool>())
 	{
 		ActionComponent->StartActionByTag(this, CGameplayTags::AimAction);
 	}
@@ -208,9 +206,7 @@ void ACPlayerCharacter::Reload(const FInputActionValue& Value)
 
 void ACPlayerCharacter::Sprint(const FInputActionValue& Value)
 {
-	bIsSprinting = Value.Get<bool>();
-	
-	if (bIsSprinting)
+	if (Value.Get<bool>())
 	{
 		ActionComponent->StartActionByTag(this, CGameplayTags::SprintAction);
 	}

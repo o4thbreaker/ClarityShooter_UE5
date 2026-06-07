@@ -6,7 +6,7 @@
 #include "ActionSystem/CAction.h"
 #include "CAction_Aim.generated.h"
 
-//struct FTimerHandle;
+class UCAction_ZoomCamera;
 
 /**
  * 
@@ -17,8 +17,16 @@ class CLARITY_API UCAction_Aim : public UCAction
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
+	float CameraZoomedFOV;
+
+	/* in/out speed (in seconds) */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
+	float CameraZoomSpeed;
+
 	UCAction_Aim();
 
+	virtual void Initialize(UCActionComponent* NewActionComponent) override;
 	virtual void StartAction_Implementation(AActor* Instigator) override;
 	virtual void StopAction_Implementation(AActor* Instigator) override;
 
@@ -28,4 +36,7 @@ protected:
 
 	/* needs to hold the default walking speed */
 	float BufferSpeed;
+
+	UPROPERTY()
+	UCAction_ZoomCamera* ZoomAction;
 };

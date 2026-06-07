@@ -31,14 +31,13 @@ public:
 
 	/* adds action to the component, and starts it if possible */
 	UFUNCTION(BlueprintCallable, Category = "Action")
-	void AddAction(AActor* Instigator, TSubclassOf<UCAction> ActionClass);
+	UCAction* AddAction(AActor* Instigator, TSubclassOf<UCAction> ActionClass);
 
 	/* stops and removes the actions */
 	UFUNCTION(BlueprintCallable, Category = "Action")
 	void RemoveAction(AActor* Instigator, UCAction* ActionToRemove);
 
 	/* starts action with name provided */
-	/// \TODO: change to FGameplayTag by creating different script struct
 	UFUNCTION(BlueprintCallable, Category = "Action")
 	bool StartActionByTag(AActor* Instigator, FGameplayTag ActionTag);
 

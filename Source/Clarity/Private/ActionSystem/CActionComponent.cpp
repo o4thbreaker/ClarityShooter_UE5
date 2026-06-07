@@ -14,10 +14,10 @@ void UCActionComponent::BeginPlay()
 	}
 }
 
-void UCActionComponent::AddAction(AActor* Instigator, TSubclassOf<UCAction> ActionClass)
+UCAction* UCActionComponent::AddAction(AActor* Instigator, TSubclassOf<UCAction> ActionClass)
 {
 	// check if action class is valid
-	if (!ensure(ActionClass)) return;
+	if (!ensure(ActionClass)) return nullptr;
 
 	UCAction* NewAction = NewObject<UCAction>(GetOwner(), ActionClass);
 	if (ensure(NewAction))
@@ -30,7 +30,11 @@ void UCActionComponent::AddAction(AActor* Instigator, TSubclassOf<UCAction> Acti
 		{
 			NewAction->StartAction(Instigator);
 		}
+
+		return NewAction;
 	}
+
+	return nullptr;
 }
 
 void UCActionComponent::RemoveAction(AActor* Instigator, UCAction* ActionToRemove)

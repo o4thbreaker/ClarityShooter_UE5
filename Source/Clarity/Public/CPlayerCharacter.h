@@ -114,12 +114,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Faction")
 	ECFaction Faction;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Aim")
-	bool bIsAiming;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Sprint")
-	bool bIsSprinting;
-
 #pragma region Sensitivity Values
 	/* default horizontal rate sensitivity */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
