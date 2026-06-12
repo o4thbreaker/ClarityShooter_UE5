@@ -22,6 +22,8 @@ public:
 	FName ProfileName;
 
 	UCHitReactionComponent();
+	
+	FORCEINLINE UPhysicalAnimationComponent* GetPhysicalAnimationComponent() { return PhysicalAnimationComponent; }
 
 
 protected:
@@ -39,7 +41,7 @@ protected:
 	void PerformHitReaction(FHitResult Hit, float KnockbackTime, float KnockbackForce);
 
 	UFUNCTION()
-	void OnOwnerHealthChanged(AActor* InstigatorActor, UCAttributeComponent* OwningComp, float NewHealth, FHealthChangeInfo HealthChangeInfo);
+	void OnOwnerDamaged(AActor* InstigatorActor, UCAttributeComponent* OwningComp, float NewHealth, FHealthChangeInfo HealthChangeInfo);
 
 private:
 	float HitReactionTimeRemaining;

@@ -3,6 +3,7 @@
 
 #include "CAttributeComponent.h"
 #include "CGameModeBase.h"
+#include "CShooterInterface.h"
 
 static TAutoConsoleVariable<bool> CVarShowHealthDebug(TEXT("art.ShowHealthDebug"), true, TEXT("Show debug info for Attributes"), ECVF_Cheat);
 
@@ -32,11 +33,16 @@ bool UCAttributeComponent::ApplyHealthChange(AActor* InstigatorActor, FHealthCha
 
 		if (ActualDelta < 0.0f)
 		{
+			// check if owner and the shooter are in the same faction -> if so, ignore damage
+			ICShooterInterface* Shooter = Cast<ICShooterInterface>(InstigatorActor);
+			ICShooterInterface* OwnerShooter = Cast<ICShooterInterface>(GetOwner());
+			if (Shooter && OwnerShooter && Shooter->GetFaction() == OwnerShooter->GetFaction()) return true;
+
 			HandleDamage(InstigatorActor, HeathChangeInfo);
 		}
 	}
 
-	return ActualDelta != 0;
+	return ActualDelta != 0.0f;
 }
 
 bool UCAttributeComponent::HandleDamage(AActor* InstigatorActor, FHealthChangeInfo HealthChangeInfo)
@@ -46,6 +52,9 @@ bool UCAttributeComponent::HandleDamage(AActor* InstigatorActor, FHealthChangeIn
 		FString OuchString = FString::Printf(TEXT("OUCH: %.2f"), HealthChangeInfo.HealthDelta);
 		DrawDebugString(GetWorld(), GetOwner()->GetActorLocation() + FVector(0, 10, 0), OuchString, nullptr, FColor::Red, 1.5f, true);
 	}
+
+	/// \TODO: make replicated
+	OnDamage.Broadcast(InstigatorActor, this, Health, HealthChangeInfo);
 
 	// died
 	if (Health <= 0.0f)

@@ -24,7 +24,7 @@ bool UCCameraModifier_Zoom::ModifyCamera(float DeltaTime, FMinimalViewInfo& InOu
 	InOutPOV.FOV = CurrentFOV + Alpha * (TargetFOV - CurrentFOV);
 
 	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Orange, FString::Printf(TEXT("FOV: %.1f"), InOutPOV.FOV));
-	UE_LOG(LogTemp, Log, TEXT("%f"), InOutPOV.FOV);
+	//UE_LOG(LogTemp, Log, TEXT("%f"), InOutPOV.FOV);
 
 	return true;
 }

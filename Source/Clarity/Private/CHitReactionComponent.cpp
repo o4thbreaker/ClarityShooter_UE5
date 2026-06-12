@@ -32,14 +32,12 @@ void UCHitReactionComponent::BeginPlay()
 	UCAttributeComponent* OwnerAttributes = UCAttributeComponent::GetAttributes(GetOwner());
 	if (OwnerAttributes)
 	{
-		OwnerAttributes->OnHealthChanged.AddDynamic(this, &UCHitReactionComponent::OnOwnerHealthChanged);
+		OwnerAttributes->OnDamage.AddDynamic(this, &UCHitReactionComponent::OnOwnerDamaged);
 	}
 }
 
 void UCHitReactionComponent::PerformHitReaction(FHitResult Hit, float KnockbackTime, float KnockbackForce)
 {
-	UE_LOG(LogTemp, Log, TEXT("HitBone to React: %s"), *Hit.BoneName.ToString());
-
 	SetComponentTickEnabled(true);
 
 	// setting it to lerp back to zero in tick
@@ -49,14 +47,13 @@ void UCHitReactionComponent::PerformHitReaction(FHitResult Hit, float KnockbackT
 
 	PhysicalAnimationComponent->ApplyPhysicalAnimationProfileBelow(CoreBodyName, ProfileName, false, false);
 
-	/// \FIXME: isn't that will cause every body below pelvis to simulate physics and not the one that was actually hit?
+	// set all bodies below pelvis to simulate physics
 	// do not set the include self because we dont want to make character fall as a ragdoll
 	OwnerMeshComponent->SetAllBodiesBelowSimulatePhysics(CoreBodyName, true, false);
 
 	FName HitBoneName;
 
-	/// \TODO: maybe should be not pelvis but CoreBodyName but I have to make sure that FIXME is wrong
-	Hit.BoneName == FName("pelvis") ? HitBoneName = FName("spine_02") : HitBoneName = Hit.BoneName;
+	(Hit.BoneName == CoreBodyName) ? HitBoneName = FName("spine_02") : HitBoneName = Hit.BoneName;
 
 	FVector ImpulseVector = (Hit.TraceEnd - Hit.TraceStart).GetSafeNormal() * KnockbackForce;
 	OwnerMeshComponent->AddImpulse(ImpulseVector, HitBoneName, true);
@@ -68,6 +65,9 @@ void UCHitReactionComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	FVector HeadLoc = OwnerMeshComponent->GetBoneLocation(FName("head"));
+	DrawDebugSphere(GetWorld(), HeadLoc, 12.f, 8, FColor::Red, false, 0.f);
+
 	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Yellow, FString::Printf(TEXT("%f"), HitReactionTimeRemaining));
 
 	HitReactionTimeRemaining -= DeltaTime;
@@ -76,12 +76,14 @@ void UCHitReactionComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	{
 		// hit reaction is finished, time to turn off physics
 
-		// just in case
+		// just for safety
 		HitReactionTimeRemaining = 0.0f;
 
+		PhysicalAnimationComponent->SetComponentTickEnabled(false);
+		// reset profile
+		PhysicalAnimationComponent->ApplyPhysicalAnimationProfileBelow(CoreBodyName, NAME_None, false, false);
 		OwnerMeshComponent->SetAllBodiesBelowSimulatePhysics(CoreBodyName, false, true);
 		SetComponentTickEnabled(false);
-		PhysicalAnimationComponent->SetComponentTickEnabled(false);
 		OwnerMeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	}
 	else
@@ -95,7 +97,20 @@ void UCHitReactionComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	}
 }
 
-void UCHitReactionComponent::OnOwnerHealthChanged(AActor* InstigatorActor, UCAttributeComponent* OwningComp, float NewHealth, FHealthChangeInfo HealthChangeInfo)
+void UCHitReactionComponent::OnOwnerDamaged(AActor* InstigatorActor, UCAttributeComponent* OwningComp, float NewHealth, FHealthChangeInfo HealthChangeInfo)
 {
+	if (NewHealth <= 0.0f)
+	{
+		HitReactionTimeRemaining = 0.0f;
+
+		PhysicalAnimationComponent->SetComponentTickEnabled(false);
+		// reset profile
+		PhysicalAnimationComponent->ApplyPhysicalAnimationProfileBelow(CoreBodyName, NAME_None, false, false);
+		SetComponentTickEnabled(false);
+		OwnerMeshComponent->SetCollisionProfileName("Ragdoll");
+		OwnerMeshComponent->SetAllBodiesSimulatePhysics(true);
+		return;
+	}
+
 	PerformHitReaction(HealthChangeInfo.Hit, HealthChangeInfo.KnockbackTime, HealthChangeInfo.KnockbackForce);
 }

@@ -71,4 +71,3 @@ void UCAction_ZoomCamera::StopAction_Implementation(AActor* Instigator)
 
 	Super::StopAction_Implementation(Instigator);
 }
-

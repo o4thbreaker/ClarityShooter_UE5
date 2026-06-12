@@ -71,8 +71,7 @@ void ACAICharacter::OnHealthChanged(AActor* InstigatorActor, UCAttributeComponen
 				//AIController->GetAIPerceptionComponent()->DestroyComponent(true);
 			}
 
-			GetMesh()->SetCollisionProfileName("Ragdoll");
-			GetMesh()->SetAllBodiesSimulatePhysics(true);
+			// ragdoll is in HitReactionComponent
 
 			GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 			GetCharacterMovement()->DisableMovement();	

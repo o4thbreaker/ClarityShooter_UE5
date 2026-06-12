@@ -20,6 +20,7 @@ public:
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnHealthChanged, AActor*, Instigator, UCAttributeComponent*, OwningComponent, float, NewHealth, FHealthChangeInfo, HealthChangeInfo);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnDamage, AActor*, Instigator, UCAttributeComponent*, OwningComponent, float, NewHealth, FHealthChangeInfo, HealthChangeInfo);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class CLARITY_API UCAttributeComponent : public UActorComponent
@@ -31,6 +32,7 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FOnHealthChanged OnHealthChanged;
+	FOnDamage OnDamage;
 
 	UFUNCTION(BlueprintCallable, Category = "Attributes")
 	bool ApplyHealthChange(AActor* InstigatorActor, FHealthChangeInfo HeathChangeInfo);

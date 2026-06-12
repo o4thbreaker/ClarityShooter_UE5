@@ -69,8 +69,9 @@ void UCAction_Shoot::StartAction_Implementation(AActor* Instigator)
 
 	/* is crosshair translated successfully */
 	bool bIsCrosshairTranslated = false;
+	ICShooterInterface* Shooter = Cast<ICShooterInterface>(Instigator);
 
-	if (ICShooterInterface* Shooter = Cast<ICShooterInterface>(Instigator))
+	if (Shooter)
 	{
 		bIsCrosshairTranslated = Shooter->GetAimOriginAndDirection(CrosshairWorldPosition, CrosshairWorldDirection);
 	}
