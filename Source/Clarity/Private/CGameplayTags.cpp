@@ -12,6 +12,7 @@ namespace CGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(SprintAction, "Action.Sprint");
 	UE_DEFINE_GAMEPLAY_TAG(AimCameraAction, "Action.AimCamera");
 	UE_DEFINE_GAMEPLAY_TAG(SprintCameraAction, "Action.SprintCamera");
+	UE_DEFINE_GAMEPLAY_TAG(DisarmAction, "Action.Disarm");
 
 	// ========== STATES ==========
 	UE_DEFINE_GAMEPLAY_TAG(Reloading, "State.Reloading");

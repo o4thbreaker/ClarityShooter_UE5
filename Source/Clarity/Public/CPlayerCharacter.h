@@ -55,6 +55,10 @@ public:
 	/** sprint input action */
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* SprintAction;
+
+	/** disarm input action */
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	UInputAction* DisarmAction;
 };
 
 UCLASS(Abstract)
@@ -160,6 +164,8 @@ protected:
 	/// \TODO: separate logic from input (Move and DoMove as example)
 	/** called for sprinting input */
 	void Sprint(const FInputActionValue& Value);
+
+	void Disarm(const FInputActionValue& Value);
 
 #pragma endregion
 

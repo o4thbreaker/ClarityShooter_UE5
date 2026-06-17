@@ -99,6 +99,9 @@ void ACPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		// sprinting
 		EnhancedInputComponent->BindAction(InputActions.SprintAction, ETriggerEvent::Started, this, &ACPlayerCharacter::Sprint);
 		EnhancedInputComponent->BindAction(InputActions.SprintAction, ETriggerEvent::Completed, this, &ACPlayerCharacter::Sprint);
+
+		// disarm (probably will be changed to interact)
+		EnhancedInputComponent->BindAction(InputActions.DisarmAction, ETriggerEvent::Started, this, &ACPlayerCharacter::Disarm);
 	}
 	else
 	{
@@ -214,4 +217,9 @@ void ACPlayerCharacter::Sprint(const FInputActionValue& Value)
 	{
 		ActionComponent->StopActionByTag(this, CGameplayTags::SprintAction);
 	}
+}
+
+void ACPlayerCharacter::Disarm(const FInputActionValue& Value)
+{
+	ActionComponent->StartActionByTag(this, CGameplayTags::DisarmAction);
 }

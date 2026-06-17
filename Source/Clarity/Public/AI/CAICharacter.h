@@ -87,7 +87,7 @@ protected:
 	UCHitReactionComponent* HitReactionComponent;
 	
 	/* will be run in Controller class */
-	UPROPERTY(EditDefaultsOnly, Category = "AI")
+	UPROPERTY(EditAnywhere, Category = "AI")
 	UBehaviorTree* BehaviorTree;
 
 	UPROPERTY(BlueprintReadOnly, Category = "AI")

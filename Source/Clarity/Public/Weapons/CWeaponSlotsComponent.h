@@ -27,6 +27,8 @@ protected:
 	virtual void BeginPlay() override;
 
 public:	
+	static UCWeaponSlotsComponent* GetWeaponSlotsComponent(AActor* FromActor);
+
 	void SpawnWeapon();
 
 	FORCEINLINE ACWeaponBase* GetCurrentWeapon() const { return CurrentWeapon; }

@@ -81,7 +81,7 @@ void UCAction_Shoot::StartAction_Implementation(AActor* Instigator)
 		// from crosshair to direction of crosshair
 		FHitResult CrosshairHitResult;
 		FVector Start = CrosshairWorldPosition;
-		FVector End = Start + CrosshairWorldDirection * Weapon->GetWeaponData()->ShotRange;
+		FVector End = Start + (CrosshairWorldDirection * Weapon->GetWeaponData()->ShotRange);
 		
 		FCollisionQueryParams Params;
 		Params.AddIgnoredActor(Instigator);
