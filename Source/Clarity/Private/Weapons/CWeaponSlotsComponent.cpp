@@ -5,18 +5,12 @@
 #include "Weapons/CWeaponBase.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "GameFramework/Character.h"
-#include "ActionSystem/CActionComponent.h"
 #include "CGameplayTags.h"
 
 UCWeaponSlotsComponent::UCWeaponSlotsComponent()
 {
 	/// \NOTE: hardcoded to character
 	WeaponSocketName = FName(TEXT("RightHandSocket"));
-}
-
-void UCWeaponSlotsComponent::BeginPlay()
-{
-	Super::BeginPlay();
 }
 
 UCWeaponSlotsComponent* UCWeaponSlotsComponent::GetWeaponSlotsComponent(AActor* FromActor)
@@ -29,19 +23,58 @@ UCWeaponSlotsComponent* UCWeaponSlotsComponent::GetWeaponSlotsComponent(AActor* 
 	return nullptr;
 }
 
-void UCWeaponSlotsComponent::SpawnWeapon()
+void UCWeaponSlotsComponent::SwitchWeapon(ACWeaponBase* NewWeapon)
 {
-	CurrentWeapon = GetWorld()->SpawnActor<ACWeaponBase>(DefaultWeapon);
+	/// \TODO: maybe not lose but stash in the inventory
+	LoseCurrentWeapon();
+	EquipWeapon(NewWeapon);
+}
+
+void UCWeaponSlotsComponent::EquipWeapon(ACWeaponBase* Weapon)
+{
+	if (CurrentWeapon)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Can't equip weapon because owner has already weapon equipped"));
+		return;
+	}
+	 
+	CurrentWeapon = Weapon;
 
 	ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
 
+	const USkeletalMeshSocket* RightHandSocket = OwnerCharacter->GetMesh()->GetSocketByName(WeaponSocketName);
+
 	if (CurrentWeapon && OwnerCharacter)
 	{
-		const USkeletalMeshSocket* RightHandSocket = OwnerCharacter->GetMesh()->GetSocketByName(WeaponSocketName);
 		if (RightHandSocket)
 		{
 			RightHandSocket->AttachActor(Cast<AActor>(CurrentWeapon), OwnerCharacter->GetMesh());
+			OnWeaponEquiped.Broadcast(this, Weapon);
 		}
 	}
 }
 
+ACWeaponBase* UCWeaponSlotsComponent::LoseCurrentWeapon()
+{
+	if (IsValid(CurrentWeapon))
+	{
+		ACWeaponBase* Weapon = CurrentWeapon;
+
+		CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+		CurrentWeapon = nullptr;
+
+		/// \NOTE: not in use
+		OnWeaponLost.Broadcast(this);
+
+		return Weapon;
+	}
+
+	return nullptr;
+}
+
+void UCWeaponSlotsComponent::SpawnDefaultWeapon()
+{
+	ACWeaponBase* Weapon = GetWorld()->SpawnActor<ACWeaponBase>(DefaultWeapon);
+	
+	EquipWeapon(Weapon);
+}

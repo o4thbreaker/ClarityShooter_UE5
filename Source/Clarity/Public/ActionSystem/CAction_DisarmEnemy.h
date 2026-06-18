@@ -20,11 +20,12 @@ public:
 
 	UCAction_DisarmEnemy();
 
-	virtual bool CanStartAction_Implementation(AActor* Instigator) override;
 	virtual void StartAction_Implementation(AActor* Instigator) override;
-	virtual void StopAction_Implementation(AActor* Instigator) override;
 
 protected:
-	UPROPERTY(EditAnywhere, Category = "Range")
+	UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "Range")
 	float Range;
+
+	UFUNCTION()
+	FHitResult GetTraceHitInfo(AActor* FromActor);
 };

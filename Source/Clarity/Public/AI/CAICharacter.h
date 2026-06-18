@@ -33,7 +33,6 @@ public:
 	bool bIsShooting = false;
 };
 
-
 UCLASS(Abstract)
 class CLARITY_API ACAICharacter : public ACharacter, public ICShooterInterface, public IAISightTargetInterface
 {
@@ -96,6 +95,12 @@ protected:
 	/// \TODO: might be better to refactor to the data asset
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI")
 	ECFaction Faction;
+
+	UFUNCTION()
+	void OnWeaponEquiped(UCWeaponSlotsComponent* OwningComp, ACWeaponBase* Weapon);
+
+	UFUNCTION()
+	void OnWeaponLost(UCWeaponSlotsComponent* OwningComp);
 
 	UFUNCTION()
 	void OnHealthChanged(AActor* InstigatorActor, UCAttributeComponent* OwningComp, float NewHealth, FHealthChangeInfo HealthChangeInfo);

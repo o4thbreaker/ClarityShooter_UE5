@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "AI/CAICharacter.h"
 #include "Perception/PawnSensingComponent.h"
 #include "ActionSystem/CActionComponent.h"
@@ -33,12 +32,15 @@ void ACAICharacter::Initialize()
 {
 	/// \NOTE: fill here anything that BT has to know (gets called from Controller)
 
-	WeaponSlotsComponent->SpawnWeapon();
+	WeaponSlotsComponent->SpawnDefaultWeapon();
 }
 
 void ACAICharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	WeaponSlotsComponent->OnWeaponEquiped.AddDynamic(this, &ACAICharacter::OnWeaponEquiped);
+	WeaponSlotsComponent->OnWeaponLost.AddDynamic(this, &ACAICharacter::OnWeaponLost);
 }
 
 void ACAICharacter::PostInitializeComponents()
@@ -46,6 +48,16 @@ void ACAICharacter::PostInitializeComponents()
 	Super::PostInitializeComponents();
 
 	AttributeComponent->OnHealthChanged.AddDynamic(this, &ACAICharacter::OnHealthChanged);
+}
+
+void ACAICharacter::OnWeaponEquiped(UCWeaponSlotsComponent* OwningComp, ACWeaponBase* Weapon)
+{
+	ActionComponent->ActiveGameplayTags.AddTag(CGameplayTags::Armed);
+}
+
+void ACAICharacter::OnWeaponLost(UCWeaponSlotsComponent* OwningComp)
+{
+	ActionComponent->ActiveGameplayTags.RemoveTag(CGameplayTags::Armed);
 }
 
 void ACAICharacter::OnHealthChanged(AActor* InstigatorActor, UCAttributeComponent* OwningComp, float NewHealth, FHealthChangeInfo HealthChangeInfo)

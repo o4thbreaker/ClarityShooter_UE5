@@ -19,6 +19,7 @@ namespace CGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Firing, "State.Firing");
 	UE_DEFINE_GAMEPLAY_TAG(Aiming, "State.Aiming");
 	UE_DEFINE_GAMEPLAY_TAG(Sprinting, "State.Sprinting");
+	UE_DEFINE_GAMEPLAY_TAG(Armed, "State.Armed");
 
 	// ========== CONDITIONS ==========
 	UE_DEFINE_GAMEPLAY_TAG(FireCooldown, "Condition.FireCooldown");

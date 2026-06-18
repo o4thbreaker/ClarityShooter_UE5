@@ -12,20 +12,33 @@ UCAction_DisarmEnemy::UCAction_DisarmEnemy()
 	Range = 500.0f;
 }
 
-bool UCAction_DisarmEnemy::CanStartAction_Implementation(AActor* Instigator)
+void UCAction_DisarmEnemy::StartAction_Implementation(AActor* Instigator)
 {
-	// if (TargetActionComponent->ActiveGameplayTags.HasTag(CGameplayTags::Aiming)) return true;
-	return true;
+	FHitResult Hit = GetTraceHitInfo(Instigator);
+	AActor* HitActor = Hit.GetActor();
+
+	if (HitActor)
+	{
+		UCWeaponSlotsComponent* TargetWeaponSlotsComponent = UCWeaponSlotsComponent::GetWeaponSlotsComponent(HitActor);
+		if (!TargetWeaponSlotsComponent) return;
+		
+		UCWeaponSlotsComponent* OwnerWeaponSlotsComponent = UCWeaponSlotsComponent::GetWeaponSlotsComponent(Instigator);
+		if (!OwnerWeaponSlotsComponent) return;
+		
+		ACWeaponBase* TargetWeapon = TargetWeaponSlotsComponent->LoseCurrentWeapon();
+
+		OwnerWeaponSlotsComponent->SwitchWeapon(TargetWeapon);
+	}
 }
 
-void UCAction_DisarmEnemy::StartAction_Implementation(AActor* Instigator)
+FHitResult UCAction_DisarmEnemy::GetTraceHitInfo(AActor* FromActor)
 {
 	FVector CrosshairWorldPosition;
 	FVector CrosshairWorldDirection;
 
 	/* is crosshair translated successfully */
 	bool bIsCrosshairTranslated = false;
-	ICShooterInterface* Shooter = Cast<ICShooterInterface>(Instigator);
+	ICShooterInterface* Shooter = Cast<ICShooterInterface>(FromActor);
 
 	if (Shooter)
 	{
@@ -42,7 +55,7 @@ void UCAction_DisarmEnemy::StartAction_Implementation(AActor* Instigator)
 		FCollisionShape CapsuleShape = FCollisionShape::MakeCapsule(CapsuleRadius, CapsuleHalfHeight);
 
 		FCollisionQueryParams Params;
-		Params.AddIgnoredActor(Instigator);
+		Params.AddIgnoredActor(FromActor);
 
 		FCollisionObjectQueryParams ObjectParams;
 		ObjectParams.AddObjectTypesToQuery(ECC_Pawn);
@@ -52,9 +65,10 @@ void UCAction_DisarmEnemy::StartAction_Implementation(AActor* Instigator)
 		FColor Color = Hit.bBlockingHit ? FColor::Green : FColor::Red;
 		DrawDebugLine(GetWorld(), Start, End, Color, false, 1.0f);
 		DrawDebugSphere(GetWorld(), End, 30.0f, 32, Color, false, 1.0f);
-	}
-}
 
-void UCAction_DisarmEnemy::StopAction_Implementation(AActor* Instigator)
-{
+		return Hit;
+	}
+	
+	UE_LOG(LogTemp, Warning, TEXT("Couldn't translate crosshair to world position and direction. Hit Result is empty"));
+	return FHitResult();
 }

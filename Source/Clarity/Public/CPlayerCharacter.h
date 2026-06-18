@@ -169,5 +169,11 @@ protected:
 
 #pragma endregion
 
+	UFUNCTION()
+	void OnWeaponEquiped(UCWeaponSlotsComponent* OwningComp, ACWeaponBase* Weapon);
+
+	UFUNCTION()
+	void OnWeaponLost(UCWeaponSlotsComponent* OwningComp);
+
 	virtual void BeginPlay() override;
 };

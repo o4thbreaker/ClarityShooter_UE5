@@ -27,6 +27,17 @@ void UCAction_Aim::Initialize(UCActionComponent* NewActionComponent)
 	ZoomAction->CameraZoomSpeed = CameraZoomSpeed;
 }
 
+bool UCAction_Aim::CanStartAction_Implementation(AActor* Instigator)
+{
+	if (!GetOwningComponent()->ActiveGameplayTags.HasTag(CGameplayTags::Armed))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Can't start Aiming because character is not armed"));
+		return false;
+	}
+
+	return Super::CanStartAction_Implementation(Instigator);
+}
+
 void UCAction_Aim::StartAction_Implementation(AActor* Instigator)
 {
 	Super::StartAction_Implementation(Instigator);

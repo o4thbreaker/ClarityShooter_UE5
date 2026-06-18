@@ -27,6 +27,7 @@ public:
 	UCAction_Aim();
 
 	virtual void Initialize(UCActionComponent* NewActionComponent) override;
+	virtual bool CanStartAction_Implementation(AActor* Instigator) override;
 	virtual void StartAction_Implementation(AActor* Instigator) override;
 	virtual void StopAction_Implementation(AActor* Instigator) override;
 
