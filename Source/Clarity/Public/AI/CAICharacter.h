@@ -3,15 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Character.h"
+#include "CBaseCharacter.h"
 #include "CShooterInterface.h"
 #include "Perception/AISightTargetInterface.h"
 #include "Clarity.h"
 #include "CAICharacter.generated.h"
 
-class UCAttributeComponent;
-class UCActionComponent;
-class UCWeaponSlotsComponent;
 class ACSmartObject;
 class UBehaviorTree;
 class ACAIController;
@@ -34,7 +31,7 @@ public:
 };
 
 UCLASS(Abstract)
-class CLARITY_API ACAICharacter : public ACharacter, public ICShooterInterface, public IAISightTargetInterface
+class CLARITY_API ACAICharacter : public ACBaseCharacter, public IAISightTargetInterface
 {
 	GENERATED_BODY()
 
@@ -74,15 +71,6 @@ public:
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	UCAttributeComponent* AttributeComponent;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	UCActionComponent* ActionComponent;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	UCWeaponSlotsComponent* WeaponSlotsComponent;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UCHitReactionComponent* HitReactionComponent;
 	
 	/* will be run in Controller class */
@@ -97,15 +85,7 @@ protected:
 	ECFaction Faction;
 
 	UFUNCTION()
-	void OnWeaponEquiped(UCWeaponSlotsComponent* OwningComp, ACWeaponBase* Weapon);
-
-	UFUNCTION()
-	void OnWeaponLost(UCWeaponSlotsComponent* OwningComp);
-
-	UFUNCTION()
 	void OnHealthChanged(AActor* InstigatorActor, UCAttributeComponent* OwningComp, float NewHealth, FHealthChangeInfo HealthChangeInfo);
-
-	virtual void BeginPlay() override;
 
 	virtual void PostInitializeComponents() override;
 

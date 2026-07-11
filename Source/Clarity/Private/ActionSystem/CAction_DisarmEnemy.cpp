@@ -6,10 +6,19 @@
 #include "CGameplayTags.h"
 #include "Weapons/CWeaponSlotsComponent.h"
 #include "CShooterInterface.h"
+#include "ContextualAnimUtilities.h"
+#include "ContextualAnimSceneActorComponent.h"
 
 UCAction_DisarmEnemy::UCAction_DisarmEnemy()
 {
 	Range = 500.0f;
+}
+
+bool UCAction_DisarmEnemy::CanStartAction_Implementation(AActor* Instigator)
+{
+	if (!ensure(ContextualAnimAsset)) return false;
+
+	return Super::CanStartAction_Implementation(Instigator);
 }
 
 void UCAction_DisarmEnemy::StartAction_Implementation(AActor* Instigator)
@@ -25,8 +34,9 @@ void UCAction_DisarmEnemy::StartAction_Implementation(AActor* Instigator)
 		UCWeaponSlotsComponent* OwnerWeaponSlotsComponent = UCWeaponSlotsComponent::GetWeaponSlotsComponent(Instigator);
 		if (!OwnerWeaponSlotsComponent) return;
 		
-		ACWeaponBase* TargetWeapon = TargetWeaponSlotsComponent->LoseCurrentWeapon();
+		PlayContextualAnimation(Instigator, HitActor);
 
+		ACWeaponBase* TargetWeapon = TargetWeaponSlotsComponent->LoseCurrentWeapon();
 		OwnerWeaponSlotsComponent->SwitchWeapon(TargetWeapon);
 	}
 }
@@ -71,4 +81,28 @@ FHitResult UCAction_DisarmEnemy::GetTraceHitInfo(AActor* FromActor)
 	
 	UE_LOG(LogTemp, Warning, TEXT("Couldn't translate crosshair to world position and direction. Hit Result is empty"));
 	return FHitResult();
+}
+
+bool UCAction_DisarmEnemy::PlayContextualAnimation(AActor* Attacker, AActor* Victim)
+{
+	FContextualAnimSceneBindings AnimBindingResult;
+
+	const TMap<FName, FContextualAnimSceneBindingContext> BindingContextParams =
+	{
+		{ FName("Attacker"), FContextualAnimSceneBindingContext(Attacker) },
+		{ FName("Victim"), FContextualAnimSceneBindingContext(Victim) }
+	};
+
+	bool bIsAnimsBinded = UContextualAnimUtilities::BP_CreateContextualAnimSceneBindings(ContextualAnimAsset, BindingContextParams, AnimBindingResult);
+
+	if (bIsAnimsBinded)
+	{
+		if (UContextualAnimSceneActorComponent* AnimSceneComponent = Attacker->FindComponentByClass<UContextualAnimSceneActorComponent>())
+		{
+			AnimSceneComponent->StartContextualAnimScene(AnimBindingResult);
+			return true;
+		}
+	}
+
+	return false;
 }

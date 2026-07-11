@@ -16,9 +16,6 @@
 
 ACAICharacter::ACAICharacter()
 {
-	AttributeComponent = CreateDefaultSubobject<UCAttributeComponent>(TEXT("AttributeComponent"));
-	ActionComponent = CreateDefaultSubobject<UCActionComponent>(TEXT("ActionComponent"));
-	WeaponSlotsComponent = CreateDefaultSubobject<UCWeaponSlotsComponent>(TEXT("WeaponSlotsComponent"));
 	HitReactionComponent = CreateDefaultSubobject<UCHitReactionComponent>(TEXT("HitReactionComponent"));
 
 	/* ========= DEFAULT VALUES ========= */
@@ -33,14 +30,8 @@ void ACAICharacter::Initialize()
 	/// \NOTE: fill here anything that BT has to know (gets called from Controller)
 
 	WeaponSlotsComponent->SpawnDefaultWeapon();
-}
-
-void ACAICharacter::BeginPlay()
-{
-	Super::BeginPlay();
-
-	WeaponSlotsComponent->OnWeaponEquiped.AddDynamic(this, &ACAICharacter::OnWeaponEquiped);
-	WeaponSlotsComponent->OnWeaponLost.AddDynamic(this, &ACAICharacter::OnWeaponLost);
+	/// \TODO: fix this workaround
+	ActionComponent->ActiveGameplayTags.AddTag(CGameplayTags::Armed);
 }
 
 void ACAICharacter::PostInitializeComponents()
@@ -50,21 +41,10 @@ void ACAICharacter::PostInitializeComponents()
 	AttributeComponent->OnHealthChanged.AddDynamic(this, &ACAICharacter::OnHealthChanged);
 }
 
-void ACAICharacter::OnWeaponEquiped(UCWeaponSlotsComponent* OwningComp, ACWeaponBase* Weapon)
-{
-	ActionComponent->ActiveGameplayTags.AddTag(CGameplayTags::Armed);
-}
-
-void ACAICharacter::OnWeaponLost(UCWeaponSlotsComponent* OwningComp)
-{
-	ActionComponent->ActiveGameplayTags.RemoveTag(CGameplayTags::Armed);
-}
-
 void ACAICharacter::OnHealthChanged(AActor* InstigatorActor, UCAttributeComponent* OwningComp, float NewHealth, FHealthChangeInfo HealthChangeInfo)
 {
 	if (HealthChangeInfo.HealthDelta < 0.0f)
 	{
-
 		/// \TODO: refactor to a callback to Damage Sense
 
 		//if (InstigatorActor && InstigatorActor != this)

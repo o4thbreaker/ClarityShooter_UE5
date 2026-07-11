@@ -52,15 +52,6 @@ ACPlayerCharacter::ACPlayerCharacter()
 	FollowCameraComponent->SetupAttachment(CameraBoomComponent, USpringArmComponent::SocketName);
 	FollowCameraComponent->bUsePawnControlRotation = false;
 
-	// ====== Action Component ======
-	ActionComponent = CreateDefaultSubobject<UCActionComponent>(TEXT("ActionComponent"));
-
-	// ====== Weapon Slots Component ======
-	WeaponSlotsComponent = CreateDefaultSubobject<UCWeaponSlotsComponent>(TEXT("WeaponSlotsComponent"));
-
-	// ====== Attribute Component ======
-	AttributeComponent = CreateDefaultSubobject<UCAttributeComponent>(TEXT("AttributeComponent"));
-
 	// mouse sensitivity
 	NormalTurnRate = 1.0f;
 	NormalLookUpRate = 1.0f;
@@ -117,8 +108,6 @@ void ACPlayerCharacter::BeginPlay()
 	PlayerAnimInstance = Cast<UCPlayerAnimInstance>(GetMesh()->GetAnimInstance());
 
 	WeaponSlotsComponent->SpawnDefaultWeapon();
-	WeaponSlotsComponent->OnWeaponEquiped.AddDynamic(this, &ACPlayerCharacter::OnWeaponEquiped);
-	WeaponSlotsComponent->OnWeaponLost.AddDynamic(this, &ACPlayerCharacter::OnWeaponLost);
 }
 
 void ACPlayerCharacter::Move(const FInputActionValue& Value)
@@ -186,17 +175,6 @@ bool ACPlayerCharacter::GetAimOriginAndDirection(FVector& OutWorldPosition, FVec
 	// try to convert data from screen to world and save to WorldPosition and WorldDirection
 	return UGameplayStatics::DeprojectScreenToWorld(GetController<ACPlayerController>(), CrosshairLocation, OutWorldPosition, OutWorldDirection);
 }
-
-void ACPlayerCharacter::OnWeaponEquiped(UCWeaponSlotsComponent* OwningComp, ACWeaponBase* Weapon)
-{
-	ActionComponent->ActiveGameplayTags.AddTag(CGameplayTags::Armed);
-}
-
-void ACPlayerCharacter::OnWeaponLost(UCWeaponSlotsComponent* OwningComp)
-{
-	ActionComponent->ActiveGameplayTags.RemoveTag(CGameplayTags::Armed);
-}
-
 void ACPlayerCharacter::Aim(const FInputActionValue& Value)
 {
 	if (Value.Get<bool>())

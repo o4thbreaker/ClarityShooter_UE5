@@ -47,6 +47,10 @@
 		{
 			"Name": "PoseSearch",
 			"Enabled": true
+		},
+		{
+			"Name": "ContextualAnimation",
+			"Enabled": true
 		}
 	]
 }

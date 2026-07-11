@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Character.h"
+#include "CBaseCharacter.h"
 #include "CShooterInterface.h"
 #include "Clarity.h"
 #include "CPlayerCharacter.generated.h"
@@ -12,11 +12,7 @@ class USpringArmComponent;
 class UCameraComponent;
 class UInputAction;
 struct FInputActionValue;
-class ACWeaponBase;
 class UCPlayerAnimInstance;
-class UCActionComponent;
-class UCWeaponSlotsComponent;
-class UCAttributeComponent;
 
 USTRUCT(BlueprintType)
 struct FCharacterInputActions
@@ -62,7 +58,7 @@ public:
 };
 
 UCLASS(Abstract)
-class CLARITY_API ACPlayerCharacter : public ACharacter, public ICShooterInterface
+class CLARITY_API ACPlayerCharacter : public ACBaseCharacter
 {
 	GENERATED_BODY()
 
@@ -93,15 +89,6 @@ public:
 	FORCEINLINE UCPlayerAnimInstance* GetPlayerAnimInstance() const { return PlayerAnimInstance; }
 
 protected:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	UCWeaponSlotsComponent* WeaponSlotsComponent;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	UCActionComponent* ActionComponent;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	UCAttributeComponent* AttributeComponent; 
-
 	/** camera boom positioning the camera behind the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	USpringArmComponent* CameraBoomComponent;
@@ -168,12 +155,6 @@ protected:
 	void Disarm(const FInputActionValue& Value);
 
 #pragma endregion
-
-	UFUNCTION()
-	void OnWeaponEquiped(UCWeaponSlotsComponent* OwningComp, ACWeaponBase* Weapon);
-
-	UFUNCTION()
-	void OnWeaponLost(UCWeaponSlotsComponent* OwningComp);
 
 	virtual void BeginPlay() override;
 };

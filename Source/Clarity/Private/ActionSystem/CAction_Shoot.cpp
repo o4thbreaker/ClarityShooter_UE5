@@ -2,11 +2,11 @@
 
 
 #include "ActionSystem/CAction_Shoot.h"
-#include "CPlayerCharacter.h"
+#include "CBaseCharacter.h"
 #include "Weapons/CWeaponBase.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Kismet/GameplayStatics.h"
-#include "CPlayerAnimInstance.h"
+#include "CBaseAnimInstance.h"
 #include "Sound/SoundCue.h"
 #include "Weapons/CWeaponSlotsComponent.h"
 #include "ActionSystem/CActionComponent.h"
@@ -184,13 +184,12 @@ void UCAction_Shoot::PlayImpactEffect(AActor* Instigator, ACWeaponBase* Weapon, 
 	}
 }
 
-/// \FIXME: depends on PlayerAnimInstance
 void UCAction_Shoot::PlayWeaponRecoil(AActor* Instigator)
 {
-	ACPlayerCharacter* PlayerCharacter = Cast<ACPlayerCharacter>(Instigator);
+	ACBaseCharacter* BaseCharacter = Cast<ACBaseCharacter>(Instigator);
 
-	if (PlayerCharacter && PlayerCharacter->GetPlayerAnimInstance())
+	if (BaseCharacter && BaseCharacter->GetBaseAnimInstance())
 	{
-		PlayerCharacter->GetPlayerAnimInstance()->DoProceduralRecoil(1.5f);
+		BaseCharacter->GetBaseAnimInstance()->DoProceduralRecoil(1.5f);
 	}
 }

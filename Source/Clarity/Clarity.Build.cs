@@ -20,7 +20,9 @@ public class Clarity : ModuleRules
 			"UMG",
 			"Slate",
 			"GameplayTags",
-            "GameplayTasks"
+            "GameplayTasks",
+			"ContextualAnimation",
+			"MotionWarping"
         });
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
