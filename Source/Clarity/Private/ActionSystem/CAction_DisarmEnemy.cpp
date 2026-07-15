@@ -4,7 +4,6 @@
 #include "ActionSystem/CAction_DisarmEnemy.h"
 #include "ActionSystem/CActionComponent.h"
 #include "CGameplayTags.h"
-#include "Weapons/CWeaponSlotsComponent.h"
 #include "CShooterInterface.h"
 #include "ContextualAnimUtilities.h"
 #include "ContextualAnimSceneActorComponent.h"
@@ -28,16 +27,9 @@ void UCAction_DisarmEnemy::StartAction_Implementation(AActor* Instigator)
 
 	if (HitActor)
 	{
-		UCWeaponSlotsComponent* TargetWeaponSlotsComponent = UCWeaponSlotsComponent::GetWeaponSlotsComponent(HitActor);
-		if (!TargetWeaponSlotsComponent) return;
-		
-		UCWeaponSlotsComponent* OwnerWeaponSlotsComponent = UCWeaponSlotsComponent::GetWeaponSlotsComponent(Instigator);
-		if (!OwnerWeaponSlotsComponent) return;
-		
-		PlayContextualAnimation(Instigator, HitActor);
+		/// \NOTE: an actual weapon transfer is in Notify_RetrieveWeapon
 
-		ACWeaponBase* TargetWeapon = TargetWeaponSlotsComponent->LoseCurrentWeapon();
-		OwnerWeaponSlotsComponent->SwitchWeapon(TargetWeapon);
+		PlayContextualAnimation(Instigator, HitActor);	
 	}
 }
 
@@ -97,6 +89,7 @@ bool UCAction_DisarmEnemy::PlayContextualAnimation(AActor* Attacker, AActor* Vic
 
 	if (bIsAnimsBinded)
 	{
+		/// \NOTE: FindByClass is used
 		if (UContextualAnimSceneActorComponent* AnimSceneComponent = Attacker->FindComponentByClass<UContextualAnimSceneActorComponent>())
 		{
 			AnimSceneComponent->StartContextualAnimScene(AnimBindingResult);

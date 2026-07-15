@@ -9,7 +9,7 @@
 class UContextualAnimSceneAsset;
 
 /**
- * 
+ * Action that plays the Disarm animation that fires the RetrieveWeapon notify
  */
 UCLASS()
 class CLARITY_API UCAction_DisarmEnemy : public UCAction

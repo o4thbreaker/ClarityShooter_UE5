@@ -31,6 +31,7 @@ public:
 	virtual ECFaction GetFaction() const override;
 
 	FORCEINLINE UCBaseAnimInstance* GetBaseAnimInstance() { return BaseAnimInstance; }
+	FORCEINLINE UContextualAnimSceneActorComponent* GetContextualAnimComponent() { return ContextualAnimComponent; }
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation")
