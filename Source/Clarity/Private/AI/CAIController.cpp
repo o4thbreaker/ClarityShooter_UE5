@@ -10,7 +10,8 @@
 #include "AI/CSmartObject.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Clarity.h"
-#include "AI/CAIManager.h"
+#include "AI/CAIManagerSubsystem.h"
+#include "Weapons/CWeaponSlotsComponent.h"
 
 ACAIController::ACAIController()
 {
@@ -42,27 +43,6 @@ ACAIController::ACAIController()
 	AIManager = nullptr;
 }
 
-void ACAIController::BeginPlay()
-{
-	Super::BeginPlay();
-
-	/// \NOTE: done in OnPossess
-	//AICharacter = Cast<ACAICharacter>(GetPawn());
-	//if (!ensure(AICharacter)) return;
-
-	/// \FIXME: maybe not the brightest idea
-	AICharacter->AIController = this;
-
-	if (AICharacter->SmartObject)
-	{
-		FGameplayTag SubTag;
-		BTComponent->SetDynamicSubtree(SubTag, AICharacter->SmartObject->SubTree);
-	} 
-
-	// register combat role
-	GetBlackboardComponent()->SetValueAsEnum("CombatRole", (uint8)AICharacter->CombatRole);
-}
-
 void ACAIController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
@@ -82,6 +62,31 @@ void ACAIController::OnPossess(APawn* InPawn)
 	}
 }
 
+void ACAIController::BeginPlay()
+{
+	Super::BeginPlay();
+
+	/// \NOTE: done in OnPossess
+	//AICharacter = Cast<ACAICharacter>(GetPawn());
+	//if (!ensure(AICharacter)) return;
+
+	AICharacter->AIController = this;
+
+	if (AICharacter->SmartObject)
+	{
+		FGameplayTag SubTag;
+		BTComponent->SetDynamicSubtree(SubTag, AICharacter->SmartObject->SubTree);
+	}
+
+	// register combat role
+	GetBlackboardComponent()->SetValueAsEnum("CombatRole", (uint8)AICharacter->CombatRole);
+
+	// go to idle state
+	GetBlackboardComponent()->SetValueAsEnum("AIState", (uint8)ECAIState::Idle);
+
+	// register weapon lose event 
+	AICharacter->GetWeaponSlotsComponent()->OnWeaponLost.AddDynamic(this, &ACAIController::OnWeaponLost);
+}
 
 void ACAIController::OnPerception(AActor* SpottedActor, FAIStimulus Stimulus)
 {
@@ -95,7 +100,7 @@ void ACAIController::OnPerception(AActor* SpottedActor, FAIStimulus Stimulus)
 
 			if (Stimulus.WasSuccessfullySensed())
 			{
-				if (GetBlackboardComponent()->GetValueAsEnum(TEXT("AIState")) != (uint8)ECAIState::Attack)
+				if (GetAIState() != (uint8)ECAIState::Attack)
 				{
 					SetTargetActor(SpottedActor);
 				}
@@ -106,9 +111,9 @@ void ACAIController::OnPerception(AActor* SpottedActor, FAIStimulus Stimulus)
 		}
 
 		// if agent is not detecting rn AND is looking at someone AND in idle state
-		if (!GetWorldTimerManager().IsTimerActive(DetectionTimer)
+		if (!GetWorldTimerManager().IsTimerActive(DetectionTimer) 
 			&& GetBlackboardComponent()->GetValueAsBool(TEXT("Contact"))
-			&& GetBlackboardComponent()->GetValueAsEnum(TEXT("AIState")) == (uint8)ECAIState::Idle)
+			&& GetAIState() == (uint8)ECAIState::Idle)
 		{
 			DetectionLevel = 0.f;
 
@@ -120,14 +125,14 @@ void ACAIController::OnPerception(AActor* SpottedActor, FAIStimulus Stimulus)
 	}
 	
 	// if agent is already attacking doesn't really matter what else he has sensed
-	if (GetBlackboardComponent()->GetValueAsEnum(TEXT("AIState")) == (uint8)ECAIState::Attack) return;
+	if (GetAIState() == (uint8)ECAIState::Attack) return;
 
 	/// \TODO: add handling other senses here
 
 	// if sensed some other way the hostile actor - start investigating
 	if (AICharacter && AICharacter->IsHostile(SpottedActor))
 	{
-		GetBlackboardComponent()->SetValueAsEnum(TEXT("AIState"), (uint8)ECAIState::Investigate);
+		TrySetAIState(ECAIState::Investigate);
 		GetBlackboardComponent()->SetValueAsVector(TEXT("MoveToLocation"), Stimulus.StimulusLocation);
 	}
 }
@@ -139,7 +144,7 @@ void ACAIController::SetDetectionLevel()
 	if (!Target || !GetBlackboardComponent()->GetValueAsBool(TEXT("Contact")))
 	{
 		// if agent is doing anything but idling
-		if (GetBlackboardComponent()->GetValueAsEnum(TEXT("AIState")) != (uint8)ECAIState::Idle)
+		if (GetAIState() != (uint8)ECAIState::Idle)
 		{
 			GetWorldTimerManager().ClearTimer(DetectionTimer);
 			return;
@@ -176,17 +181,51 @@ void ACAIController::SetDetectionLevel()
 	// if the detection level is more than 50% - start investigating, otherwise keep detecting
 	if (DetectionLevel >= DetectionThreshold / 2.f)
 	{
-		GetBlackboardComponent()->SetValueAsEnum(TEXT("AIState"), (uint8)ECAIState::Investigate);
+		TrySetAIState(ECAIState::Investigate);
 		GetBlackboardComponent()->SetValueAsVector(TEXT("MoveToLocation"), LastStimulusLocation);
 	}
 }
 
+void ACAIController::OnWeaponLost(UCWeaponSlotsComponent* OwningComponent)
+{
+	UE_LOG(LogTemp, Log, TEXT("AI has lost a weapon! Changing state to WeaponLost"));
+	TrySetAIState(ECAIState::WeaponLost);
+}
+
 void ACAIController::SetShouldShootFromCover(bool ShouldShoot)
 {
-	if (GetBlackboardComponent()->GetValueAsEnum(TEXT("CombatState")) == (uint8)ECCombatState::HoldCover)
+	if (GetCombatState() == (uint8)ECCombatState::HoldCover)
 	{
 		GetBlackboardComponent()->SetValueAsBool(TEXT("ShootFromCover"), ShouldShoot);
 	}
+}
+
+
+bool ACAIController::TrySetAIState(ECAIState NewState)
+{
+	if (GetAIState() < (uint8)NewState)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Priority of new state is lower"));
+		return false;
+	}
+
+	GetBlackboardComponent()->SetValueAsEnum(TEXT("AIState"), (uint8)NewState);
+	return true;
+}
+
+uint8 ACAIController::GetAIState() const
+{
+	return GetBlackboardComponent()->GetValueAsEnum(TEXT("AIState"));
+}
+
+void ACAIController::SetCombatState(ECCombatState NewState)
+{
+	GetBlackboardComponent()->SetValueAsEnum(TEXT("CombatState"), (uint8)NewState);
+}
+
+uint8 ACAIController::GetCombatState() const
+{
+	return GetBlackboardComponent()->GetValueAsEnum(TEXT("CombatState"));
 }
 
 void ACAIController::SetTargetActor(AActor* NewTarget)

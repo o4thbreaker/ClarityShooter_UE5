@@ -22,16 +22,24 @@ public:
 
 	UCAction_DisarmEnemy();
 
+	virtual void Initialize(UCActionComponent* NewActionComponent) override;
 	virtual bool CanStartAction_Implementation(AActor* Instigator) override;
 	virtual void StartAction_Implementation(AActor* Instigator) override;
+	virtual void StopAction_Implementation(AActor* Instigator) override;
 
 protected:
 	/* stores the disarm CAS */
 	UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "Animation")
 	UContextualAnimSceneAsset* ContextualAnimAsset;
 
-	UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "Range")
-	float Range;
+	UPROPERTY(BlueprintReadonly, Category = "Animation")
+	UContextualAnimSceneActorComponent* AnimSceneComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "Properties")
+	float MaxRange;
+
+	UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "Properties", meta = (ClampMin = "0.0", ClampMax = "1.0", UIMin = "0.0", UIMax = "1.0"))
+	float SlowMotionTime;
 
 	UFUNCTION()
 	FHitResult GetTraceHitInfo(AActor* FromActor);
@@ -39,4 +47,7 @@ protected:
 	UFUNCTION()
 	bool PlayContextualAnimation(AActor* Attacker, AActor* Victim);
 
+private:
+	UFUNCTION()
+	void OnAnimationEnd(UContextualAnimSceneActorComponent* SceneActorComponent);
 };

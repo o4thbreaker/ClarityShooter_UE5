@@ -64,5 +64,5 @@ protected:
 	void OnWeaponLost(UCWeaponSlotsComponent* OwningComp);
 
 	UFUNCTION()
-	void OnAnimSceneStateSwitch(UContextualAnimSceneActorComponent* SceneActorComponent);
+	void OnContextualAnimStateChange(UContextualAnimSceneActorComponent* SceneActorComponent);
 };

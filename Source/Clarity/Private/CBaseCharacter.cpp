@@ -50,8 +50,8 @@ void ACBaseCharacter::BeginPlay()
 
 	BaseAnimInstance = Cast<UCBaseAnimInstance>(GetMesh()->GetAnimInstance());
 
-	ContextualAnimComponent->OnJoinedSceneDelegate.AddDynamic(this, &ACBaseCharacter::OnAnimSceneStateSwitch);
-	ContextualAnimComponent->OnLeftSceneDelegate.AddDynamic(this, &ACBaseCharacter::OnAnimSceneStateSwitch);
+	ContextualAnimComponent->OnJoinedSceneDelegate.AddDynamic(this, &ACBaseCharacter::OnContextualAnimStateChange);
+	ContextualAnimComponent->OnLeftSceneDelegate.AddDynamic(this, &ACBaseCharacter::OnContextualAnimStateChange);
 }
 
 void ACBaseCharacter::OnWeaponEquiped(UCWeaponSlotsComponent* OwningComp, ACWeaponBase* Weapon)
@@ -64,7 +64,7 @@ void ACBaseCharacter::OnWeaponLost(UCWeaponSlotsComponent* OwningComp)
 	ActionComponent->ActiveGameplayTags.RemoveTag(CGameplayTags::Armed);
 }
 
-void ACBaseCharacter::OnAnimSceneStateSwitch(UContextualAnimSceneActorComponent* SceneActorComponent)
+void ACBaseCharacter::OnContextualAnimStateChange(UContextualAnimSceneActorComponent* SceneActorComponent)
 {
-	bIsInContextualAnimMode ? bIsInContextualAnimMode = false : bIsInContextualAnimMode = true;
+	bIsInContextualAnimMode ? bIsInContextualAnimMode = false : bIsInContextualAnimMode = true;	
 }

@@ -7,7 +7,7 @@
 #include "CBTTask_StartAiming.generated.h"
 
 /**
- * 
+ * Task thats selects target and starts to aim at it (IS NOT IN USE RN)
  */
 UCLASS()
 class CLARITY_API UCBTTask_StartAiming : public UBTTaskNode

@@ -63,7 +63,6 @@ ACWeaponBase* UCWeaponSlotsComponent::LoseCurrentWeapon()
 		CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 		CurrentWeapon = nullptr;
 
-		/// \NOTE: not in use
 		OnWeaponLost.Broadcast(this);
 
 		return Weapon;

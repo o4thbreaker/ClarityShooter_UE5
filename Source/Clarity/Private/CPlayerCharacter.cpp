@@ -119,6 +119,9 @@ void ACPlayerCharacter::Move(const FInputActionValue& Value)
 
 void ACPlayerCharacter::DoMove(float Right, float Forward)
 {
+	// do not provide movement if disarming is active
+	if (ActionComponent && ActionComponent->ActiveGameplayTags.HasTag(CGameplayTags::Disarming)) return;
+
 	if (GetController())
 	{
 		// find out which way is forward

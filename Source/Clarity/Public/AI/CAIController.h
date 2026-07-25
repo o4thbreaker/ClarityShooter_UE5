@@ -12,7 +12,8 @@ struct FAIStimulus;
 class UBehaviorTreeComponent;
 class UBlackboardComponent;
 class ACAICharacter;
-class ACAIManager;
+class UCAIManagerSubsystem;
+class UCWeaponSlotsComponent;
 
 /**
  * 
@@ -23,7 +24,8 @@ class CLARITY_API ACAIController : public AAIController
 	GENERATED_BODY()
 
 public:
-	ACAIManager* AIManager;
+	UPROPERTY(BlueprintReadOnly, Category = "AI")
+	UCAIManagerSubsystem* AIManager;
 
 	ACAIController();
 
@@ -33,6 +35,18 @@ public:
 	/* Sets TargetActor key */
 	UFUNCTION()
 	void SetTargetActor(AActor* NewTarget);
+
+	UFUNCTION(BlueprintCallable, Category = "AI|Roles")
+	bool TrySetAIState(ECAIState NewState);
+
+	UFUNCTION(BlueprintCallable, Category = "AI|Roles")
+	uint8 GetAIState() const;
+
+	UFUNCTION(BlueprintCallable, Category = "AI|Roles")
+	void SetCombatState(ECCombatState NewState);
+
+	UFUNCTION(BlueprintCallable, Category = "AI|Roles")
+	uint8 GetCombatState() const;
 
 	/* Sets ShootFromCover key */
 	UFUNCTION(BlueprintCallable)
@@ -80,5 +94,9 @@ protected:
 
 	virtual void BeginPlay() override;
 
+	UFUNCTION()
 	virtual void OnPossess(APawn* InPawn) override;
+
+	UFUNCTION(BlueprintCallable)
+	void OnWeaponLost(UCWeaponSlotsComponent* OwningComponent);
 };

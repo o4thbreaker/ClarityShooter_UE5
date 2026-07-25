@@ -9,7 +9,7 @@
 #include "ActionSystem/CAction.h"
 #include "CGameplayTags.h"
 #include "BehaviorTree/BlackboardComponent.h"
-#include "AI/CAIManager.h"
+#include "AI/CAIManagerSubsystem.h"
 
 UCBTTask_Reload::UCBTTask_Reload()
 {
@@ -60,12 +60,14 @@ void UCBTTask_Reload::OnReloadFinished(UCActionComponent* ActionComponent, UCAct
 	if (Action->ActionTag == CGameplayTags::ReloadAction)
 	{
 		APawn* OwnerPawn = Cast<APawn>(ActionComponent->GetOwner());
-		AAIController* AIController = Cast<AAIController>(OwnerPawn->GetController());
+		ACAIController* AIController = Cast<ACAIController>(OwnerPawn->GetController());
 		if (ensureAlways(AIController))
 		{
 			UBehaviorTreeComponent* BehaviorTreeComponent = Cast<UBehaviorTreeComponent>(AIController->BrainComponent);
 			if (ensure(BehaviorTreeComponent))
 			{
+				// tell to stop cover fire
+				AIController->AIManager->RequestCoverFire(false, AIController->GetAICharacter());
 				FinishLatentTask(*BehaviorTreeComponent, EBTNodeResult::Succeeded);
 			}
 		}

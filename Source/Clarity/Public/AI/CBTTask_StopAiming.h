@@ -7,7 +7,7 @@
 #include "CBTTask_StopAiming.generated.h"
 
 /**
- * 
+ * Task thats deselects target and stops aiming at it (IS NOT IN USE RN)
  */
 UCLASS()
 class CLARITY_API UCBTTask_StopAiming : public UBTTaskNode

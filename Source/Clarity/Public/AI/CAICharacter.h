@@ -57,14 +57,16 @@ public:
 
 	bool IsHostile(AActor* Other);
 
+	void SetIsCombat(bool bNewIsCombat);
+
+	void SetIsCrouching(bool bNewIsCrouching);
+
 	virtual bool GetAimOriginAndDirection(FVector& OutOrigin, FVector& OutDirection) const override;
 
 	bool GetIsAiming() const;
 
 	FORCEINLINE virtual ECFaction GetFaction() const override { return Faction; }
 
-	FORCEINLINE void SetIsCrouching(bool bNewIsCrouching) { AnimState.bIsCrouching = bNewIsCrouching; }
-	FORCEINLINE void SetIsCombat(bool bNewIsCombat) { AnimState.bIsCombat = bNewIsCombat; }
 	FORCEINLINE UBehaviorTree* GetBehaviorTree() const { return BehaviorTree; }
 	FORCEINLINE UCActionComponent* GetActionComponent() const { return ActionComponent; }
 	FORCEINLINE UCWeaponSlotsComponent* GetWeaponSlotsComponent() const { return WeaponSlotsComponent; }

@@ -7,15 +7,34 @@
 #include "CShooterInterface.h"
 #include "ContextualAnimUtilities.h"
 #include "ContextualAnimSceneActorComponent.h"
+#include "CTimeDilationSubsystem.h"
+#include "CGameplayTags.h"
+
+static TAutoConsoleVariable<bool> CVarDrawDebugDisarmLines(TEXT("art.DisarmDrawDebug"), true, TEXT("Enable Debug Lines for disarming"), ECVF_Cheat);
+
 
 UCAction_DisarmEnemy::UCAction_DisarmEnemy()
 {
-	Range = 500.0f;
+	MaxRange = 500.0f;
+	SlowMotionTime = 0.5f;
+}
+
+void UCAction_DisarmEnemy::Initialize(UCActionComponent* NewActionComponent)
+{
+	Super::Initialize(NewActionComponent);
+
+	AnimSceneComponent = NewActionComponent->GetOwner()->FindComponentByClass<UContextualAnimSceneActorComponent>();
+
+	if (ensure(AnimSceneComponent))
+	{
+		AnimSceneComponent->OnLeftSceneDelegate.AddDynamic(this, &UCAction_DisarmEnemy::OnAnimationEnd);
+	}
 }
 
 bool UCAction_DisarmEnemy::CanStartAction_Implementation(AActor* Instigator)
 {
 	if (!ensure(ContextualAnimAsset)) return false;
+	if (!ensure(AnimSceneComponent)) return false;
 
 	return Super::CanStartAction_Implementation(Instigator);
 }
@@ -29,9 +48,43 @@ void UCAction_DisarmEnemy::StartAction_Implementation(AActor* Instigator)
 	{
 		/// \NOTE: an actual weapon transfer is in Notify_RetrieveWeapon
 
-		PlayContextualAnimation(Instigator, HitActor);	
+		// start animation
+		if (PlayContextualAnimation(Instigator, HitActor))
+		{
+			// add Disarming state
+			ActionComponent->ActiveGameplayTags.AddTag(CGameplayTags::Disarming);
+
+			// remove the Armed state
+			UCActionComponent* VictimActionComponent = UCActionComponent::GetActionComponent(HitActor);
+			if (VictimActionComponent)
+			{
+				VictimActionComponent->ActiveGameplayTags.RemoveTag(CGameplayTags::Armed);
+			}
+
+			// start SlowMo
+			UCTimeDilationSubsystem* TimeDilationSubsystem = GetWorld()->GetSubsystem<UCTimeDilationSubsystem>();
+			if (TimeDilationSubsystem)
+			{
+				TimeDilationSubsystem->SetSlowMotion(SlowMotionTime);
+			}
+		}
 	}
 }
+
+void UCAction_DisarmEnemy::StopAction_Implementation(AActor* Instigator)
+{
+	/// \WARNING: this can become a problem in future because StopAction will also be called if the action is interrupted
+
+	UCTimeDilationSubsystem* TimeDilationSubsystem = GetWorld()->GetSubsystem<UCTimeDilationSubsystem>();
+
+	if (TimeDilationSubsystem)
+	{
+		TimeDilationSubsystem->ResetSlowMotion();
+	}
+	 
+	ActionComponent->ActiveGameplayTags.RemoveTag(CGameplayTags::Disarming);
+}
+
 
 FHitResult UCAction_DisarmEnemy::GetTraceHitInfo(AActor* FromActor)
 {
@@ -51,7 +104,7 @@ FHitResult UCAction_DisarmEnemy::GetTraceHitInfo(AActor* FromActor)
 	{
 		FHitResult Hit;
 		FVector Start = CrosshairWorldPosition;
-		FVector End = Start + (CrosshairWorldDirection * Range);
+		FVector End = Start + (CrosshairWorldDirection * MaxRange);
 		float CapsuleRadius = 30.0f;
 		float CapsuleHalfHeight = 60.0f;
 		FCollisionShape CapsuleShape = FCollisionShape::MakeCapsule(CapsuleRadius, CapsuleHalfHeight);
@@ -64,9 +117,14 @@ FHitResult UCAction_DisarmEnemy::GetTraceHitInfo(AActor* FromActor)
 
 		GetWorld()->SweepSingleByObjectType(Hit, Start, End, FQuat::Identity, ObjectParams, CapsuleShape, Params);
 
-		FColor Color = Hit.bBlockingHit ? FColor::Green : FColor::Red;
-		DrawDebugLine(GetWorld(), Start, End, Color, false, 1.0f);
-		DrawDebugSphere(GetWorld(), End, 30.0f, 32, Color, false, 1.0f);
+		bool bIsDrawDebug = CVarDrawDebugDisarmLines.GetValueOnGameThread();
+
+		if (bIsDrawDebug)
+		{
+			FColor Color = Hit.bBlockingHit ? FColor::Green : FColor::Red;
+			DrawDebugLine(GetWorld(), Start, End, Color, false, 1.0f);
+			DrawDebugSphere(GetWorld(), End, 30.0f, 32, Color, false, 1.0f);
+		}
 
 		return Hit;
 	}
@@ -89,13 +147,15 @@ bool UCAction_DisarmEnemy::PlayContextualAnimation(AActor* Attacker, AActor* Vic
 
 	if (bIsAnimsBinded)
 	{
-		/// \NOTE: FindByClass is used
-		if (UContextualAnimSceneActorComponent* AnimSceneComponent = Attacker->FindComponentByClass<UContextualAnimSceneActorComponent>())
-		{
-			AnimSceneComponent->StartContextualAnimScene(AnimBindingResult);
-			return true;
-		}
+		AnimSceneComponent->StartContextualAnimScene(AnimBindingResult);
+
+		return true;
 	}
 
 	return false;
+}
+
+void UCAction_DisarmEnemy::OnAnimationEnd(UContextualAnimSceneActorComponent* SceneActorComponent)
+{
+	StopAction_Implementation(GetOwningComponent()->GetOwner());
 }

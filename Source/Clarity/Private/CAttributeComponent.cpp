@@ -79,7 +79,7 @@ bool UCAttributeComponent::Kill(AActor* InstigatorActor)
 	return ApplyHealthChange(InstigatorActor, HealthChangeInfo);
 }
 
-
+/// \TODO: change to Interface call
 UCAttributeComponent* UCAttributeComponent::GetAttributes(AActor* FromActor)
 {
 	if (FromActor)

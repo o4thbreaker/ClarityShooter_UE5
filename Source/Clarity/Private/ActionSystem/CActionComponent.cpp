@@ -14,6 +14,17 @@ void UCActionComponent::BeginPlay()
 	}
 }
 
+/// \TODO: switch to Interface call, temporary solution
+UCActionComponent* UCActionComponent::GetActionComponent(AActor* FromActor)
+{
+	if (FromActor)
+	{
+		return Cast<UCActionComponent>(FromActor->GetComponentByClass(UCActionComponent::StaticClass()));
+	}
+
+	return nullptr;
+}
+
 UCAction* UCActionComponent::AddAction(AActor* Instigator, TSubclassOf<UCAction> ActionClass)
 {
 	// check if action class is valid

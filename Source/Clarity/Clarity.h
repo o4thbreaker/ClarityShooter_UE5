@@ -8,15 +8,18 @@
 DECLARE_LOG_CATEGORY_EXTERN(LogClarity, Log, All);
 
 /* global enum for AI states */
+/// \WARNING: please remember that ordering is IMPORTANT for this enum. number = state priority. 
+///           0 - the highest priority, 6 - the lowest.
 UENUM(BlueprintType)
 enum class ECAIState : uint8
 {
-	Idle		UMETA(DisplayName = "Idle"),
-	ManDown		UMETA(DisplayName = "Man Down"),
-	Investigate UMETA(DisplayName = "Investigate"),
-	LostEnemy	UMETA(DisplayName = "Lost Enemy"),
-	Search		UMETA(DisplayName = "Search"),
-	Attack		UMETA(DisplayName = "Attack")
+	Idle	= 6		UMETA(DisplayName = "Idle"),
+	ManDown = 0		UMETA(DisplayName = "Man Down"),
+	Investigate	= 4	UMETA(DisplayName = "Investigate"),
+	LostEnemy	= 3	UMETA(DisplayName = "Lost Enemy"),
+	Search	= 5		UMETA(DisplayName = "Search"),
+	Attack	= 2		UMETA(DisplayName = "Attack"),
+	WeaponLost = 1	UMETA(DisplayName = "WeaponLost")
 };
 
 /* global enum for any possible factions in the game */

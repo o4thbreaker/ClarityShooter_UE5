@@ -3,19 +3,22 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "BehaviorTree/Tasks/BTTask_BlackboardBase.h"
+#include "BehaviorTree/BTTaskNode.h"
 #include "CBTTask_SetAnimationState.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class CLARITY_API UCBTTask_SetAnimationState : public UBTTask_BlackboardBase
+class CLARITY_API UCBTTask_SetAnimationState : public UBTTaskNode
 {
 	GENERATED_BODY()
 
 public:
 	UCBTTask_SetAnimationState();
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Blackboard")
+	FBlackboardKeySelector FocusTargetKey;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Blackboard")
 	bool bInCombat;

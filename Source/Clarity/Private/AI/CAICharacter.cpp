@@ -1,17 +1,17 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "AI/CAICharacter.h"
+#include "AI/CAIController.h"
+#include "AI/CAIManagerSubsystem.h"
 #include "Perception/PawnSensingComponent.h"
 #include "ActionSystem/CActionComponent.h"
 #include "CAttributeComponent.h"
-#include "AI/CAIController.h"
 #include "BrainComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Weapons/CWeaponSlotsComponent.h"
 #include "Weapons/CWeaponBase.h"
 #include "CGameplayTags.h"
-#include "AI/CAIManager.h"
 #include "CHitReactionComponent.h"
 
 ACAICharacter::ACAICharacter()
@@ -130,6 +130,33 @@ bool ACAICharacter::IsHostile(AActor* Other)
 	return false;
 }
 
+void ACAICharacter::SetIsCombat(bool bNewIsCombat)
+{
+	AnimState.bIsCombat = bNewIsCombat;
+	if (bNewIsCombat)
+	{
+		ActionComponent->StartActionByTag(this, CGameplayTags::AimAction);
+	}
+	else
+	{
+		/// \NOTE: probably do something more interesting in future like draw a weapon not just aim it
+		ActionComponent->StopActionByTag(this, CGameplayTags::AimAction);
+	}
+}
+
+void ACAICharacter::SetIsCrouching(bool bNewIsCrouching)
+{
+	AnimState.bIsCrouching = bNewIsCrouching;
+	if (bNewIsCrouching)
+	{
+		ActionComponent->ActiveGameplayTags.AddTag(CGameplayTags::Crouching);
+	}
+	else
+	{
+		ActionComponent->ActiveGameplayTags.RemoveTag(CGameplayTags::Crouching);
+	}
+}
+
 bool ACAICharacter::GetAimOriginAndDirection(FVector& OutOrigin, FVector& OutDirection) const
 {
 	if (!ensure(AIController)) return false;
@@ -140,8 +167,6 @@ bool ACAICharacter::GetAimOriginAndDirection(FVector& OutOrigin, FVector& OutDir
 		UE_LOG(LogTemp, Warning, TEXT("AI has no target"));
 		return false;
 	}
-
-	UE_LOG(LogTemp, Log, TEXT("Target for AI is: %s"), *GetNameSafe(TargetActor));
 
 	ACWeaponBase* Weapon = WeaponSlotsComponent->GetCurrentWeapon();
 	if (Weapon == nullptr)

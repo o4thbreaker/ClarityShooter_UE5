@@ -29,6 +29,10 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Action")
 	FOnActionStateChanged OnActionStopped;
 
+	/// \TODO: switch to Interface call, temporary solution
+	UFUNCTION(BlueprintCallable, Category = "Attrubutes")
+	static UCActionComponent* GetActionComponent(AActor* FromActor);
+
 	/* adds action to the component, and starts it if possible */
 	UFUNCTION(BlueprintCallable, Category = "Action")
 	UCAction* AddAction(AActor* Instigator, TSubclassOf<UCAction> ActionClass);

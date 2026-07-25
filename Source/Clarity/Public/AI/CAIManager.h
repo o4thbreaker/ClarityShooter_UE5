@@ -69,7 +69,7 @@ protected:
 
 	/* Are any of the agents has line of sight to an enemy or if the time from the last stimulus > max stimulus time? */
 	UFUNCTION()
-	bool Engaged();
+	bool IsEngaged();
 
 	virtual void BeginPlay() override;
 

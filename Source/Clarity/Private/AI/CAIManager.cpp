@@ -45,7 +45,7 @@ void ACAIManager::CreateAgentsList()
 				if (ShooterInterface->GetFaction() == ManagerFaction)
 				{
 					Agents.AddUnique(Controller);
-					Controller->AIManager = this;
+					//Controller->AIManager = this;
 
 					if (Controller->GetAICharacter()->CombatRole == ECCombatRole::Defender)
 					{
@@ -60,9 +60,9 @@ void ACAIManager::CreateAgentsList()
 void ACAIManager::NotifyAIState(ECAIState NewState)
 {
 	// change the AI state of all the agents
-	for (auto& Controller : Agents)
+	for (ACAIController*& Controller : Agents)
 	{
-		Controller->GetBlackboardComponent()->SetValueAsEnum("AIState", (uint8)(NewState));
+		Controller->TrySetAIState(NewState);
 	}
 
 	// if the state is attack, start the combat loop
@@ -103,10 +103,10 @@ void ACAIManager::RequestCoverFire(bool ShouldProvideCoverFire, ACAICharacter* R
 	if (ShouldProvideCoverFire)
 	{
 		// tell all the defenders
-		for (auto& Defender : Defenders) 
+		for (ACAICharacter*& Defender : Defenders) 
 		{
 			// if the defender is not providing cover fire and is holding cover - tell him to provide cover fire
-			if (Defender != RequestInstigator)
+			if (Defender != RequestInstigator && Defender->AIController->GetCombatState() == (uint8)ECCombatState::HoldCover)
 			{
 				AgentProvidingCoverFire = Defender;
 				Defender->AIController->SetShouldShootFromCover(true);
@@ -118,7 +118,10 @@ void ACAIManager::RequestCoverFire(bool ShouldProvideCoverFire, ACAICharacter* R
 	}
 
 	// if no one is providing cover fire - stop shooting from the previous one
-	AgentProvidingCoverFire->AIController->SetShouldShootFromCover(false);
+	if (AgentProvidingCoverFire && AgentProvidingCoverFire->AIController->GetCombatState() == (uint8)ECCombatState::HoldCover)
+	{
+		AgentProvidingCoverFire->AIController->SetShouldShootFromCover(false);
+	}
 }
 
 void ACAIManager::RunSearchTimer()
@@ -133,16 +136,16 @@ void ACAIManager::RunSearchTimer()
 
 void ACAIManager::RunCombatLoop()
 {
-	if (Engaged())
+	if (IsEngaged())
 	{
-		// Approach
-		if (Defenders.Num() > 0)
+		// Approach if not in hold cover
+		if (Defenders.Num() > 0 && Defenders[ApproacherIndex]->AIController->GetCombatState() != (uint8)ECCombatState::HoldCover)
 		{
-			Defenders[ApproacherIndex]->AIController->GetBlackboardComponent()->SetValueAsEnum("CombatState", (uint8)ECCombatState::ApproachingCover);
+			Defenders[ApproacherIndex]->AIController->SetCombatState(ECCombatState::ApproachingCover);
 			// request cover fire while approaching cover
 			RequestCoverFire(true, Defenders[ApproacherIndex]);
 			// if index is not the last one - increment
-			ApproacherIndex = (ApproacherIndex + 1 <= Defenders.Num() - 1) ? ApproacherIndex++ : 0;
+			ApproacherIndex = (ApproacherIndex + 1 <= Defenders.Num() - 1) ? ++ApproacherIndex : 0;
 		}
 
 		return;
@@ -153,7 +156,7 @@ void ACAIManager::RunCombatLoop()
 	GetWorldTimerManager().ClearTimer(CombatTimer);
 }
 
-bool ACAIManager::Engaged()
+bool ACAIManager::IsEngaged()
 {
 	bool bIsEngaged = false;
 

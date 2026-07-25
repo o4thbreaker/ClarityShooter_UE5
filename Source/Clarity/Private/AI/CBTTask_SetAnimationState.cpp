@@ -13,7 +13,8 @@ UCBTTask_SetAnimationState::UCBTTask_SetAnimationState()
 
 	NodeName = "Set Animation State";
 
-	BlackboardKey.AddObjectFilter(this, *NodeName, AActor::StaticClass());
+	FocusTargetKey.AddObjectFilter(this, *NodeName, AActor::StaticClass());
+
 	bInCombat = false;
 	bShouldFocus = false;
 	bInCombat = false;
@@ -33,7 +34,7 @@ EBTNodeResult::Type UCBTTask_SetAnimationState::ExecuteTask(UBehaviorTreeCompone
 	const UBlackboardComponent* MyBlackboard = OwnerComp.GetBlackboardComponent();
 
 	/// \NOTE: not GetTargetActor because target can be whatever we choose in editor
-	AActor* Target = Cast<AActor>(MyBlackboard->GetValueAsObject(BlackboardKey.SelectedKeyName));
+	AActor* Target = Cast<AActor>(MyBlackboard->GetValueAsObject(FocusTargetKey.SelectedKeyName));
 
 	if (Target)
 	{

@@ -4,7 +4,7 @@
 #include "AI/CBTTask_FindStrafeLocation.h"
 #include "AI/CAIController.h"
 #include "AI/CAICharacter.h"
-#include "AI/CAIManager.h"
+#include "AI/CAIManagerSubsystem.h"
 #include "BehaviorTree/BlackboardComponent.h"
 
 UCBTTask_FindStrafeLocation::UCBTTask_FindStrafeLocation()
@@ -50,12 +50,12 @@ void UCBTTask_FindStrafeLocation::LocationSeekerQueryFinished(TSharedPtr<FEnvQue
 
 bool UCBTTask_FindStrafeLocation::IsDistanceGreater(FVector Location)
 {   
-	if (AIController->AIManager->Agents.Num() <= 1) return true;
+	if (AIController->AIManager->GetAgents().Num() <= 1) return true;
 
 	bool ConsiderThisLocation = true;
 
 	// calculate distance from given location and all of the agents of the team
-	for (ACAIController*& Agent : AIController->AIManager->Agents)
+	for (ACAIController* Agent : AIController->AIManager->GetAgents())
 	{
 		const float CalculatedDistance = (Location - Agent->GetAICharacter()->GetActorLocation()).Size();
 

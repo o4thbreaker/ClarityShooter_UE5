@@ -3,7 +3,7 @@
 
 #include "AI/CBTTask_OverrideAIState.h"
 #include "BehaviorTree/BlackboardComponent.h"
-#include "AI/CAIManager.h"
+#include "AI/CAIManagerSubsystem.h"
 #include "AI/CAIController.h"
 
 UCBTTask_OverrideAIState::UCBTTask_OverrideAIState()
@@ -19,7 +19,11 @@ EBTNodeResult::Type UCBTTask_OverrideAIState::ExecuteTask(UBehaviorTreeComponent
 
 	if (RunMode == ECRunMode::ThisAgent)
 	{
-		OwnerComp.GetBlackboardComponent()->SetValueAsEnum("AIState", (uint8)DesiredState);
+		if (!MyController->TrySetAIState(DesiredState))
+		{
+			return EBTNodeResult::Failed;
+		}
+		//OwnerComp.GetBlackboardComponent()->SetValueAsEnum("AIState", (uint8)DesiredState);
 	}
 	else
 	{
