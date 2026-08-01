@@ -63,4 +63,7 @@ public:
 	/* how far should bullet go */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Stats")
 	float ShotRange;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Info")
+	float RecoilRate;
 };

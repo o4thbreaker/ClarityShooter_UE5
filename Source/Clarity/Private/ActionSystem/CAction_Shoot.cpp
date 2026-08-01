@@ -13,19 +13,24 @@
 #include "CGameplayTags.h"
 #include "CAttributeComponent.h"
 #include "CShooterInterface.h"
-#include "CHitReactionComponent.h"
 
 static TAutoConsoleVariable<bool> CVarDrawDebugShootLines(TEXT("art.ShootDrawDebug"), false, TEXT("Enable Debug Lines for shooting"), ECVF_Cheat);
 
 void UCAction_Shoot::Initialize(UCActionComponent* NewActionComponent)
 {
 	Super::Initialize(NewActionComponent);
-	OwnerWeaponSlotsComponent = Cast<UCWeaponSlotsComponent>(NewActionComponent->GetOwner()->FindComponentByClass<UCWeaponSlotsComponent>());
+	OwnerWeaponSlotsComponent = NewActionComponent->GetOwner()->FindComponentByClass<UCWeaponSlotsComponent>();
 }
 
 bool UCAction_Shoot::CanStartAction_Implementation(AActor* Instigator)
 {
 	if (!Super::CanStartAction_Implementation(Instigator)) return false;
+
+	if (!Cast<ICShooterInterface>(Instigator))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s doesn't implement ICShooterInterface. Aborting Shoot Action."), *GetNameSafe(Instigator));
+		return false;
+	}
 
 	if (!IsValid(OwnerWeaponSlotsComponent))
 	{
@@ -37,6 +42,13 @@ bool UCAction_Shoot::CanStartAction_Implementation(AActor* Instigator)
 	if (!IsValid(Weapon))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Couldn't find attached Weapon. Aborting Shoot Action."));
+		return false;
+	}
+
+	/// \NOTE: defensive check, WeaponData is guaranteed non-null by WeaponBase invariant, kept for safety margin
+	if (!Weapon->GetWeaponData())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Couldn't find Weapon Data on Weapon. Aborting Shoot Action."));
 		return false;
 	}
 
@@ -53,7 +65,7 @@ void UCAction_Shoot::StartAction_Implementation(AActor* Instigator)
 	// handle the ammo logic
 	if (!Weapon->TryConsumeAmmo())
 	{
-		StopAction_Implementation(Instigator);
+		StopAction(Instigator);
 		return;
 	}
 
@@ -69,83 +81,44 @@ void UCAction_Shoot::StartAction_Implementation(AActor* Instigator)
 
 	/* is crosshair translated successfully */
 	bool bIsCrosshairTranslated = false;
-	ICShooterInterface* Shooter = Cast<ICShooterInterface>(Instigator);
 
+	ICShooterInterface* Shooter = Cast<ICShooterInterface>(Instigator);
 	if (Shooter)
 	{
 		bIsCrosshairTranslated = Shooter->GetAimOriginAndDirection(CrosshairWorldPosition, CrosshairWorldDirection);
+		Accuracy = Shooter->GetAccuracy();
+		bWillMiss = FMath::FRand() > Accuracy;
 	}
 
 	if (bIsCrosshairTranslated)
 	{
-		// from crosshair to direction of crosshair
 		FHitResult CrosshairHitResult;
+		// from crosshair to direction of crosshair
 		FVector Start = CrosshairWorldPosition;
 		FVector End = Start + (CrosshairWorldDirection * Weapon->GetWeaponData()->ShotRange);
-		
 		FCollisionQueryParams Params;
 		Params.AddIgnoredActor(Instigator);
 		Params.AddIgnoredActor(Weapon);
 		// need to consider what part of body we hit
 		Params.bReturnPhysicalMaterial = true;
 
-		GetWorld()->LineTraceSingleByChannel(CrosshairHitResult, Start, End, ECollisionChannel::ECC_GameTraceChannel1, Params);
-
-		bool bIsDrawDebug = CVarDrawDebugShootLines.GetValueOnGameThread();
-		if (bIsDrawDebug)
-		{
-			DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 2.0f);
-			DrawDebugPoint(GetWorld(), CrosshairHitResult.Location, 4.0f, FColor::Blue, false, 2.0f);
-		}
-		
-		if (CrosshairHitResult.bBlockingHit)
-		{
-			PlayImpactEffect(Instigator, Weapon, CrosshairHitResult.Location);
-		}
-
+		PerformCrosshairLineTrace(CrosshairHitResult, Start, End, Params);
+	
 		/* trace from weapon to hit location */
 		FHitResult WeaponHitResult;
+		/* get location to pass it to the function*/
+		FVector WeaponStart = SocketTransform.GetLocation();
 
-		const FVector WeaponStart = SocketTransform.GetLocation();
+		PerformWeaponLineTrace(Weapon, WeaponHitResult, CrosshairHitResult, WeaponStart, End, Params);
 
-		/// \NOTE: due to floating point precision WeaponEnd can be coincided exactly with the surface point from CrosshairHitResult
-		///		   and UE can sometimes not register the intersection
-		FVector WeaponEnd = CrosshairHitResult.bBlockingHit ? CrosshairHitResult.Location : End;
-
-		/// \NOTE: so we have to adjust it by small number to make a difference
-		FVector WeaponDirection = (WeaponEnd - WeaponStart).GetSafeNormal();
-		FVector AdjustedEnd = CrosshairHitResult.bBlockingHit ? CrosshairHitResult.Location + WeaponDirection * 10.0f : End;
-
-		// ECC_GameTraceChannel1 = Bullet
-		GetWorld()->LineTraceSingleByChannel(WeaponHitResult, WeaponStart, AdjustedEnd, ECollisionChannel::ECC_GameTraceChannel1, Params);
-
-		if (bIsDrawDebug)
-		{
-			DrawDebugLine(GetWorld(), WeaponStart, AdjustedEnd, FColor::Yellow, false, 2.0f);
-			DrawDebugPoint(GetWorld(), WeaponHitResult.Location, 4.0f, FColor::Magenta, false, 2.0f);
-		}
-		
 		if (WeaponHitResult.bBlockingHit)
 		{
-			AActor* HitActor = WeaponHitResult.GetActor();
-			if (IsValid(HitActor))
-			{
-				UCAttributeComponent* AttributeComponent = UCAttributeComponent::GetAttributes(HitActor);
-				if (AttributeComponent)
-				{
-					FHealthChangeInfo HealthChangeInfo;
-					HealthChangeInfo.HealthDelta = -Weapon->GetWeaponData()->Damage;
-					HealthChangeInfo.Hit = WeaponHitResult;
-					HealthChangeInfo.KnockbackForce = Weapon->GetWeaponData()->KnockbackForce;
-					HealthChangeInfo.KnockbackTime = Weapon->GetWeaponData()->KnockbackTime;
-
-					AttributeComponent->ApplyHealthChange(Instigator, HealthChangeInfo);
-				}
-			}
+			ProvideDamage(Instigator, WeaponHitResult.GetActor(), Weapon, WeaponHitResult);
+			PlayImpactEffect(Instigator, Weapon, WeaponHitResult.Location);
 		}
 	}
 
-	PlayWeaponRecoil(Instigator);
+	PlayWeaponRecoil(Instigator, Weapon);
 
 	// add blocking tag after the fire
 	ActionComponent->ActiveGameplayTags.AddTag(CGameplayTags::FireCooldown);
@@ -155,6 +128,41 @@ void UCAction_Shoot::StartAction_Implementation(AActor* Instigator)
 		Weapon->GetWeaponData()->FireRate, false);
 
 	StopAction(Instigator);
+}
+
+void UCAction_Shoot::PerformCrosshairLineTrace(FHitResult& CrosshairHitResult, const FVector& Start, const FVector& End, const FCollisionQueryParams& Params)
+{
+	GetWorld()->LineTraceSingleByChannel(CrosshairHitResult, Start, End, ECollisionChannel::ECC_GameTraceChannel1, Params);
+
+	DrawDebugLineTrace(Start, End, CrosshairHitResult.Location, FColor::Red, FColor::Blue);
+}
+
+void UCAction_Shoot::PerformWeaponLineTrace(ACWeaponBase* Weapon, FHitResult& WeaponHitResult, const FHitResult& CrosshairHitResult, const FVector& Start, const FVector& End, const FCollisionQueryParams& Params)
+{
+	FVector AdjustedEnd = CalculateBulletEndLocation(Weapon, CrosshairHitResult, Start, End);
+
+	// ECC_GameTraceChannel1 = Bullet
+	GetWorld()->LineTraceSingleByChannel(WeaponHitResult, Start, AdjustedEnd, ECollisionChannel::ECC_GameTraceChannel1, Params);
+
+	DrawDebugLineTrace(Start, AdjustedEnd, WeaponHitResult.Location, FColor::Yellow, FColor::Magenta);
+}
+
+void UCAction_Shoot::ProvideDamage(AActor* Instigator, AActor* Victim, ACWeaponBase* Weapon, const FHitResult& WeaponHitResult)
+{
+	if (IsValid(Victim))
+	{
+		UCAttributeComponent* AttributeComponent = UCAttributeComponent::GetAttributes(Victim);
+		if (AttributeComponent)
+		{
+			FHealthChangeInfo HealthChangeInfo;
+			HealthChangeInfo.HealthDelta = -Weapon->GetWeaponData()->Damage;
+			HealthChangeInfo.Hit = WeaponHitResult;
+			HealthChangeInfo.KnockbackForce = Weapon->GetWeaponData()->KnockbackForce;
+			HealthChangeInfo.KnockbackTime = Weapon->GetWeaponData()->KnockbackTime;
+
+			AttributeComponent->ApplyHealthChange(Instigator, HealthChangeInfo);
+		}
+	}
 }
 
 void UCAction_Shoot::PlayFireSound(AActor* Instigator, ACWeaponBase* Weapon)
@@ -168,7 +176,7 @@ void UCAction_Shoot::PlayFireSound(AActor* Instigator, ACWeaponBase* Weapon)
 	}
 }
 
-void UCAction_Shoot::PlayMuzzleFlash(AActor* Instigator, ACWeaponBase* Weapon, const FTransform SocketTransform)
+void UCAction_Shoot::PlayMuzzleFlash(AActor* Instigator, ACWeaponBase* Weapon, const FTransform& SocketTransform)
 {
 	if (Weapon->GetWeaponData()->MuzzleFlash)
 	{
@@ -184,12 +192,52 @@ void UCAction_Shoot::PlayImpactEffect(AActor* Instigator, ACWeaponBase* Weapon, 
 	}
 }
 
-void UCAction_Shoot::PlayWeaponRecoil(AActor* Instigator)
+void UCAction_Shoot::PlayWeaponRecoil(AActor* Instigator, ACWeaponBase* Weapon)
 {
 	ACBaseCharacter* BaseCharacter = Cast<ACBaseCharacter>(Instigator);
 
 	if (BaseCharacter && BaseCharacter->GetBaseAnimInstance())
 	{
-		BaseCharacter->GetBaseAnimInstance()->DoProceduralRecoil(1.5f);
+		BaseCharacter->GetBaseAnimInstance()->DoProceduralRecoil(Weapon->GetWeaponData()->RecoilRate);
+	}
+}
+
+void UCAction_Shoot::DrawDebugLineTrace(const FVector& Start, const FVector& End, const FVector& HitLocation, const FColor& TraceColor, const FColor& HitColor)
+{
+	bool bIsDrawDebug = CVarDrawDebugShootLines.GetValueOnGameThread();
+	if (bIsDrawDebug)
+	{
+		DrawDebugLine(GetWorld(), Start, End, TraceColor, false, 2.0f);
+		DrawDebugPoint(GetWorld(), HitLocation, 4.0f, HitColor, false, 2.0f);
+	}
+}
+
+FVector UCAction_Shoot::CalculateBulletEndLocation(ACWeaponBase* Weapon, const FHitResult& CrosshairHitResult, const FVector& Start, const FVector& End) const
+{
+	/// \NOTE: due to floating point precision WeaponEnd can be coincided exactly with the surface point from CrosshairHitResult
+		///		   and UE can sometimes not register the intersection
+	FVector WeaponEnd = CrosshairHitResult.bBlockingHit ? CrosshairHitResult.Location : End;
+
+	FVector WeaponDirection = (WeaponEnd - Start).GetSafeNormal();
+	
+	if (bWillMiss)
+	{
+		// calculate a random miss angle within a certain range
+		const float MinMissAngle = 10.0f;
+		const float MaxMissAngle = 35.0f;
+		float MissAngleRad = FMath::DegreesToRadians(FMath::FRandRange(MinMissAngle, MaxMissAngle));
+
+		// calculate direction based on the miss angle and the original direction
+		FVector ScatteredDirection = FMath::VRandCone(WeaponDirection, MissAngleRad);
+		 
+		// calculate the end point
+		FVector AdjustedEnd = Start + ScatteredDirection * Weapon->GetWeaponData()->ShotRange;
+		return AdjustedEnd;
+	}
+	else
+	{
+		/// \NOTE: because of the first NOTE we have to adjust vector by small number (10.0f) to make a difference
+		FVector AdjustedEnd = CrosshairHitResult.bBlockingHit ? CrosshairHitResult.Location + (WeaponDirection * 10.0f) : WeaponEnd;
+		return AdjustedEnd;
 	}
 }

@@ -13,7 +13,7 @@ UCAttributeComponent::UCAttributeComponent()
 	Health = MaxHealth;
 }
 
-bool UCAttributeComponent::ApplyHealthChange(AActor* InstigatorActor, FHealthChangeInfo HeathChangeInfo)
+bool UCAttributeComponent::ApplyHealthChange(AActor* InstigatorActor, FHealthChangeInfo& HeathChangeInfo)
 {
 	if (!GetOwner()->CanBeDamaged() && HeathChangeInfo.HealthDelta < 0.0f)
 	{

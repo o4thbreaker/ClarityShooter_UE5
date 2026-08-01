@@ -26,4 +26,6 @@ public:
 	virtual bool GetAimOriginAndDirection(FVector& OutOrigin, FVector& OutDirection) const = 0;
 
 	virtual ECFaction GetFaction() const = 0;
+
+	virtual float GetAccuracy() const = 0;
 };

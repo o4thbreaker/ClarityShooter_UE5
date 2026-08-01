@@ -35,7 +35,7 @@ public:
 	FOnDamage OnDamage;
 
 	UFUNCTION(BlueprintCallable, Category = "Attributes")
-	bool ApplyHealthChange(AActor* InstigatorActor, FHealthChangeInfo HeathChangeInfo);
+	bool ApplyHealthChange(AActor* InstigatorActor, FHealthChangeInfo& HeathChangeInfo);
 
 	UFUNCTION(BlueprintCallable)
 	bool Kill(AActor* InstigatorActor);

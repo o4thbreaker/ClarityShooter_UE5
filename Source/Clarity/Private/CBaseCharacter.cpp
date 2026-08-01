@@ -21,6 +21,7 @@ ACBaseCharacter::ACBaseCharacter()
 	MotionWarpingComponent = CreateDefaultSubobject<UMotionWarpingComponent>(TEXT("MotionWarpingComponent"));
 
 	bIsInContextualAnimMode = false;
+	Accuracy = 1.0f;
 }
 
 bool ACBaseCharacter::GetAimOriginAndDirection(FVector& OutOrigin, FVector& OutDirection) const
@@ -34,7 +35,6 @@ ECFaction ACBaseCharacter::GetFaction() const
 	// will be implemented in derived classes
 	return ECFaction();
 }
-
 void ACBaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();

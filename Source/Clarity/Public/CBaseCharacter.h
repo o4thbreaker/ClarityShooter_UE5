@@ -30,10 +30,15 @@ public:
 	/* Empty. Should be overriden in derived classes */
 	virtual ECFaction GetFaction() const override;
 
+	FORCEINLINE virtual float GetAccuracy() const override { return Accuracy; }
+
 	FORCEINLINE UCBaseAnimInstance* GetBaseAnimInstance() { return BaseAnimInstance; }
 	FORCEINLINE UContextualAnimSceneActorComponent* GetContextualAnimComponent() { return ContextualAnimComponent; }
 
 protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stats", meta = (ClampMin = "0.0", ClampMax = "1.0", UIMin = "0.0", UIMax = "1.0"))
+	float Accuracy;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation")
 	bool bIsInContextualAnimMode;
 

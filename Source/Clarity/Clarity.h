@@ -52,3 +52,13 @@ enum class ECCombatRole : uint8
 	Defender 					UMETA(DisplayName = "Defender"),
 	Ambusher 					UMETA(DisplayName = "Ambusher"),
 };
+
+/* global enum for ai speed modes. */
+UENUM(BlueprintType)
+enum class ECMovementMode : uint8
+{
+	Idle 					UMETA(DisplayName = "Idle"),
+	Walking 				UMETA(DisplayName = "Walking"),
+	Jogging 				UMETA(DisplayName = "Jogging"),
+	Sprinting				UMETA(DisplayName = "Sprinting"),
+};
