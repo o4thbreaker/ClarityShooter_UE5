@@ -11,6 +11,31 @@ UCAttributeComponent::UCAttributeComponent()
 {
 	MaxHealth = 100.f;
 	Health = MaxHealth;
+	
+	bShouldLimbDamage = false;
+
+	HitZones.Add(FName("pelvis"), ECHitZone::Body);
+	HitZones.Add(FName("spine_02"), ECHitZone::Body);
+	HitZones.Add(FName("spine_03"), ECHitZone::Body);
+	HitZones.Add(FName("spine_04"), ECHitZone::Body);
+	HitZones.Add(FName("spine_05"), ECHitZone::Body);
+	HitZones.Add(FName("clavicle_l"), ECHitZone::Body);
+	HitZones.Add(FName("upperarm_l"), ECHitZone::Arm);
+	HitZones.Add(FName("lowerarm_l"), ECHitZone::Arm);
+	HitZones.Add(FName("hand_l"), ECHitZone::Hand);
+	HitZones.Add(FName("clavicle_r"), ECHitZone::Body);
+	HitZones.Add(FName("upperarm_r"), ECHitZone::Arm);
+	HitZones.Add(FName("lowerarm_r"), ECHitZone::Arm);
+	HitZones.Add(FName("hand_r"), ECHitZone::Hand);
+	HitZones.Add(FName("neck_01"), ECHitZone::Body);
+	HitZones.Add(FName("neck_02"), ECHitZone::Body);
+	HitZones.Add(FName("head"), ECHitZone::Head);
+	HitZones.Add(FName("thigh_l"), ECHitZone::Foot);
+	HitZones.Add(FName("calf_l"), ECHitZone::Foot);
+	HitZones.Add(FName("foot_l"), ECHitZone::Foot);
+	HitZones.Add(FName("thigh_r"), ECHitZone::Foot);
+	HitZones.Add(FName("calf_r"), ECHitZone::Foot);
+	HitZones.Add(FName("foot_r"), ECHitZone::Foot);
 }
 
 bool UCAttributeComponent::ApplyHealthChange(AActor* InstigatorActor, FHealthChangeInfo& HeathChangeInfo)
@@ -31,6 +56,8 @@ bool UCAttributeComponent::ApplyHealthChange(AActor* InstigatorActor, FHealthCha
 	{
 		MulticastHealthChanged(InstigatorActor, Health, HeathChangeInfo);
 
+		UE_LOG(LogTemp, Log, TEXT("%s was hit"), *HeathChangeInfo.Hit.BoneName.ToString());
+
 		if (ActualDelta < 0.0f)
 		{
 			// check if owner and the shooter are in the same faction -> if so, ignore damage
@@ -45,7 +72,7 @@ bool UCAttributeComponent::ApplyHealthChange(AActor* InstigatorActor, FHealthCha
 	return ActualDelta != 0.0f;
 }
 
-bool UCAttributeComponent::HandleDamage(AActor* InstigatorActor, FHealthChangeInfo HealthChangeInfo)
+bool UCAttributeComponent::HandleDamage(AActor* InstigatorActor, const FHealthChangeInfo& HealthChangeInfo)
 {
 	if (CVarShowHealthDebug.GetValueOnGameThread())
 	{
@@ -53,7 +80,6 @@ bool UCAttributeComponent::HandleDamage(AActor* InstigatorActor, FHealthChangeIn
 		DrawDebugString(GetWorld(), GetOwner()->GetActorLocation() + FVector(0, 10, 0), OuchString, nullptr, FColor::Red, 1.5f, true);
 	}
 
-	/// \TODO: make replicated
 	OnDamage.Broadcast(InstigatorActor, this, Health, HealthChangeInfo);
 
 	// died
@@ -88,6 +114,16 @@ UCAttributeComponent* UCAttributeComponent::GetAttributes(AActor* FromActor)
 	}
 
 	return nullptr;
+}
+
+ECHitZone UCAttributeComponent::GetHitZoneFromBoneName(FName BoneName) const
+{
+	if (const ECHitZone* Zone = HitZones.Find(BoneName))
+	{
+		return *Zone;
+	}
+
+	return ECHitZone::Body;
 }
 
 void UCAttributeComponent::MulticastHealthChanged_Implementation(AActor* InstigatorActor, float NewHealth, FHealthChangeInfo HeathChangeInfo)

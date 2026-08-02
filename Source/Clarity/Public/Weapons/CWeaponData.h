@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
+#include "Clarity.h"
 #include "CWeaponData.generated.h"
 
 class ACWeaponBase;
@@ -12,7 +13,7 @@ class UParticleSystem;
 class USoundCue;
 
 /**
- * Class that stores data for weapon
+ * class that stores data for weapon
  */
 UCLASS()
 class CLARITY_API UCWeaponData : public UPrimaryDataAsset
@@ -20,18 +21,14 @@ class CLARITY_API UCWeaponData : public UPrimaryDataAsset
 	GENERATED_BODY()
 	
 public:
-	/// \NOTE: recoil is procedural for now
-	//UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Animation")
-	//UAnimMontage* FireMontage;
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Info")
 	FName WeaponName;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Info")
 	TSubclassOf<ACWeaponBase> WeaponClass;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Animation")
-	UAnimMontage* ReloadMontage;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Info")
+	ECWeaponCategory WeaponCategory;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Effects")
 	UParticleSystem* MuzzleFlash;

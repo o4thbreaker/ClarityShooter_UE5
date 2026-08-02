@@ -62,3 +62,12 @@ enum class ECMovementMode : uint8
 	Jogging 				UMETA(DisplayName = "Jogging"),
 	Sprinting				UMETA(DisplayName = "Sprinting"),
 };
+
+/* global enum for weapon categories. */
+UENUM(BlueprintType)
+enum class ECWeaponCategory : uint8
+{
+	Pistol 					UMETA(DisplayName = "Pistol"),
+	Shotgun 				UMETA(DisplayName = "Shotgun"),
+	Rifle	 				UMETA(DisplayName = "Rifle"),
+};

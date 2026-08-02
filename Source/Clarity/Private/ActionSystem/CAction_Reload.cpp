@@ -6,7 +6,8 @@
 #include "Weapons/CWeaponBase.h"
 #include "CGameplayTags.h"
 #include "ActionSystem/CActionComponent.h"
-#include "GameFramework/Character.h"
+#include "CBaseCharacter.h"
+#include "Weapon/CWeaponAnimData.h"
 
 UCAction_Reload::UCAction_Reload()
 {
@@ -62,22 +63,25 @@ void UCAction_Reload::ReloadWeapon(AActor* Instigator)
 
 void UCAction_Reload::PlayReloadMontage(AActor* Instigator)
 {
-	ACharacter* Character = Cast<ACharacter>(Instigator);
+	ACBaseCharacter* InstigatorCharacter = Cast<ACBaseCharacter>(Instigator);
 	
-	if (ensure(Character))
+	if (ensure(InstigatorCharacter))
 	{
-		ACWeaponBase* Weapon = WeaponSlotsComponent->GetCurrentWeapon();
-		if (Weapon && Weapon->GetWeaponData()->ReloadMontage)
+		if (InstigatorCharacter->GetWeaponAnimData())
 		{
-			Character->PlayAnimMontage(Weapon->GetWeaponData()->ReloadMontage, 1.0f, FName("Default"));
-
-			if (!GetWorld()->GetTimerManager().IsTimerActive(ReloadTimerHandle))
+			UAnimMontage* ReloadMontage = *InstigatorCharacter->GetWeaponAnimData()->ReloadMontages.Find(WeaponCategory);
+			if (ReloadMontage)
 			{
-				FTimerDelegate Delegate;
-				Delegate.BindUObject(this, &UCAction_Reload::ReloadWeapon, Instigator);
+				InstigatorCharacter->PlayAnimMontage(ReloadMontage, 1.0f, FName("Default"));
 
-				GetWorld()->GetTimerManager().SetTimer(ReloadTimerHandle, Delegate, RefillTime, false);
-			}	
+				if (!GetWorld()->GetTimerManager().IsTimerActive(ReloadTimerHandle))
+				{
+					FTimerDelegate Delegate;
+					Delegate.BindUObject(this, &UCAction_Reload::ReloadWeapon, Instigator);
+
+					GetWorld()->GetTimerManager().SetTimer(ReloadTimerHandle, Delegate, RefillTime, false);
+				}
+			}
 		}
 	}
 }

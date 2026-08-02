@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "ActionSystem/CAction.h"
+#include "Clarity.h"
 #include "CAction_Reload.generated.h"
 
 class ACWeaponBase;
@@ -26,14 +27,17 @@ public:
 	virtual void StartAction_Implementation(AActor* Instigator) override;
 
 protected:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation")
+	ECWeaponCategory WeaponCategory;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation")
+	float RefillTime;
+
 	FTimerHandle ReloadTimerHandle;
 
 	UPROPERTY()
 	UCWeaponSlotsComponent* WeaponSlotsComponent;
 	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation")
-	float RefillTime;
-
 private:
 	UFUNCTION()
 	void ReloadWeapon(AActor* Instigator);

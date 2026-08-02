@@ -6,6 +6,17 @@
 #include "Components/ActorComponent.h"
 #include "CAttributeComponent.generated.h"
 
+/* enum for hit zones */
+UENUM(BlueprintType)
+enum class ECHitZone : uint8
+{
+	Body 		UMETA(DisplayName = "Body"),
+	Head 		UMETA(DisplayName = "Head"),
+	Arm 		UMETA(DisplayName = "Arm"),
+	Hand		UMETA(DisplayName = "Hand"),
+	Foot		UMETA(DisplayName = "Foot"),
+};
+
 USTRUCT(BlueprintType)
 struct FHealthChangeInfo
 {
@@ -43,6 +54,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Attrubutes")
 	static UCAttributeComponent* GetAttributes(AActor* FromActor);
 
+	ECHitZone GetHitZoneFromBoneName(FName BoneNAme) const;
+
 	UFUNCTION(BlueprintCallable)
 	FORCEINLINE bool IsAlive() const { return Health > 0; }
 
@@ -52,7 +65,6 @@ public:
 	FORCEINLINE float GetHealth() const { return Health; }
 
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }	
-
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes")
 	float Health;
@@ -60,9 +72,15 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes")
 	float MaxHealth;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes")
+	bool bShouldLimbDamage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes")
+	TMap<FName, ECHitZone> HitZones;
+
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastHealthChanged(AActor* InstigatorActor, float NewHealth, FHealthChangeInfo HeathChangeInfo);
 
 	UFUNCTION(Category = "Attributes")
-	bool HandleDamage(AActor* InstigatorActor, FHealthChangeInfo HeathChangeInfo);
+	bool HandleDamage(AActor* InstigatorActor, const FHealthChangeInfo& HeathChangeInfo);
 };

@@ -15,6 +15,7 @@ class ACWeaponBase;
 class UContextualAnimSceneActorComponent;
 class UMotionWarpingComponent;
 class UCBaseAnimInstance;
+class UCWeaponAnimData;
 
 UCLASS()
 class CLARITY_API ACBaseCharacter : public ACharacter, public ICShooterInterface
@@ -34,6 +35,7 @@ public:
 
 	FORCEINLINE UCBaseAnimInstance* GetBaseAnimInstance() { return BaseAnimInstance; }
 	FORCEINLINE UContextualAnimSceneActorComponent* GetContextualAnimComponent() { return ContextualAnimComponent; }
+	FORCEINLINE UCWeaponAnimData* GetWeaponAnimData() { return WeaponAnimData; }
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stats", meta = (ClampMin = "0.0", ClampMax = "1.0", UIMin = "0.0", UIMax = "1.0"))
@@ -59,6 +61,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UMotionWarpingComponent* MotionWarpingComponent;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation")
+	UCWeaponAnimData* WeaponAnimData;
 
 	virtual void BeginPlay() override;
 
