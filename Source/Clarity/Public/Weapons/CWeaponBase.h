@@ -17,6 +17,7 @@ class CLARITY_API ACWeaponBase : public AActor
 public:	
 	ACWeaponBase();
 
+	UPROPERTY(BlueprintAssignable)
 	FOnAmmoChanged OnAmmoChanged;
 
 	/* maybe should be in Weapon Data, but it is the same for all the weapons */

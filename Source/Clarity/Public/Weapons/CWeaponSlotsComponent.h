@@ -29,7 +29,10 @@ protected:
 
 	FName WeaponSocketName;
 public:
+	UPROPERTY(BlueprintAssignable)
 	FOnWeaponEquiped OnWeaponEquiped;
+
+	UPROPERTY(BlueprintAssignable)
 	FOnWeaponLost OnWeaponLost;
 
 	static UCWeaponSlotsComponent* GetWeaponSlotsComponent(AActor* FromActor);
