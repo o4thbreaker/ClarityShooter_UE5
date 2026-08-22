@@ -95,8 +95,8 @@ enc_temp_folder
 # Temporary do not include
 Content/__ExternalActors__
 Content/Characters/ParagonTwinblast
+Content/Characters/Mannequins
 Documentation
 Content/Core/VFX
-Content/Cigar_room
-Content/DetectiveOffice
-Content/MafiaBarnPack
+Content/Core/Environment
+Content/Core/Weapons/MilitaryWeapSilver

@@ -13,6 +13,7 @@ namespace CGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(AimCameraAction, "Action.AimCamera");
 	UE_DEFINE_GAMEPLAY_TAG(SprintCameraAction, "Action.SprintCamera");
 	UE_DEFINE_GAMEPLAY_TAG(DisarmAction, "Action.Disarm");
+	UE_DEFINE_GAMEPLAY_TAG(SwapShoulderAction, "Action.SwapShoulder");
 
 	// ========== STATES ==========
 	UE_DEFINE_GAMEPLAY_TAG(Reloading, "State.Reloading");
@@ -22,7 +23,9 @@ namespace CGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Disarming, "State.Disarming");
 	UE_DEFINE_GAMEPLAY_TAG(Armed, "State.Armed");
 	UE_DEFINE_GAMEPLAY_TAG(Crouching, "State.Crouching");
+	UE_DEFINE_GAMEPLAY_TAG(SwappingShoulder, "State.SwappingShoulder");
 
 	// ========== CONDITIONS ==========
 	UE_DEFINE_GAMEPLAY_TAG(FireCooldown, "Condition.FireCooldown");
+	UE_DEFINE_GAMEPLAY_TAG(ShoulderSwapped, "Condition.ShoulderSwapped");
 }

@@ -69,10 +69,15 @@ void UCAction_Shoot::StartAction_Implementation(AActor* Instigator)
 		return;
 	}
 
+	const FTransform SocketTransform = Weapon->GetMesh()->GetSocketTransform(Weapon->BarrelSocketName);
+
+	/*
 	PlayFireSound(Instigator, Weapon);
 
-	const FTransform SocketTransform = Weapon->GetMesh()->GetSocketTransform(Weapon->BarrelSocketName);
 	PlayMuzzleFlash(Instigator, Weapon, SocketTransform);
+	*/
+
+	PlayFireAnimation(Instigator, Weapon);
 
 	/* we get position and direction of crosshair. if it is player, it will return its origin on screen and direction
 	if it is AI, it will return origin of AI's weapon and direction towards target*/
@@ -158,6 +163,7 @@ void UCAction_Shoot::ProvideDamage(AActor* Instigator, AActor* Victim, ACWeaponB
 
 			FHealthChangeInfo HealthChangeInfo;
 			HealthChangeInfo.HealthDelta = (HitZone == ECHitZone::Head) ? -AttributeComponent->GetMaxHealth() : -Weapon->GetWeaponData()->Damage;
+			HealthChangeInfo.HitZone = HitZone;
 			HealthChangeInfo.Hit = WeaponHitResult;
 			HealthChangeInfo.KnockbackForce = Weapon->GetWeaponData()->KnockbackForce;
 			HealthChangeInfo.KnockbackTime = Weapon->GetWeaponData()->KnockbackTime;
@@ -167,34 +173,24 @@ void UCAction_Shoot::ProvideDamage(AActor* Instigator, AActor* Victim, ACWeaponB
 	}
 }
 
-void UCAction_Shoot::PlayFireSound(AActor* Instigator, ACWeaponBase* Weapon)
+void UCAction_Shoot::PlayFireAnimation(AActor* Instigator, const ACWeaponBase* Weapon)
 {
-	USoundCue* FiringAudio = Weapon->GetWeaponData()->FiringAudio;
-
-	if (FiringAudio)
+	if (Weapon && Weapon->GetWeaponData()->FireAnimation)
 	{
-		UGameplayStatics::PlaySoundAtLocation(GetWorld(), FiringAudio, Instigator->GetActorLocation(),
-			1.0f, 1.0f, 0.0f, FiringAudio->AttenuationSettings);
+		UAnimSequence* FireAnimation = Weapon->GetWeaponData()->FireAnimation;
+		Weapon->GetMesh()->PlayAnimation(FireAnimation, false);
 	}
 }
 
-void UCAction_Shoot::PlayMuzzleFlash(AActor* Instigator, ACWeaponBase* Weapon, const FTransform& SocketTransform)
+void UCAction_Shoot::PlayImpactEffect(AActor* Instigator, const ACWeaponBase* Weapon, const FVector& ImpactPoint)
 {
-	if (Weapon->GetWeaponData()->MuzzleFlash)
-	{
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), Weapon->GetWeaponData()->MuzzleFlash, SocketTransform);
-	}
-}
-
-void UCAction_Shoot::PlayImpactEffect(AActor* Instigator, ACWeaponBase* Weapon, const FVector& ImpactPoint)
-{
-	if (Weapon->GetWeaponData()->ImpactEffect)
+	if (Weapon && Weapon->GetWeaponData()->ImpactEffect)
 	{
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), Weapon->GetWeaponData()->ImpactEffect, ImpactPoint);
 	}
 }
 
-void UCAction_Shoot::PlayWeaponRecoil(AActor* Instigator, ACWeaponBase* Weapon)
+void UCAction_Shoot::PlayWeaponRecoil(AActor* Instigator, const ACWeaponBase* Weapon)
 {
 	ACBaseCharacter* BaseCharacter = Cast<ACBaseCharacter>(Instigator);
 
@@ -243,3 +239,25 @@ FVector UCAction_Shoot::CalculateBulletEndLocation(ACWeaponBase* Weapon, const F
 		return AdjustedEnd;
 	}
 }
+
+/// \NOTE: DEPRECATED. IT IS NOW DONE VIA ANIMATION
+/*
+void UCAction_Shoot::PlayFireSound(AActor* Instigator, ACWeaponBase* Weapon)
+{
+	USoundCue* FiringAudio = Weapon->GetWeaponData()->FiringAudio;
+
+	if (FiringAudio)
+	{
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), FiringAudio, Instigator->GetActorLocation(),
+			1.0f, 1.0f, 0.0f, FiringAudio->AttenuationSettings);
+	}
+}
+
+void UCAction_Shoot::PlayMuzzleFlash(AActor* Instigator, ACWeaponBase* Weapon, const FTransform& SocketTransform)
+{
+	if (Weapon->GetWeaponData()->MuzzleFlash)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), Weapon->GetWeaponData()->MuzzleFlash, SocketTransform);
+	}
+}
+*/

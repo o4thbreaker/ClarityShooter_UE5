@@ -132,7 +132,7 @@ void UCAIManagerSubsystem::RequestCoverFire(bool ShouldProvideCoverFire, ACAICha
 		for (ACAICharacter*& Defender : Defenders)
 		{
 			// if the defender is not providing cover fire and is holding cover - tell him to provide cover fire
-			if (Defender != RequestInstigator && Defender->AIController->GetCombatState() == (uint8)ECCombatState::HoldCover)
+			if (Defender && Defender != RequestInstigator && Defender->AIController->GetCombatState() == (uint8)ECCombatState::HoldCover)
 			{
 				AgentProvidingCoverFire = Defender;
 				Defender->AIController->SetShouldShootFromCover(true);

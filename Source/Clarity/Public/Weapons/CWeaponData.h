@@ -8,9 +8,9 @@
 #include "CWeaponData.generated.h"
 
 class ACWeaponBase;
-class UAnimMontage;
 class UParticleSystem;
 class USoundCue;
+class UAnimSequence;
 
 /**
  * class that stores data for weapon
@@ -31,13 +31,16 @@ public:
 	ECWeaponCategory WeaponCategory;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Effects")
-	UParticleSystem* MuzzleFlash;
+	UAnimSequence* FireAnimation;
+
+	/*UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Effects")
+	UParticleSystem* MuzzleFlash;*/
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Effects")
 	UParticleSystem* ImpactEffect;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Audio")
-	USoundCue* FiringAudio;
+	/*UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Audio")
+	USoundCue* FiringAudio;*/
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Stats")
 	float Damage;
@@ -61,6 +64,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Stats")
 	float ShotRange;
 
+	/* how hard should recoil be */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Info")
 	float RecoilRate;
 };

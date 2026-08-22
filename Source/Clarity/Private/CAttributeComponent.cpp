@@ -38,25 +38,26 @@ UCAttributeComponent::UCAttributeComponent()
 	HitZones.Add(FName("foot_r"), ECHitZone::Foot);
 }
 
-bool UCAttributeComponent::ApplyHealthChange(AActor* InstigatorActor, FHealthChangeInfo& HeathChangeInfo)
+bool UCAttributeComponent::ApplyHealthChange(AActor* InstigatorActor, FHealthChangeInfo& HealthChangeInfo)
 {
-	if (!GetOwner()->CanBeDamaged() && HeathChangeInfo.HealthDelta < 0.0f)
+	if (!GetOwner()->CanBeDamaged() && HealthChangeInfo.HealthDelta < 0.0f)
 	{
 		return false;
 	}
 
 	float OldHealth = Health;
-	float NewHealth = FMath::Clamp(Health + HeathChangeInfo.HealthDelta, 0.0f, MaxHealth);
+	float HealthChangeFactor = bShouldLimbDamage ? HealthChangeInfo.HealthDelta * CalculateLimbDamageMultiplier(HealthChangeInfo.HitZone) : HealthChangeInfo.HealthDelta;
+	float NewHealth = FMath::Clamp(Health + HealthChangeFactor, 0.0f, MaxHealth);
 	float ActualDelta = NewHealth - OldHealth;
 
 	Health = NewHealth;
-	HeathChangeInfo.HealthDelta = ActualDelta;
+	HealthChangeInfo.HealthDelta = ActualDelta;
 
 	if (ActualDelta != 0.0f)
 	{
-		MulticastHealthChanged(InstigatorActor, Health, HeathChangeInfo);
+		MulticastHealthChanged(InstigatorActor, Health, HealthChangeInfo);
 
-		UE_LOG(LogTemp, Log, TEXT("%s was hit"), *HeathChangeInfo.Hit.BoneName.ToString());
+		UE_LOG(LogTemp, Log, TEXT("%s was hit"), *HealthChangeInfo.Hit.BoneName.ToString());
 
 		if (ActualDelta < 0.0f)
 		{
@@ -65,7 +66,7 @@ bool UCAttributeComponent::ApplyHealthChange(AActor* InstigatorActor, FHealthCha
 			ICShooterInterface* OwnerShooter = Cast<ICShooterInterface>(GetOwner());
 			if (Shooter && OwnerShooter && Shooter->GetFaction() == OwnerShooter->GetFaction()) return true;
 
-			HandleDamage(InstigatorActor, HeathChangeInfo);
+			HandleDamage(InstigatorActor, HealthChangeInfo);
 		}
 	}
 
@@ -95,6 +96,23 @@ bool UCAttributeComponent::HandleDamage(AActor* InstigatorActor, const FHealthCh
 	}
 
 	return true;
+}
+
+float UCAttributeComponent::CalculateLimbDamageMultiplier(const ECHitZone& HitZone) const
+{
+	switch (HitZone)
+	{
+		case ECHitZone::Head:
+			return MaxHealth;
+		case ECHitZone::Arm:
+			return 0.75f;
+		case ECHitZone::Hand:
+			return 0.5f;
+		case ECHitZone::Foot:
+			return 0.75f;
+		default:
+			return 1.0f;
+	}
 }
 
 bool UCAttributeComponent::Kill(AActor* InstigatorActor)

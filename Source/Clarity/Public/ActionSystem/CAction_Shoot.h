@@ -33,14 +33,18 @@ protected:
 
 	bool bWillMiss;
 
+	void PlayFireAnimation(AActor* Instigator, const ACWeaponBase* Weapon);
+
+	void PlayImpactEffect(AActor* Instigator, const ACWeaponBase* Weapon, const FVector& ImpactPoint);
+
+	void PlayWeaponRecoil(AActor* Instigator, const ACWeaponBase* Weapon);
+
+	/// \NOTE: DEPRECATED. IT IS NOW DONE VIA ANIMATION
+	/*
 	void PlayFireSound(AActor* Instigator, ACWeaponBase* Weapon);
 
 	void PlayMuzzleFlash(AActor* Instigator, ACWeaponBase* Weapon, const FTransform& SocketTransform);
-
-	void PlayImpactEffect(AActor* Instigator, ACWeaponBase* Weapon, const FVector& ImpactPoint);
-
-	void PlayWeaponRecoil(AActor* Instigator, ACWeaponBase* Weapon);
-
+	*/
 private:
 	UPROPERTY()
 	UCWeaponSlotsComponent* OwnerWeaponSlotsComponent;

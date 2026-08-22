@@ -4,6 +4,12 @@
 #include "ActionSystem/CAction.h"
 #include "ActionSystem/CActionComponent.h"
 
+UCAction::UCAction()
+{
+	bWantsTick = false;
+	bIsAutoStart = false;
+}
+
 void UCAction::Initialize(UCActionComponent* NewActionComponent)
 {
 	ActionComponent = NewActionComponent;

@@ -4,6 +4,11 @@
 #include "ActionSystem/CActionComponent.h"
 #include "ActionSystem/CAction.h"
 
+UCActionComponent::UCActionComponent()
+{
+	PrimaryComponentTick.bCanEverTick = true;
+}
+
 void UCActionComponent::BeginPlay()
 {
 	Super::BeginPlay();
@@ -103,4 +108,17 @@ bool UCActionComponent::IsInActions(TSubclassOf<UCAction> ActionClassToCheck) co
 	}
 
 	return false;
+}
+
+void UCActionComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	
+	for (UCAction* Action : Actions)
+	{
+		if (Action && Action->bWantsTick && (Action->IsRunning() || Action->IsStopping()))
+		{
+			Action->TickAction(DeltaTime);
+		}
+	}
 }

@@ -6,25 +6,12 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "ActionSystem/CActionComponent.h"
 #include "CGameplayTags.h"
-#include "ActionSystem/CAction_ZoomCamera.h"
+#include "ActionSystem/CAction_AimCamera.h"
 
 UCAction_Aim::UCAction_Aim()
 {
 	AimingWalkingSpeed = 200.f;
 	BufferSpeed = 0.f;
-	CameraZoomedFOV = 40.0f;
-	CameraZoomSpeed = 0.3f;
-}
-
-void UCAction_Aim::Initialize(UCActionComponent* NewActionComponent)
-{
-	Super::Initialize(NewActionComponent);
-
-	// initialize zoom action
-	ZoomAction = Cast<UCAction_ZoomCamera>(NewActionComponent->AddAction(NewActionComponent->GetOwner(), UCAction_ZoomCamera::StaticClass()));
-	ZoomAction->ActionTag = CGameplayTags::AimCameraAction;
-	ZoomAction->CameraZoomedFOV = CameraZoomedFOV;
-	ZoomAction->CameraZoomSpeed = CameraZoomSpeed;
 }
 
 bool UCAction_Aim::CanStartAction_Implementation(AActor* Instigator)

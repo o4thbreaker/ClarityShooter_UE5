@@ -55,6 +55,10 @@ public:
 	/** disarm input action */
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* DisarmAction;
+
+	/** swap shoulder input action */
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	UInputAction* SwapShoulderAction;
 };
 
 UCLASS(Abstract)
@@ -153,6 +157,8 @@ protected:
 	void Sprint(const FInputActionValue& Value);
 
 	void Disarm(const FInputActionValue& Value);
+
+	void SwapShoulder(const FInputActionValue& Value);
 
 #pragma endregion
 

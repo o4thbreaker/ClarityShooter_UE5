@@ -44,7 +44,7 @@ void UCBTTask_SelectCover::CoverSeekerQueryFinished(TSharedPtr<FEnvQueryResult> 
 		for (AActor*& Actor : DetectedActors)
 		{
 			ACCoverActor* Cover = Cast<ACCoverActor>(Actor);
-			if (Cover )
+			if (Cover)
 			{
 				if (Cover->GetDistanceTo(Target) >= DesiredDistance && Cover->bIsCoverAvailable && Cover->CurrentCharacter == nullptr)
 				{

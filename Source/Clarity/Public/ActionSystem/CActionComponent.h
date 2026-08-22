@@ -29,6 +29,8 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Action")
 	FOnActionStateChanged OnActionStopped;
 
+	UCActionComponent();
+
 	/// \TODO: switch to Interface call, temporary solution
 	UFUNCTION(BlueprintCallable, Category = "Attrubutes")
 	static UCActionComponent* GetActionComponent(AActor* FromActor);
@@ -62,5 +64,7 @@ protected:
 	TArray<TSubclassOf<UCAction>> DefaultActions;
 
 	virtual void BeginPlay() override;
+
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 		
 };

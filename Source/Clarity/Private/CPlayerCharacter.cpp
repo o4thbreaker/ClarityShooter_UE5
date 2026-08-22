@@ -93,6 +93,9 @@ void ACPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 		// disarm (probably will be changed to interact)
 		EnhancedInputComponent->BindAction(InputActions.DisarmAction, ETriggerEvent::Started, this, &ACPlayerCharacter::Disarm);
+
+		// swap shoulder
+		EnhancedInputComponent->BindAction(InputActions.SwapShoulderAction, ETriggerEvent::Started, this, &ACPlayerCharacter::SwapShoulder);
 	}
 	else
 	{
@@ -215,4 +218,9 @@ void ACPlayerCharacter::Sprint(const FInputActionValue& Value)
 void ACPlayerCharacter::Disarm(const FInputActionValue& Value)
 {
 	ActionComponent->StartActionByTag(this, CGameplayTags::DisarmAction);
+}
+
+void ACPlayerCharacter::SwapShoulder(const FInputActionValue& Value)
+{
+	ActionComponent->StartActionByTag(this, CGameplayTags::SwapShoulderAction);
 }

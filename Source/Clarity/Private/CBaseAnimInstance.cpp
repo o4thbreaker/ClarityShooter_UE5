@@ -17,10 +17,10 @@ void UCBaseAnimInstance::DoProceduralRecoil(float RecoilMultiplier)
 	///		 // isn't big of a deal, but probably needs to be fixed later. 
 
 	/* ROTATION (RECOIL ITSELF) */
-	/// \NOTE: i think it is pseudo random (they don't change each shot)
-	float RandomRotationRoll = FMath::RandRange(-3.f, 3.f) * RecoilMultiplier; // little roll to the left or right
-	float RandomRotationPitch = FMath::RandRange(-22.f, -17.f) * RecoilMultiplier; // up
-	float RandomRotationYaw = FMath::RandRange(-4.f, 4.f) * RecoilMultiplier; // left/right
+
+	float RandomRotationRoll = FMath::RandRange(-6.f, -4.f) * RecoilMultiplier; // up (negative) or down (positive)
+	float RandomRotationPitch = FMath::RandRange(-2.5f, 2.5f) * RecoilMultiplier; // little roll to the left or right
+	float RandomRotationYaw = 0.f * RecoilMultiplier; // left (negative) or right (positive)
 
 	FRotator RecoilRotation = FRotator(RandomRotationPitch, RandomRotationYaw, RandomRotationRoll);
 

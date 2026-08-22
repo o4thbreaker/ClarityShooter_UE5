@@ -29,6 +29,11 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Action")
 	bool bIsAutoStart;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Action")
+	bool bWantsTick;
+
+	UCAction();
+
 	virtual void Initialize(UCActionComponent* NewActionComponent);
 
 	/* will be implemented in child classes */
@@ -43,11 +48,18 @@ public:
 	UFUNCTION(BlueprintNativeEvent, Category = "Action")
 	bool CanStartAction(AActor* Instigator);
 
+	/* will be implemented in child classes */
+	UFUNCTION(Category = "Action")
+	virtual void TickAction(float DeltaTime) {};
+
 	UFUNCTION(BlueprintCallable, Category = "Action")
 	UCActionComponent* GetOwningComponent() const { return ActionComponent; }
 
 	UFUNCTION(BlueprintCallable, Category = "Action")
-	bool IsRunning() const { return bIsRunning; }
+	FORCEINLINE bool IsRunning() const { return bIsRunning; }
+
+	UFUNCTION(BlueprintCallable, Category = "Action")
+	FORCEINLINE bool IsStopping() const { return bIsStopping; }
 
 	/* returns the world */
 	UWorld* GetWorld() const override;
@@ -66,5 +78,8 @@ protected:
 	FGameplayTagContainer BlockedTags;
 
 	bool bIsRunning;
+
+	/* to handle actions with outro */
+	bool bIsStopping;
 	
 };

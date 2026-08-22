@@ -25,9 +25,11 @@ struct FHealthChangeInfo
 public:
 	float HealthDelta;
 
-	FHitResult Hit;
 	float KnockbackTime;
 	float KnockbackForce;
+
+	FHitResult Hit;
+	ECHitZone HitZone;
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnHealthChanged, AActor*, Instigator, UCAttributeComponent*, OwningComponent, float, NewHealth, FHealthChangeInfo, HealthChangeInfo);
@@ -83,4 +85,7 @@ protected:
 
 	UFUNCTION(Category = "Attributes")
 	bool HandleDamage(AActor* InstigatorActor, const FHealthChangeInfo& HeathChangeInfo);
+
+	UFUNCTION()
+	float CalculateLimbDamageMultiplier(ECHitZone HitZone) const;
 };
