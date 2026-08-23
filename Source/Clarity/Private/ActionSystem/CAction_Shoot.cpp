@@ -162,7 +162,7 @@ void UCAction_Shoot::ProvideDamage(AActor* Instigator, AActor* Victim, ACWeaponB
 			ECHitZone HitZone = AttributeComponent->GetHitZoneFromBoneName(WeaponHitResult.BoneName);
 
 			FHealthChangeInfo HealthChangeInfo;
-			HealthChangeInfo.HealthDelta = (HitZone == ECHitZone::Head) ? -AttributeComponent->GetMaxHealth() : -Weapon->GetWeaponData()->Damage;
+			HealthChangeInfo.HealthDelta = -Weapon->GetWeaponData()->Damage;
 			HealthChangeInfo.HitZone = HitZone;
 			HealthChangeInfo.Hit = WeaponHitResult;
 			HealthChangeInfo.KnockbackForce = Weapon->GetWeaponData()->KnockbackForce;

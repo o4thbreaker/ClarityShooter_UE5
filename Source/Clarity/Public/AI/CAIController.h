@@ -97,6 +97,9 @@ protected:
 	UFUNCTION()
 	virtual void OnPossess(APawn* InPawn) override;
 
+	UFUNCTION()
+	void OnDamaged(AActor* InstigatorActor, UCAttributeComponent* OwningComp, float NewHealth, FHealthChangeInfo HealthChangeInfo);
+
 	UFUNCTION(BlueprintCallable)
 	void OnWeaponLost(UCWeaponSlotsComponent* OwningComponent);
 };

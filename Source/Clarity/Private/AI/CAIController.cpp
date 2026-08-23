@@ -12,6 +12,7 @@
 #include "Clarity.h"
 #include "AI/CAIManagerSubsystem.h"
 #include "Weapons/CWeaponSlotsComponent.h"
+#include "CAttributeComponent.h"
 
 ACAIController::ACAIController()
 {
@@ -54,6 +55,11 @@ void ACAIController::OnPossess(APawn* InPawn)
 	{
 		AICharacter->Initialize();
 
+		if (ensure(AICharacter->GetAttributeComponent()))
+		{
+			AICharacter->GetAttributeComponent()->OnDamage.AddDynamic(this, &ACAIController::OnDamaged);
+		}
+
 		if (ensureMsgf(AICharacter->GetBehaviorTree(), TEXT("Behaviour Tree is nullptr. Please assgin BehaviourTree in your AICharacter")))
 		{
 			BlackboardComponent->InitializeBlackboard(*AICharacter->GetBehaviorTree()->BlackboardAsset);
@@ -65,10 +71,6 @@ void ACAIController::OnPossess(APawn* InPawn)
 void ACAIController::BeginPlay()
 {
 	Super::BeginPlay();
-
-	/// \NOTE: done in OnPossess
-	//AICharacter = Cast<ACAICharacter>(GetPawn());
-	//if (!ensure(AICharacter)) return;
 
 	AICharacter->AIController = this;
 
@@ -127,7 +129,7 @@ void ACAIController::OnPerception(AActor* SpottedActor, FAIStimulus Stimulus)
 	// if agent is already attacking doesn't really matter what else he has sensed
 	if (GetAIState() == (uint8)ECAIState::Attack) return;
 
-	/// \TODO: add handling other senses here
+	/// \NOTE: add handling other senses here
 
 	// if sensed some other way the hostile actor - start investigating
 	if (AICharacter && AICharacter->IsHostile(SpottedActor))
@@ -137,6 +139,16 @@ void ACAIController::OnPerception(AActor* SpottedActor, FAIStimulus Stimulus)
 	}
 }
 
+void ACAIController::OnDamaged(AActor* InstigatorActor, UCAttributeComponent* OwningComp, float NewHealth, FHealthChangeInfo HealthChangeInfo)
+{
+	// death
+	if (NewHealth <= 0.0f)
+	{
+		GetBrainComponent()->StopLogic(TEXT("Killed"));
+		ClearFocus(EAIFocusPriority::LastFocusPriority);
+		AIManager->RemoveAgent(this);
+	}
+}
 
 void ACAIController::SetDetectionLevel()
 {

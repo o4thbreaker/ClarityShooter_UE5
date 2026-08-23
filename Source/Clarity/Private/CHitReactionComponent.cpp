@@ -99,6 +99,7 @@ void UCHitReactionComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 
 void UCHitReactionComponent::OnOwnerDamaged(AActor* InstigatorActor, UCAttributeComponent* OwningComp, float NewHealth, FHealthChangeInfo HealthChangeInfo)
 {
+	// death
 	if (NewHealth <= 0.0f)
 	{
 		HitReactionTimeRemaining = 0.0f;
@@ -112,5 +113,6 @@ void UCHitReactionComponent::OnOwnerDamaged(AActor* InstigatorActor, UCAttribute
 		return;
 	}
 
+	// damage reaction (if not dead)
 	PerformHitReaction(HealthChangeInfo.Hit, HealthChangeInfo.KnockbackTime, HealthChangeInfo.KnockbackForce);
 }

@@ -38,44 +38,27 @@ void ACAICharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
-	AttributeComponent->OnHealthChanged.AddDynamic(this, &ACAICharacter::OnHealthChanged);
+	AttributeComponent->OnHealthChanged.AddDynamic(this, &ACAICharacter::OnDamaged);
 }
 
-void ACAICharacter::OnHealthChanged(AActor* InstigatorActor, UCAttributeComponent* OwningComp, float NewHealth, FHealthChangeInfo HealthChangeInfo)
+void ACAICharacter::OnDamaged(AActor* InstigatorActor, UCAttributeComponent* OwningComp, float NewHealth, FHealthChangeInfo HealthChangeInfo)
 {
-	if (HealthChangeInfo.HealthDelta < 0.0f)
+	// death
+	if (NewHealth <= 0.0f)
 	{
-		/// \TODO: refactor to a callback to Damage Sense
+		// ragdoll is in HitReactionComponent
+		// controller logic is in the controller class
 
-		//if (InstigatorActor && InstigatorActor != this)
-		//{
-		//	SetTargetActor(InstigatorActor);
-		//}
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		GetCharacterMovement()->DisableMovement();	
 
-		if (NewHealth <= 0.0f)
-		{
-			// stop bt
-			if (AIController)
-			{
-				AIController->GetBrainComponent()->StopLogic(TEXT("Killed"));
-				AIController->ClearFocus(EAIFocusPriority::LastFocusPriority);
-				AIController->AIManager->RemoveAgent(AIController);
-				//AIController->GetAIPerceptionComponent()->DestroyComponent(true);
-			}
-
-			// ragdoll is in HitReactionComponent
-
-			GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-			GetCharacterMovement()->DisableMovement();	
-
-			SetLifeSpan(10.0f);
-		}
+		SetLifeSpan(10.0f);
 	}
 }
 
 bool ACAICharacter::CanBeSeenFrom(const FVector& ObserverLocation, FHitResult& OutHitResult, const AActor* IgnoreActor) const
 {
-	// function that makes AI look at other bones rather than the center of the mass
+	// function that makes AI look at other bones rather than to the center of the mass
 	/// \NOTE: is not used for now, needs review
 
 	static const FName AILineOfSight = FName(TEXT("PawnLineOfSight"));

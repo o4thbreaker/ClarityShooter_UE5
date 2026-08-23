@@ -87,5 +87,5 @@ protected:
 	bool HandleDamage(AActor* InstigatorActor, const FHealthChangeInfo& HeathChangeInfo);
 
 	UFUNCTION()
-	float CalculateLimbDamageMultiplier(ECHitZone HitZone) const;
+	float CalculateLimbDamageMultiplier(const ECHitZone& HitZone) const;
 };

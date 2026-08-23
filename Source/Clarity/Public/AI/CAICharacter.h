@@ -66,7 +66,6 @@ public:
 	bool GetIsAiming() const;
 
 	FORCEINLINE virtual ECFaction GetFaction() const override { return Faction; }
-
 	FORCEINLINE UBehaviorTree* GetBehaviorTree() const { return BehaviorTree; }
 	FORCEINLINE UCActionComponent* GetActionComponent() const { return ActionComponent; }
 	FORCEINLINE UCWeaponSlotsComponent* GetWeaponSlotsComponent() const { return WeaponSlotsComponent; }
@@ -87,7 +86,7 @@ protected:
 	ECFaction Faction;
 
 	UFUNCTION()
-	void OnHealthChanged(AActor* InstigatorActor, UCAttributeComponent* OwningComp, float NewHealth, FHealthChangeInfo HealthChangeInfo);
+	void OnDamaged(AActor* InstigatorActor, UCAttributeComponent* OwningComp, float NewHealth, FHealthChangeInfo HealthChangeInfo);
 
 	virtual void PostInitializeComponents() override;
 

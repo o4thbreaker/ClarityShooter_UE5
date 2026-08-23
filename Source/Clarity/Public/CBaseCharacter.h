@@ -33,9 +33,10 @@ public:
 
 	FORCEINLINE virtual float GetAccuracy() const override { return Accuracy; }
 
-	FORCEINLINE UCBaseAnimInstance* GetBaseAnimInstance() { return BaseAnimInstance; }
-	FORCEINLINE UContextualAnimSceneActorComponent* GetContextualAnimComponent() { return ContextualAnimComponent; }
-	FORCEINLINE UCWeaponAnimData* GetWeaponAnimData() { return WeaponAnimData; }
+	FORCEINLINE UCBaseAnimInstance* GetBaseAnimInstance() const { return BaseAnimInstance; }
+	FORCEINLINE UContextualAnimSceneActorComponent* GetContextualAnimComponent() const { return ContextualAnimComponent; }
+	FORCEINLINE UCWeaponAnimData* GetWeaponAnimData() const { return WeaponAnimData; }
+	FORCEINLINE UCAttributeComponent* GetAttributeComponent() const { return AttributeComponent; }
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stats", meta = (ClampMin = "0.0", ClampMax = "1.0", UIMin = "0.0", UIMax = "1.0"))
