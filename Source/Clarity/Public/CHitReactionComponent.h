@@ -38,7 +38,7 @@ protected:
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	UFUNCTION(BlueprintCallable, Category = "HitReaction")
-	void PerformHitReaction(FHitResult Hit, float KnockbackTime, float KnockbackForce);
+	void PerformHitReaction(const FHitResult& Hit, const float KnockbackTime, const float KnockbackForce);
 
 	UFUNCTION()
 	void OnOwnerDamaged(AActor* InstigatorActor, UCAttributeComponent* OwningComp, float NewHealth, FHealthChangeInfo HealthChangeInfo);

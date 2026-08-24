@@ -30,6 +30,24 @@ UCActionComponent* UCActionComponent::GetActionComponent(AActor* FromActor)
 	return nullptr;
 }
 
+void UCActionComponent::CancelActionsWithTags(AActor* Instigator, const FGameplayTagContainer& CancelTags, UCAction* ActionToIgnore)
+{
+	if (CancelTags.IsEmpty()) return;
+
+	TArray<UCAction*> ActionsToInspect = Actions;
+
+	for (UCAction* Action : ActionsToInspect)
+	{
+		if (!Action || Action == ActionToIgnore || !Action->IsRunning()) continue;
+
+		if (CancelTags.HasTag(Action->ActionTag))
+		{
+			UE_LOG(LogTemp, Log, TEXT("ActionComponent: %s canceled because of tag matching"), *GetNameSafe(Action));
+			Action->StopAction(Instigator);
+		}
+	}
+}
+
 UCAction* UCActionComponent::AddAction(AActor* Instigator, TSubclassOf<UCAction> ActionClass)
 {
 	// check if action class is valid
@@ -44,6 +62,8 @@ UCAction* UCActionComponent::AddAction(AActor* Instigator, TSubclassOf<UCAction>
 
 		if (NewAction->bIsAutoStart && ensure(NewAction->CanStartAction(Instigator)))
 		{
+			CancelActionsWithTags(Instigator, NewAction->GetCancelActionWithTags(), NewAction);
+
 			NewAction->StartAction(Instigator);
 		}
 
@@ -55,7 +75,12 @@ UCAction* UCActionComponent::AddAction(AActor* Instigator, TSubclassOf<UCAction>
 
 void UCActionComponent::RemoveAction(AActor* Instigator, UCAction* ActionToRemove)
 {
-	if (!ensure(ActionToRemove) && !ActionToRemove->IsRunning()) return;
+	if (!ensure(ActionToRemove)) return;
+
+	if (ActionToRemove->IsRunning())
+	{
+		ActionToRemove->StopAction(Instigator);
+	}
 
 	Actions.Remove(ActionToRemove);
 }
@@ -72,6 +97,9 @@ bool UCActionComponent::StartActionByTag(AActor* Instigator, FGameplayTag Action
 				UE_LOG(LogTemp, Warning, TEXT("Failed to start action %s for %s"), *Action->ActionName.ToString(), *InstigatorName);
 				continue;
 			}
+
+			CancelActionsWithTags(Instigator, Action->GetCancelActionWithTags(), Action);
+
 			Action->StartAction(Instigator);
 			return true;
 		}

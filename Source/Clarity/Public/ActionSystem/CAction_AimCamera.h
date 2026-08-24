@@ -39,9 +39,6 @@ public:
 	UCAction_AimCamera();
 
 protected:
-	UPROPERTY(BlueprintReadOnly, Category = "Owner")
-	ACharacter* OwnerCharacter;
-
 	UPROPERTY(BlueprintReadOnly, Category = "Camera")
 	UCameraComponent* OwnerCamera;
 

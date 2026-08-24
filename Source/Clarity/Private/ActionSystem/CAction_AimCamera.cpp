@@ -22,10 +22,8 @@ void UCAction_AimCamera::Initialize(UCActionComponent* NewActionComponent)
 {
 	Super::Initialize(NewActionComponent);
 
-	OwnerCharacter = Cast<ACharacter>(NewActionComponent->GetOwner());
-
-	OwnerCamera = OwnerCharacter->FindComponentByClass<UCameraComponent>();
-	OwnerCameraBoom = OwnerCharacter->FindComponentByClass<USpringArmComponent>();
+	OwnerCamera = GetActionOwner()->FindComponentByClass<UCameraComponent>();
+	OwnerCameraBoom = GetActionOwner()->FindComponentByClass<USpringArmComponent>();
 
 	// bind the Update pin function
 	ProgressDelegate.BindUFunction(this, FName("HandleTimelineProgress"));
@@ -38,13 +36,7 @@ void UCAction_AimCamera::Initialize(UCActionComponent* NewActionComponent)
 }
 
 bool UCAction_AimCamera::CanStartAction_Implementation(AActor* Instigator)
-{
-	if (!OwnerCharacter)
-	{
-		UE_LOG(LogTemp, Error, TEXT("UCAction_AimCamera: OwnerCharacter is null"));
-		return false;
-	}
-	
+{	
 	if (!MovementCurve)
 	{
 		UE_LOG(LogTemp, Error, TEXT("UCAction_AimCamera: MovementCurve is null"));
@@ -83,7 +75,6 @@ void UCAction_AimCamera::TickAction(float DeltaTime)
 
 void UCAction_AimCamera::HandleTimelineProgress(float Value)
 {
-	UE_LOG(LogTemp, Log, TEXT("Aim Progress: %f"), Value);
 	SetCameraOnAim(Value);
 }
 

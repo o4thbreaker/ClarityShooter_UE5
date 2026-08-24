@@ -36,7 +36,7 @@ void UCHitReactionComponent::BeginPlay()
 	}
 }
 
-void UCHitReactionComponent::PerformHitReaction(FHitResult Hit, float KnockbackTime, float KnockbackForce)
+void UCHitReactionComponent::PerformHitReaction(const FHitResult& Hit, const float KnockbackTime, const float KnockbackForce)
 {
 	SetComponentTickEnabled(true);
 

@@ -18,7 +18,7 @@ void UCAction_Reload::Initialize(UCActionComponent* NewActionComponent)
 {
 	Super::Initialize(NewActionComponent);
 
-	WeaponSlotsComponent = NewActionComponent->GetOwner()->FindComponentByClass<UCWeaponSlotsComponent>();
+	WeaponSlotsComponent = GetActionOwner()->FindComponentByClass<UCWeaponSlotsComponent>();
 }
 
 bool UCAction_Reload::CanStartAction_Implementation(AActor* Instigator)
@@ -51,37 +51,37 @@ void UCAction_Reload::StartAction_Implementation(AActor* Instigator)
 {
 	Super::StartAction_Implementation(Instigator);
 
-	PlayReloadMontage(Instigator);
+	PlayReloadMontage(GetActionOwner());
 }
 
-void UCAction_Reload::ReloadWeapon(AActor* Instigator)
+void UCAction_Reload::PlayReloadMontage(AActor* ActorToReload)
 {
-	WeaponSlotsComponent->GetCurrentWeapon()->Reload();
-
-	StopAction_Implementation(Instigator);
-}
-
-void UCAction_Reload::PlayReloadMontage(AActor* Instigator)
-{
-	ACBaseCharacter* InstigatorCharacter = Cast<ACBaseCharacter>(Instigator);
+	ACBaseCharacter* TargetCharacter = Cast<ACBaseCharacter>(ActorToReload);
 	
-	if (ensure(InstigatorCharacter))
+	if (ensure(TargetCharacter))
 	{
-		if (InstigatorCharacter->GetWeaponAnimData())
+		if (TargetCharacter->GetWeaponAnimData())
 		{
-			UAnimMontage* ReloadMontage = *InstigatorCharacter->GetWeaponAnimData()->ReloadMontages.Find(WeaponCategory);
+			UAnimMontage* ReloadMontage = *TargetCharacter->GetWeaponAnimData()->ReloadMontages.Find(WeaponCategory);
 			if (ReloadMontage)
 			{
-				InstigatorCharacter->PlayAnimMontage(ReloadMontage, 1.0f, FName("Default"));
+				TargetCharacter->PlayAnimMontage(ReloadMontage, 1.0f, FName("Default"));
 
 				if (!GetWorld()->GetTimerManager().IsTimerActive(ReloadTimerHandle))
 				{
 					FTimerDelegate Delegate;
-					Delegate.BindUObject(this, &UCAction_Reload::ReloadWeapon, Instigator);
+					Delegate.BindUObject(this, &UCAction_Reload::ReloadWeapon, ActorToReload);
 
 					GetWorld()->GetTimerManager().SetTimer(ReloadTimerHandle, Delegate, RefillTime, false);
 				}
 			}
 		}
 	}
+}
+
+void UCAction_Reload::ReloadWeapon(AActor* ActorToReload)
+{
+	WeaponSlotsComponent->GetCurrentWeapon()->Reload();
+
+	StopAction(ActorToReload);
 }

@@ -40,8 +40,8 @@ protected:
 	
 private:
 	UFUNCTION()
-	void ReloadWeapon(AActor* Instigator);
+	void ReloadWeapon(AActor* ActorToReload);
 
 	UFUNCTION()
-	void PlayReloadMontage(AActor* Instigator);
+	void PlayReloadMontage(AActor* ActorToReload);
 };

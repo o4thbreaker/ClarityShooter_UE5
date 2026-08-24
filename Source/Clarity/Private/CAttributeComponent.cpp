@@ -97,7 +97,7 @@ bool UCAttributeComponent::HandleDamage(AActor* InstigatorActor, const FHealthCh
 
 	return true;
 }
-
+	
 float UCAttributeComponent::CalculateLimbDamageMultiplier(const ECHitZone& HitZone) const
 {
 	switch (HitZone)

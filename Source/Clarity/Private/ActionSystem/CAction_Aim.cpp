@@ -29,13 +29,7 @@ void UCAction_Aim::StartAction_Implementation(AActor* Instigator)
 {
 	Super::StartAction_Implementation(Instigator);
 
-	// disable sprinting
-	if (GetOwningComponent()->ActiveGameplayTags.HasTag(CGameplayTags::Sprinting))
-	{
-		GetOwningComponent()->StopActionByTag(Instigator, CGameplayTags::SprintAction);
-	}
-
-	ACharacter* Character = Cast<ACharacter>(Instigator);
+	ACharacter* Character = GetActionOwner<ACharacter>();
 
 	if (ensure(Character))
 	{
@@ -46,13 +40,13 @@ void UCAction_Aim::StartAction_Implementation(AActor* Instigator)
 		Character->GetCharacterMovement()->bUseControllerDesiredRotation = true;
 
 		// start zooming
-		GetOwningComponent()->StartActionByTag(Instigator, CGameplayTags::AimCameraAction);
+		GetOwningComponent()->StartActionByTag(Character, CGameplayTags::AimCameraAction);
 	}
 }
 
 void UCAction_Aim::StopAction_Implementation(AActor* Instigator)
 {
-	ACharacter* Character = Cast<ACharacter>(Instigator);
+	ACharacter* Character = GetActionOwner<ACharacter>();
 
 	if (ensure(Character))
 	{
@@ -61,9 +55,8 @@ void UCAction_Aim::StopAction_Implementation(AActor* Instigator)
 		Character->GetCharacterMovement()->bUseControllerDesiredRotation = false;
 
 		// stop zooming
-		GetOwningComponent()->StopActionByTag(Instigator, CGameplayTags::AimCameraAction);
+		GetOwningComponent()->StopActionByTag(Character, CGameplayTags::AimCameraAction);
 	}
 	
 	Super::StopAction_Implementation(Instigator);
 }
-

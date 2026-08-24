@@ -93,5 +93,5 @@ void UCAction_SwapShoulder::HandleTimelineProgress(float Value)
 
 void UCAction_SwapShoulder::HandleTimelineFinished()
 {
-	StopAction_Implementation(OwnerCharacter);
+	StopAction(OwnerCharacter);
 }

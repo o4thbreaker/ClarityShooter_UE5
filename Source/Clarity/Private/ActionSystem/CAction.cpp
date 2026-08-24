@@ -20,7 +20,7 @@ void UCAction::StartAction_Implementation(AActor* Instigator)
 	UE_LOG(LogTemp, Log, TEXT("StartAction: %s"), *GetNameSafe(this));
 
 	UCActionComponent* Component = GetOwningComponent();
-	
+
 	Component->ActiveGameplayTags.AppendTags(GrantsTags);
 
 	bIsRunning = true;
@@ -61,6 +61,11 @@ bool UCAction::CanStartAction_Implementation(AActor* Instigator)
 		
 	// otherwise
 	return true;
+}
+
+AActor* UCAction::GetActionOwner() const
+{
+	return GetOwningComponent() ? GetOwningComponent()->GetOwner() : nullptr; 
 }
 
 UWorld* UCAction::GetWorld() const

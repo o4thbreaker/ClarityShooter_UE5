@@ -21,8 +21,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Action")
 	FGameplayTag ActionTag;
 
-	/* tag of the action */
-	/// \NOTE: will be replaced with tag
+	/* name of the action */
+	/// \NOTE: DEPRECATED (has been replaced with tag)
 	UPROPERTY(EditDefaultsOnly, Category = "Action")
 	FName ActionName; 
 
@@ -53,13 +53,29 @@ public:
 	virtual void TickAction(float DeltaTime) {};
 
 	UFUNCTION(BlueprintCallable, Category = "Action")
-	UCActionComponent* GetOwningComponent() const { return ActionComponent; }
-
-	UFUNCTION(BlueprintCallable, Category = "Action")
 	FORCEINLINE bool IsRunning() const { return bIsRunning; }
 
 	UFUNCTION(BlueprintCallable, Category = "Action")
 	FORCEINLINE bool IsStopping() const { return bIsStopping; }
+
+	UFUNCTION(BlueprintCallable, Category = "Action")
+	UCActionComponent* GetOwningComponent() const { return ActionComponent; }
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Action")
+	AActor* GetActionOwner() const;
+
+	/// \NOTE: because it as a template function, we have to implement it in the header file
+	/* generic override to get smth like ACharacter */
+	template<class T>
+	T* GetActionOwner() const
+	{
+		AActor* Owner = GetActionOwner();
+		return Owner ? Cast<T>(Owner) : nullptr;
+	}
+
+
+	UFUNCTION(BlueprintCallable, Category = "Action")
+	const FGameplayTagContainer& GetCancelActionWithTags() const { return CancelActionsWithTags; }
 
 	/* returns the world */
 	UWorld* GetWorld() const override;
@@ -70,12 +86,16 @@ protected:
 	UCActionComponent* ActionComponent;
 
 	/* what tags will be added to the instigator of this action */
-	UPROPERTY(EditDefaultsOnly, Category = "Action")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Action")
 	FGameplayTagContainer GrantsTags;
 
 	/* action can only start if OWNER has none of this TAGS applied */
-	UPROPERTY(EditDefaultsOnly, Category = "Action")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Action")
 	FGameplayTagContainer BlockedTags;
+
+	/* when this action starts, all actions with those tags will be cancelled */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Action")
+	FGameplayTagContainer CancelActionsWithTags;
 
 	bool bIsRunning;
 

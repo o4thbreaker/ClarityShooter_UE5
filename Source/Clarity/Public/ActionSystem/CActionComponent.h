@@ -63,6 +63,8 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Action")
 	TArray<TSubclassOf<UCAction>> DefaultActions;
 
+	void CancelActionsWithTags(AActor* Instigator, const FGameplayTagContainer& CancelTags, UCAction* ActionToIgnore);
+
 	virtual void BeginPlay() override;
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;

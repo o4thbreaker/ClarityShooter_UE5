@@ -12,7 +12,6 @@
 
 static TAutoConsoleVariable<bool> CVarDrawDebugDisarmLines(TEXT("art.DisarmDrawDebug"), true, TEXT("Enable Debug Lines for disarming"), ECVF_Cheat);
 
-
 UCAction_DisarmEnemy::UCAction_DisarmEnemy()
 {
 	MaxRange = 500.0f;
@@ -23,7 +22,7 @@ void UCAction_DisarmEnemy::Initialize(UCActionComponent* NewActionComponent)
 {
 	Super::Initialize(NewActionComponent);
 
-	AnimSceneComponent = NewActionComponent->GetOwner()->FindComponentByClass<UContextualAnimSceneActorComponent>();
+	AnimSceneComponent = GetActionOwner()->FindComponentByClass<UContextualAnimSceneActorComponent>();
 
 	if (ensure(AnimSceneComponent))
 	{
@@ -33,15 +32,24 @@ void UCAction_DisarmEnemy::Initialize(UCActionComponent* NewActionComponent)
 
 bool UCAction_DisarmEnemy::CanStartAction_Implementation(AActor* Instigator)
 {
-	if (!ensure(ContextualAnimAsset)) return false;
-	if (!ensure(AnimSceneComponent)) return false;
+	if (!ensure(ContextualAnimAsset))
+	{
+		UE_LOG(LogTemp, Error, TEXT("UCAction_DisarmEnemy: ContextualAnimSceneAsset is null"));
+		return false;
+	}
+	
+	if (!ensure(AnimSceneComponent))
+	{
+		UE_LOG(LogTemp, Error, TEXT("UCAction_DisarmEnemy: ContextualAnimSceneActorComponent is null"));
+		return false;
+	}
 
 	return Super::CanStartAction_Implementation(Instigator);
 }
 
 void UCAction_DisarmEnemy::StartAction_Implementation(AActor* Instigator)
 {
-	FHitResult Hit = GetTraceHitInfo(Instigator);
+	FHitResult Hit = GetTraceHitInfo(GetActionOwner());
 	AActor* HitActor = Hit.GetActor();
 
 	if (HitActor)
@@ -49,7 +57,7 @@ void UCAction_DisarmEnemy::StartAction_Implementation(AActor* Instigator)
 		/// \NOTE: an actual weapon transfer is in Notify_RetrieveWeapon
 
 		// start animation
-		if (PlayContextualAnimation(Instigator, HitActor))
+		if (PlayContextualAnimation(GetActionOwner(), HitActor))
 		{
 			// add Disarming state
 			ActionComponent->ActiveGameplayTags.AddTag(CGameplayTags::Disarming);
@@ -86,7 +94,7 @@ void UCAction_DisarmEnemy::StopAction_Implementation(AActor* Instigator)
 }
 
 
-FHitResult UCAction_DisarmEnemy::GetTraceHitInfo(AActor* FromActor)
+FHitResult UCAction_DisarmEnemy::GetTraceHitInfo(AActor* FromActor) const
 {
 	FVector CrosshairWorldPosition;
 	FVector CrosshairWorldDirection;
@@ -157,5 +165,5 @@ bool UCAction_DisarmEnemy::PlayContextualAnimation(AActor* Attacker, AActor* Vic
 
 void UCAction_DisarmEnemy::OnAnimationEnd(UContextualAnimSceneActorComponent* SceneActorComponent)
 {
-	StopAction_Implementation(GetOwningComponent()->GetOwner());
+	StopAction(GetActionOwner());
 }

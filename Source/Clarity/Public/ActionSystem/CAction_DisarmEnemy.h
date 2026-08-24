@@ -42,7 +42,7 @@ protected:
 	float SlowMotionTime;
 
 	UFUNCTION()
-	FHitResult GetTraceHitInfo(AActor* FromActor);
+	FHitResult GetTraceHitInfo(AActor* FromActor) const;
 
 	UFUNCTION()
 	bool PlayContextualAnimation(AActor* Attacker, AActor* Victim);
