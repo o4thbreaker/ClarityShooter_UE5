@@ -11,7 +11,7 @@ class ACWeaponBase;
 struct FCollisionQueryParams;
 
 /**
- *
+ * Action that performs a single shot from the currently equipped weapon.
  */
 UCLASS()
 class CLARITY_API UCAction_Shoot : public UCAction
@@ -33,18 +33,11 @@ protected:
 
 	bool bWillMiss;
 
-	void PlayFireAnimation(AActor* Instigator, const ACWeaponBase* Weapon);
+	void PlayFireAnimation(const ACWeaponBase* Weapon);
 
-	void PlayImpactEffect(AActor* Instigator, const ACWeaponBase* Weapon, const FVector& ImpactPoint);
+	void PlayImpactEffect(const ACWeaponBase* Weapon, const FVector& ImpactPoint);
 
-	void PlayWeaponRecoil(AActor* Instigator, const ACWeaponBase* Weapon);
-
-	/// \NOTE: DEPRECATED. IT IS NOW DONE VIA ANIMATION
-	/*
-	void PlayFireSound(AActor* Instigator, ACWeaponBase* Weapon);
-
-	void PlayMuzzleFlash(AActor* Instigator, ACWeaponBase* Weapon, const FTransform& SocketTransform);
-	*/
+	void PlayWeaponRecoil(const ACWeaponBase* Weapon);
 private:
 	UPROPERTY()
 	UCWeaponSlotsComponent* OwnerWeaponSlotsComponent;
@@ -54,11 +47,13 @@ private:
 
 	void PerformCrosshairLineTrace(FHitResult& CrosshairHitResult, const FVector& Start, const FVector& End, const FCollisionQueryParams& Params);
 
-	void PerformWeaponLineTrace(ACWeaponBase* Weapon, FHitResult& WeaponHitResult, const FHitResult& CrosshairHitResult, const FVector& Start, const FVector& End, const FCollisionQueryParams& Params);
+	void PerformWeaponLineTrace(const ACWeaponBase* Weapon, FHitResult& WeaponHitResult, const FHitResult& CrosshairHitResult, const FVector& Start, const FVector& End, const FCollisionQueryParams& Params);
 
-	void ProvideDamage(AActor* Instigator, AActor* Victim, ACWeaponBase* Weapon, const FHitResult& WeaponHitResult);
+	void ProvideDamage(AActor* DamageProvider, AActor* Victim, const ACWeaponBase* Weapon, const FHitResult& WeaponHitResult);
 
 	void DrawDebugLineTrace(const FVector& Start, const FVector& End, const FVector& HitLocation, const FColor& TraceColor, const FColor& HitColor);
 
-	FVector CalculateBulletEndLocation(ACWeaponBase* Weapon, const FHitResult& CrosshairHitResult, const FVector& Start, const FVector& End) const;
+	FVector CalculateBulletEndLocation(const ACWeaponBase* Weapon, const FHitResult& CrosshairHitResult, const FVector& Start, const FVector& End) const;
+
+	void ClearFireCooldown();
 };

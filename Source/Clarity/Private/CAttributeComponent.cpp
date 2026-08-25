@@ -86,16 +86,20 @@ bool UCAttributeComponent::HandleDamage(AActor* InstigatorActor, const FHealthCh
 	// died
 	if (Health <= 0.0f)
 	{
-		ACGameModeBase* GameMode = GetWorld()->GetAuthGameMode<ACGameModeBase>();
-		if (GameMode)
-		{
-			GameMode->OnActorKilled(GetOwner(), InstigatorActor);
-		}
-
+		HandleDeath(InstigatorActor, HealthChangeInfo);
 		return true;
 	}
 
 	return true;
+}
+
+void UCAttributeComponent::HandleDeath(AActor* InstigatorActor, const FHealthChangeInfo& HeathChangeInfo)
+{
+	ACGameModeBase* GameMode = GetWorld()->GetAuthGameMode<ACGameModeBase>();
+	if (GameMode)
+	{
+		GameMode->OnActorKilled(GetOwner(), InstigatorActor);
+	}
 }
 	
 float UCAttributeComponent::CalculateLimbDamageMultiplier(const ECHitZone& HitZone) const

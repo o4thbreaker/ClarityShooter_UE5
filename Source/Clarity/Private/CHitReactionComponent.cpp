@@ -3,7 +3,6 @@
 #include "CHitReactionComponent.h"
 #include "PhysicsEngine/PhysicalAnimationComponent.h"
 #include "GameFramework/Character.h"
-#include "CAttributeComponent.h"
 
 UCHitReactionComponent::UCHitReactionComponent()
 {
@@ -28,12 +27,6 @@ void UCHitReactionComponent::BeginPlay()
 
 	PhysicalAnimationComponent->SetSkeletalMeshComponent(OwnerMeshComponent);
 	PhysicalAnimationComponent->SetComponentTickEnabled(false);
-
-	UCAttributeComponent* OwnerAttributes = UCAttributeComponent::GetAttributes(GetOwner());
-	if (OwnerAttributes)
-	{
-		OwnerAttributes->OnDamage.AddDynamic(this, &UCHitReactionComponent::OnOwnerDamaged);
-	}
 }
 
 void UCHitReactionComponent::PerformHitReaction(const FHitResult& Hit, const float KnockbackTime, const float KnockbackForce)
@@ -60,6 +53,16 @@ void UCHitReactionComponent::PerformHitReaction(const FHitResult& Hit, const flo
 	PhysicalAnimationComponent->SetComponentTickEnabled(true);
 }
 
+void UCHitReactionComponent::HandleDeath()
+{
+	HitReactionTimeRemaining = 0.0f;
+	PhysicalAnimationComponent->SetComponentTickEnabled(false);
+	// reset profile
+	PhysicalAnimationComponent->ApplyPhysicalAnimationProfileBelow(CoreBodyName, NAME_None, false, false);
+	SetComponentTickEnabled(false);
+	OwnerMeshComponent->SetCollisionProfileName("Ragdoll");
+	OwnerMeshComponent->SetAllBodiesSimulatePhysics(true);
+}
 
 void UCHitReactionComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
@@ -95,24 +98,4 @@ void UCHitReactionComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		float MinValue = FMath::Min(HitReactionTimeRemaining, 1.0f);
 		OwnerMeshComponent->SetAllBodiesBelowPhysicsBlendWeight(CoreBodyName, MinValue, false, true);
 	}
-}
-
-void UCHitReactionComponent::OnOwnerDamaged(AActor* InstigatorActor, UCAttributeComponent* OwningComp, float NewHealth, FHealthChangeInfo HealthChangeInfo)
-{
-	// death
-	if (NewHealth <= 0.0f)
-	{
-		HitReactionTimeRemaining = 0.0f;
-
-		PhysicalAnimationComponent->SetComponentTickEnabled(false);
-		// reset profile
-		PhysicalAnimationComponent->ApplyPhysicalAnimationProfileBelow(CoreBodyName, NAME_None, false, false);
-		SetComponentTickEnabled(false);
-		OwnerMeshComponent->SetCollisionProfileName("Ragdoll");
-		OwnerMeshComponent->SetAllBodiesSimulatePhysics(true);
-		return;
-	}
-
-	// damage reaction (if not dead)
-	PerformHitReaction(HealthChangeInfo.Hit, HealthChangeInfo.KnockbackTime, HealthChangeInfo.KnockbackForce);
 }

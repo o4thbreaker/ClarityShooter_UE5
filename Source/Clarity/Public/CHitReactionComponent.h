@@ -23,8 +23,13 @@ public:
 
 	UCHitReactionComponent();
 	
-	FORCEINLINE UPhysicalAnimationComponent* GetPhysicalAnimationComponent() { return PhysicalAnimationComponent; }
+	UFUNCTION(BlueprintCallable, Category = "HitReaction")
+	void PerformHitReaction(const FHitResult& Hit, const float KnockbackTime, const float KnockbackForce);
 
+	UFUNCTION(BlueprintCallable, Category = "HitReaction")
+	void HandleDeath();
+
+	FORCEINLINE UPhysicalAnimationComponent* GetPhysicalAnimationComponent() { return PhysicalAnimationComponent; }
 
 protected:
 	UPROPERTY(BlueprintReadonly, Category = "Components")
@@ -36,12 +41,6 @@ protected:
 	virtual void BeginPlay() override;
 
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
-	UFUNCTION(BlueprintCallable, Category = "HitReaction")
-	void PerformHitReaction(const FHitResult& Hit, const float KnockbackTime, const float KnockbackForce);
-
-	UFUNCTION()
-	void OnOwnerDamaged(AActor* InstigatorActor, UCAttributeComponent* OwningComp, float NewHealth, FHealthChangeInfo HealthChangeInfo);
 
 private:
 	float HitReactionTimeRemaining;

@@ -45,6 +45,8 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FOnHealthChanged OnHealthChanged;
+
+	UPROPERTY(BlueprintAssignable)
 	FOnDamage OnDamage;
 
 	UFUNCTION(BlueprintCallable, Category = "Attributes")
@@ -59,14 +61,14 @@ public:
 	ECHitZone GetHitZoneFromBoneName(FName BoneNAme) const;
 
 	UFUNCTION(BlueprintCallable)
-	FORCEINLINE bool IsAlive() const { return Health > 0; }
+	FORCEINLINE bool IsAlive() const { return Health > 0.0f; }
 
 	UFUNCTION(BlueprintCallable)
 	FORCEINLINE bool IsFullHealth() const { return MaxHealth <= Health; }
 
 	FORCEINLINE float GetHealth() const { return Health; }
 
-	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }	
+	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes")
 	float Health;
@@ -86,6 +88,8 @@ protected:
 	UFUNCTION(Category = "Attributes")
 	bool HandleDamage(AActor* InstigatorActor, const FHealthChangeInfo& HeathChangeInfo);
 
+	UFUNCTION(Category = "Attributes")
+	void HandleDeath(AActor* InstigatorActor, const FHealthChangeInfo& HeathChangeInfo);
 	UFUNCTION()
 	float CalculateLimbDamageMultiplier(const ECHitZone& HitZone) const;
 };

@@ -38,22 +38,35 @@ void ACAICharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
-	AttributeComponent->OnHealthChanged.AddDynamic(this, &ACAICharacter::OnDamaged);
+	AttributeComponent->OnDamage.AddDynamic(this, &ACAICharacter::OnDamaged);
 }
 
 void ACAICharacter::OnDamaged(AActor* InstigatorActor, UCAttributeComponent* OwningComp, float NewHealth, FHealthChangeInfo HealthChangeInfo)
 {
-	// death
-	if (NewHealth <= 0.0f)
+	// hit reaction
+	if (NewHealth > 0.0f)
 	{
-		// ragdoll is in HitReactionComponent
-		// controller logic is in the controller class
-
-		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		GetCharacterMovement()->DisableMovement();	
-
-		SetLifeSpan(10.0f);
+		// package the event data
+		FActionEventData EventData;
+		EventData.EventTag = CGameplayTags::HitReactionAction;
+		EventData.Instigator = InstigatorActor;
+		EventData.EventContext.InitializeAs<FHealthChangeInfo>(HealthChangeInfo); // the structure will automatically allocate memory for the event data
+		// start action with context
+		ActionComponent->TryStartActionWithContext(EventData);
+		return;
 	}
+	
+	// death
+	
+	// ragdoll is in HitReactionComponent
+	// controller logic is in the controller class
+
+	ActionComponent->StartActionByTag(this, CGameplayTags::DeathAction);
+
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetCharacterMovement()->DisableMovement();
+
+	SetLifeSpan(10.0f);
 }
 
 bool ACAICharacter::CanBeSeenFrom(const FVector& ObserverLocation, FHitResult& OutHitResult, const AActor* IgnoreActor) const

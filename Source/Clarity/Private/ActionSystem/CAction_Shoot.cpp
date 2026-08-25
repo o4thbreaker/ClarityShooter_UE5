@@ -19,16 +19,16 @@ static TAutoConsoleVariable<bool> CVarDrawDebugShootLines(TEXT("art.ShootDrawDeb
 void UCAction_Shoot::Initialize(UCActionComponent* NewActionComponent)
 {
 	Super::Initialize(NewActionComponent);
-	OwnerWeaponSlotsComponent = NewActionComponent->GetOwner()->FindComponentByClass<UCWeaponSlotsComponent>();
+	OwnerWeaponSlotsComponent = GetActionOwner()->FindComponentByClass<UCWeaponSlotsComponent>();
 }
 
 bool UCAction_Shoot::CanStartAction_Implementation(AActor* Instigator)
 {
 	if (!Super::CanStartAction_Implementation(Instigator)) return false;
 
-	if (!Cast<ICShooterInterface>(Instigator))
+	if (!Cast<ICShooterInterface>(GetActionOwner()))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("%s doesn't implement ICShooterInterface. Aborting Shoot Action."), *GetNameSafe(Instigator));
+		UE_LOG(LogTemp, Warning, TEXT("%s doesn't implement ICShooterInterface. Aborting Shoot Action."), *GetNameSafe(GetActionOwner()));
 		return false;
 	}
 
@@ -65,19 +65,13 @@ void UCAction_Shoot::StartAction_Implementation(AActor* Instigator)
 	// handle the ammo logic
 	if (!Weapon->TryConsumeAmmo())
 	{
-		StopAction(Instigator);
+		StopAction(GetActionOwner());
 		return;
 	}
 
 	const FTransform SocketTransform = Weapon->GetMesh()->GetSocketTransform(Weapon->BarrelSocketName);
 
-	/*
-	PlayFireSound(Instigator, Weapon);
-
-	PlayMuzzleFlash(Instigator, Weapon, SocketTransform);
-	*/
-
-	PlayFireAnimation(Instigator, Weapon);
+	PlayFireAnimation(Weapon);
 
 	/* we get position and direction of crosshair. if it is player, it will return its origin on screen and direction
 	if it is AI, it will return origin of AI's weapon and direction towards target*/
@@ -87,7 +81,7 @@ void UCAction_Shoot::StartAction_Implementation(AActor* Instigator)
 	/* is crosshair translated successfully */
 	bool bIsCrosshairTranslated = false;
 
-	ICShooterInterface* Shooter = Cast<ICShooterInterface>(Instigator);
+	ICShooterInterface* Shooter = Cast<ICShooterInterface>(GetActionOwner());
 	if (Shooter)
 	{
 		bIsCrosshairTranslated = Shooter->GetAimOriginAndDirection(CrosshairWorldPosition, CrosshairWorldDirection);
@@ -102,7 +96,7 @@ void UCAction_Shoot::StartAction_Implementation(AActor* Instigator)
 		FVector Start = CrosshairWorldPosition;
 		FVector End = Start + (CrosshairWorldDirection * Weapon->GetWeaponData()->ShotRange);
 		FCollisionQueryParams Params;
-		Params.AddIgnoredActor(Instigator);
+		Params.AddIgnoredActor(GetActionOwner());
 		Params.AddIgnoredActor(Weapon);
 		// need to consider what part of body we hit
 		Params.bReturnPhysicalMaterial = true;
@@ -118,21 +112,22 @@ void UCAction_Shoot::StartAction_Implementation(AActor* Instigator)
 
 		if (WeaponHitResult.bBlockingHit)
 		{
-			ProvideDamage(Instigator, WeaponHitResult.GetActor(), Weapon, WeaponHitResult);
-			PlayImpactEffect(Instigator, Weapon, WeaponHitResult.Location);
+			ProvideDamage(GetActionOwner(), WeaponHitResult.GetActor(), Weapon, WeaponHitResult);
+			PlayImpactEffect(Weapon, WeaponHitResult.Location);
 		}
 	}
 
-	PlayWeaponRecoil(Instigator, Weapon);
+	PlayWeaponRecoil(Weapon);
 
 	// add blocking tag after the fire
 	ActionComponent->ActiveGameplayTags.AddTag(CGameplayTags::FireCooldown);
 
-	// i use lambda because too lazy to make whole new function
-	GetWorld()->GetTimerManager().SetTimer(FireRateCooldownHandle, [this]() {ActionComponent->ActiveGameplayTags.RemoveTag(CGameplayTags::FireCooldown); }, 
-		Weapon->GetWeaponData()->FireRate, false);
+	FTimerDelegate CooldownDelegate;
+	CooldownDelegate.BindUObject(this, &UCAction_Shoot::ClearFireCooldown);
 
-	StopAction(Instigator);
+	GetWorld()->GetTimerManager().SetTimer(FireRateCooldownHandle, CooldownDelegate, Weapon->GetWeaponData()->FireRate, false);
+
+	StopAction(GetActionOwner());
 }
 
 void UCAction_Shoot::PerformCrosshairLineTrace(FHitResult& CrosshairHitResult, const FVector& Start, const FVector& End, const FCollisionQueryParams& Params)
@@ -142,7 +137,7 @@ void UCAction_Shoot::PerformCrosshairLineTrace(FHitResult& CrosshairHitResult, c
 	DrawDebugLineTrace(Start, End, CrosshairHitResult.Location, FColor::Red, FColor::Blue);
 }
 
-void UCAction_Shoot::PerformWeaponLineTrace(ACWeaponBase* Weapon, FHitResult& WeaponHitResult, const FHitResult& CrosshairHitResult, const FVector& Start, const FVector& End, const FCollisionQueryParams& Params)
+void UCAction_Shoot::PerformWeaponLineTrace(const ACWeaponBase* Weapon, FHitResult& WeaponHitResult, const FHitResult& CrosshairHitResult, const FVector& Start, const FVector& End, const FCollisionQueryParams& Params)
 {
 	FVector AdjustedEnd = CalculateBulletEndLocation(Weapon, CrosshairHitResult, Start, End);
 
@@ -152,7 +147,7 @@ void UCAction_Shoot::PerformWeaponLineTrace(ACWeaponBase* Weapon, FHitResult& We
 	DrawDebugLineTrace(Start, AdjustedEnd, WeaponHitResult.Location, FColor::Yellow, FColor::Magenta);
 }
 
-void UCAction_Shoot::ProvideDamage(AActor* Instigator, AActor* Victim, ACWeaponBase* Weapon, const FHitResult& WeaponHitResult)
+void UCAction_Shoot::ProvideDamage(AActor* DamageProvider, AActor* Victim, const ACWeaponBase* Weapon, const FHitResult& WeaponHitResult)
 {
 	if (IsValid(Victim))
 	{
@@ -168,12 +163,12 @@ void UCAction_Shoot::ProvideDamage(AActor* Instigator, AActor* Victim, ACWeaponB
 			HealthChangeInfo.KnockbackForce = Weapon->GetWeaponData()->KnockbackForce;
 			HealthChangeInfo.KnockbackTime = Weapon->GetWeaponData()->KnockbackTime;
 
-			AttributeComponent->ApplyHealthChange(Instigator, HealthChangeInfo);
+			AttributeComponent->ApplyHealthChange(DamageProvider, HealthChangeInfo);
 		}
 	}
 }
 
-void UCAction_Shoot::PlayFireAnimation(AActor* Instigator, const ACWeaponBase* Weapon)
+void UCAction_Shoot::PlayFireAnimation(const ACWeaponBase* Weapon)
 {
 	if (Weapon && Weapon->GetWeaponData()->FireAnimation)
 	{
@@ -182,7 +177,7 @@ void UCAction_Shoot::PlayFireAnimation(AActor* Instigator, const ACWeaponBase* W
 	}
 }
 
-void UCAction_Shoot::PlayImpactEffect(AActor* Instigator, const ACWeaponBase* Weapon, const FVector& ImpactPoint)
+void UCAction_Shoot::PlayImpactEffect(const ACWeaponBase* Weapon, const FVector& ImpactPoint)
 {
 	if (Weapon && Weapon->GetWeaponData()->ImpactEffect)
 	{
@@ -190,9 +185,9 @@ void UCAction_Shoot::PlayImpactEffect(AActor* Instigator, const ACWeaponBase* We
 	}
 }
 
-void UCAction_Shoot::PlayWeaponRecoil(AActor* Instigator, const ACWeaponBase* Weapon)
+void UCAction_Shoot::PlayWeaponRecoil(const ACWeaponBase* Weapon)
 {
-	ACBaseCharacter* BaseCharacter = Cast<ACBaseCharacter>(Instigator);
+	ACBaseCharacter* BaseCharacter = GetActionOwner<ACBaseCharacter>();
 
 	if (BaseCharacter && BaseCharacter->GetBaseAnimInstance())
 	{
@@ -210,7 +205,7 @@ void UCAction_Shoot::DrawDebugLineTrace(const FVector& Start, const FVector& End
 	}
 }
 
-FVector UCAction_Shoot::CalculateBulletEndLocation(ACWeaponBase* Weapon, const FHitResult& CrosshairHitResult, const FVector& Start, const FVector& End) const
+FVector UCAction_Shoot::CalculateBulletEndLocation(const ACWeaponBase* Weapon, const FHitResult& CrosshairHitResult, const FVector& Start, const FVector& End) const
 {
 	/// \NOTE: due to floating point precision WeaponEnd can be coincided exactly with the surface point from CrosshairHitResult
 		///		   and UE can sometimes not register the intersection
@@ -240,24 +235,8 @@ FVector UCAction_Shoot::CalculateBulletEndLocation(ACWeaponBase* Weapon, const F
 	}
 }
 
-/// \NOTE: DEPRECATED. IT IS NOW DONE VIA ANIMATION
-/*
-void UCAction_Shoot::PlayFireSound(AActor* Instigator, ACWeaponBase* Weapon)
+void UCAction_Shoot::ClearFireCooldown()
 {
-	USoundCue* FiringAudio = Weapon->GetWeaponData()->FiringAudio;
-
-	if (FiringAudio)
-	{
-		UGameplayStatics::PlaySoundAtLocation(GetWorld(), FiringAudio, Instigator->GetActorLocation(),
-			1.0f, 1.0f, 0.0f, FiringAudio->AttenuationSettings);
-	}
+	// remove the blocking tag after the fire cooldown
+	ActionComponent->ActiveGameplayTags.RemoveTag(CGameplayTags::FireCooldown);
 }
-
-void UCAction_Shoot::PlayMuzzleFlash(AActor* Instigator, ACWeaponBase* Weapon, const FTransform& SocketTransform)
-{
-	if (Weapon->GetWeaponData()->MuzzleFlash)
-	{
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), Weapon->GetWeaponData()->MuzzleFlash, SocketTransform);
-	}
-}
-*/

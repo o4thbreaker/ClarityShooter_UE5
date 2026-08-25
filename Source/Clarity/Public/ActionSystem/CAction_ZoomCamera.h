@@ -11,7 +11,7 @@ class UCCameraModifier_Zoom;
 class APlayerCameraManager;
 
 /**
- * Action to zoom camera based on lerp equation
+ * [DEPRECATED] Action to zoom camera based on lerp equation
  */
 UCLASS()
 class CLARITY_API UCAction_ZoomCamera : public UCAction

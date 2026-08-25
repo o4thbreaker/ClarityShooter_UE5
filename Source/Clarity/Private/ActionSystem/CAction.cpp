@@ -15,6 +15,13 @@ void UCAction::Initialize(UCActionComponent* NewActionComponent)
 	ActionComponent = NewActionComponent;
 }
 
+void UCAction::StartActionWithContext(AActor* Instigator, const FActionEventData& EventData)
+{
+	ActionData = EventData;
+
+	StartAction(Instigator);
+}
+
 void UCAction::StartAction_Implementation(AActor* Instigator)
 {
 	UE_LOG(LogTemp, Log, TEXT("StartAction: %s"), *GetNameSafe(this));

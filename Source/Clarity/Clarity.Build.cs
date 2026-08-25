@@ -22,7 +22,8 @@ public class Clarity : ModuleRules
 			"GameplayTags",
             "GameplayTasks",
 			"ContextualAnimation",
-			"MotionWarping"
+			"MotionWarping",
+			"StructUtils"
         });
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });

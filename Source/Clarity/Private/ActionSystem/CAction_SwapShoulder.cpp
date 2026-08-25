@@ -16,7 +16,7 @@ void UCAction_SwapShoulder::Initialize(UCActionComponent* NewActionComponent)
 {
 	Super::Initialize(NewActionComponent);
 
-	OwnerCharacter = Cast<ACharacter>(NewActionComponent->GetOwner());
+	OwnerCharacter = GetActionOwner<ACharacter>();
 
 	if (OwnerCharacter)
 	{

@@ -14,6 +14,8 @@ namespace CGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(SprintCameraAction, "Action.SprintCamera");
 	UE_DEFINE_GAMEPLAY_TAG(DisarmAction, "Action.Disarm");
 	UE_DEFINE_GAMEPLAY_TAG(SwapShoulderAction, "Action.SwapShoulder");
+	UE_DEFINE_GAMEPLAY_TAG(HitReactionAction, "Action.HitReaction");
+	UE_DEFINE_GAMEPLAY_TAG(DeathAction, "Action.Death");
 
 	// ========== STATES ==========
 	UE_DEFINE_GAMEPLAY_TAG(Reloading, "State.Reloading");

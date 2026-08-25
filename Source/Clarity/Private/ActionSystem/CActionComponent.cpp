@@ -60,7 +60,7 @@ UCAction* UCActionComponent::AddAction(AActor* Instigator, TSubclassOf<UCAction>
 
 		Actions.Add(NewAction);
 
-		if (NewAction->bIsAutoStart && ensure(NewAction->CanStartAction(Instigator)))
+		if (NewAction->bIsAutoStart && NewAction->CanStartAction(Instigator))
 		{
 			CancelActionsWithTags(Instigator, NewAction->GetCancelActionWithTags(), NewAction);
 
@@ -129,8 +129,32 @@ bool UCActionComponent::IsInActions(TSubclassOf<UCAction> ActionClassToCheck) co
 {
 	for (UCAction* Action : Actions)
 	{
-		if (Action->GetClass() == ActionClassToCheck)
+		if (Action && Action->GetClass() == ActionClassToCheck)
 		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool UCActionComponent::TryStartActionWithContext(const FActionEventData& EventData)
+{
+	if (!EventData.EventTag.IsValid())
+	{	
+		UE_LOG(LogTemp, Warning, TEXT("SendActionEvent: Invalid EventTag"));
+		return false;
+	}
+
+	for (UCAction* Action : Actions)
+	{
+		if (Action && Action->ActionTag == EventData.EventTag)
+		{
+			if (!Action->CanStartAction(EventData.Instigator)) return false;
+			
+			CancelActionsWithTags(EventData.Instigator, Action->GetCancelActionWithTags(), Action);
+
+			Action->StartActionWithContext(EventData.Instigator, EventData);
 			return true;
 		}
 	}

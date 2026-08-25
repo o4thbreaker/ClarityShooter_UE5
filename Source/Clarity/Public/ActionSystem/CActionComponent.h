@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "GameplayTagContainer.h"
+#include "ActionSystem/CActionSystemTypes.h"
 #include "CActionComponent.generated.h"
 
 class UCAction;
@@ -53,6 +54,10 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Action")
 	bool IsInActions(TSubclassOf<UCAction> ActionClassToCheck) const;
+
+	/* sends a gameplay event with context to the action system. be aware, that it is also starts and action */
+	UFUNCTION(BlueprintCallable, Category = "Action")
+	bool TryStartActionWithContext(const FActionEventData& EventData);
 
 protected:
 	/* active actions */

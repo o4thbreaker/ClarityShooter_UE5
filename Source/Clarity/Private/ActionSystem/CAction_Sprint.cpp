@@ -21,7 +21,7 @@ void UCAction_Sprint::Initialize(UCActionComponent* NewActionComponent)
 	Super::Initialize(NewActionComponent);
 
 	// initialize zoom action
-	ZoomAction = Cast<UCAction_ZoomCamera>(NewActionComponent->AddAction(NewActionComponent->GetOwner(), UCAction_ZoomCamera::StaticClass()));
+	ZoomAction = Cast<UCAction_ZoomCamera>(ActionComponent->AddAction(GetActionOwner(), UCAction_ZoomCamera::StaticClass()));
 	ZoomAction->ActionTag = CGameplayTags::SprintCameraAction;
 	ZoomAction->CameraZoomedFOV = CameraZoomedFOV;
 	ZoomAction->CameraZoomSpeed = CameraZoomSpeed;
@@ -31,7 +31,7 @@ void UCAction_Sprint::StartAction_Implementation(AActor* Instigator)
 {
 	Super::StartAction_Implementation(Instigator);
 
-	ACharacter* Owner = Cast<ACharacter>(Instigator);
+	ACharacter* Owner = GetActionOwner<ACharacter>();
 	if (Owner)
 	{
 		// store original speed
@@ -40,18 +40,18 @@ void UCAction_Sprint::StartAction_Implementation(AActor* Instigator)
 		// accelerate
 		Owner->GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
 
-		GetOwningComponent()->StartActionByTag(Instigator, CGameplayTags::SprintCameraAction);
+		ActionComponent->StartActionByTag(Instigator, CGameplayTags::SprintCameraAction);
 	}
 }
 
 void UCAction_Sprint::StopAction_Implementation(AActor* Instigator)
 {
-	ACharacter* Owner = Cast<ACharacter>(Instigator);
+	ACharacter* Owner = GetActionOwner<ACharacter>();
 	if (Owner)
 	{
 		Owner->GetCharacterMovement()->MaxWalkSpeed = BufferSpeed;
 
-		GetOwningComponent()->StopActionByTag(Instigator, CGameplayTags::SprintCameraAction);
+		ActionComponent->StopActionByTag(Instigator, CGameplayTags::SprintCameraAction);
 	}
 
 	Super::StopAction_Implementation(Instigator);

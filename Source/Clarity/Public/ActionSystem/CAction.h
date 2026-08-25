@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
 #include "GameplayTagContainer.h"
+#include "ActionSystem/CActionSystemTypes.h"
 #include "CAction.generated.h"
 
 class UCActionComponent;
@@ -40,6 +41,10 @@ public:
 	UFUNCTION(BlueprintNativeEvent, Category = "Action")
 	void StartAction(AActor* Instigator);
 
+	/* start action with any needed data */
+	UFUNCTION(BlueprintCallable, Category = "Action")
+	void StartActionWithContext(AActor* Instigator, const FActionEventData& EventData);
+
 	/* will be implemented in child classes */
 	UFUNCTION(BlueprintNativeEvent, Category = "Action")
 	void StopAction(AActor* Instigator);
@@ -73,6 +78,7 @@ public:
 		return Owner ? Cast<T>(Owner) : nullptr;
 	}
 
+	const FActionEventData& GetActionEventData() const { return ActionData; }
 
 	UFUNCTION(BlueprintCallable, Category = "Action")
 	const FGameplayTagContainer& GetCancelActionWithTags() const { return CancelActionsWithTags; }
@@ -96,6 +102,9 @@ protected:
 	/* when this action starts, all actions with those tags will be cancelled */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Action")
 	FGameplayTagContainer CancelActionsWithTags;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Action")
+	FActionEventData ActionData;
 
 	bool bIsRunning;
 
