@@ -111,4 +111,6 @@ protected:
 	/* to handle actions with outro */
 	bool bIsStopping;
 	
+	/* to invoke tags delegates */
+	void NotifyTagsStateChanged(FGameplayTagContainer TagsToNotify, bool bIsStarted);
 };

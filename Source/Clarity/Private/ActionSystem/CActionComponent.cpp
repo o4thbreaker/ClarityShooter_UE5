@@ -142,7 +142,7 @@ bool UCActionComponent::TryStartActionWithContext(const FActionEventData& EventD
 {
 	if (!EventData.EventTag.IsValid())
 	{	
-		UE_LOG(LogTemp, Warning, TEXT("SendActionEvent: Invalid EventTag"));
+		UE_LOG(LogTemp, Warning, TEXT("TryStartActionWithContext: Invalid EventTag"));
 		return false;
 	}
 
@@ -150,7 +150,11 @@ bool UCActionComponent::TryStartActionWithContext(const FActionEventData& EventD
 	{
 		if (Action && Action->ActionTag == EventData.EventTag)
 		{
-			if (!Action->CanStartAction(EventData.Instigator)) return false;
+			if (!Action->CanStartAction(EventData.Instigator))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("TryStartActionWithContext: Can't start action"));
+				return false;
+			}
 			
 			CancelActionsWithTags(EventData.Instigator, Action->GetCancelActionWithTags(), Action);
 
@@ -171,6 +175,38 @@ void UCActionComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 		if (Action && Action->bWantsTick && (Action->IsRunning() || Action->IsStopping()))
 		{
 			Action->TickAction(DeltaTime);
+		}
+	}
+}
+
+FOnTagStateChanged& UCActionComponent::RegisterGameplayTagEvent(FGameplayTag Tag)
+{
+	return SpecificTagDelegates.FindOrAdd(Tag);
+}
+
+void UCActionComponent::NotifyTagsAdded(const FGameplayTagContainer& Tags)
+{
+	for (const FGameplayTag& Tag : Tags)
+	{
+		/// \NOTE: in order to work RegisterGameplayTagEvent() should be called first
+		if (FOnTagStateChanged* Delegate = SpecificTagDelegates.Find(Tag))
+		{
+			Delegate->Broadcast(true);
+		}
+	}
+}
+
+void UCActionComponent::NotifyTagsRemoved(const FGameplayTagContainer& Tags)
+{
+	for (const FGameplayTag& Tag : Tags)
+	{
+		// if tag still in container (another action helds it, skip)/
+		if (ActiveGameplayTags.HasTagExact(Tag)) continue;
+
+		/// \NOTE: in order to work RegisterGameplayTagEvent() should be called first
+		if (FOnTagStateChanged* Delegate = SpecificTagDelegates.Find(Tag))
+		{
+			Delegate->Broadcast(false);
 		}
 	}
 }

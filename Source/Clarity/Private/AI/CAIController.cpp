@@ -2,17 +2,19 @@
 
 #include "AI/CAIController.h"
 #include "AI/CAICharacter.h"
+#include "AI/CSmartObject.h"
+#include "AI/CAIManagerSubsystem.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BehaviorTree.h"
-#include "AI/CSmartObject.h"
 #include "Kismet/KismetSystemLibrary.h"
-#include "Clarity.h"
-#include "AI/CAIManagerSubsystem.h"
 #include "Weapons/CWeaponSlotsComponent.h"
 #include "CAttributeComponent.h"
+#include "ActionSystem/CActionComponent.h"
+#include "CGameplayTags.h"
+#include "Clarity.h"
 
 ACAIController::ACAIController()
 {
@@ -59,6 +61,10 @@ void ACAIController::OnPossess(APawn* InPawn)
 		{
 			AICharacter->GetAttributeComponent()->OnDamage.AddDynamic(this, &ACAIController::OnDamaged);
 		}
+		if (ensure(AICharacter->GetActionComponent()))
+		{
+			AICharacter->GetActionComponent()->RegisterGameplayTagEvent(CGameplayTags::ReactingToHit).AddDynamic(this, &ACAIController::OnStopHitReaction);
+		}
 
 		if (ensureMsgf(AICharacter->GetBehaviorTree(), TEXT("Behaviour Tree is nullptr. Please assgin BehaviourTree in your AICharacter")))
 		{
@@ -74,6 +80,7 @@ void ACAIController::BeginPlay()
 
 	AICharacter->AIController = this;
 
+	GetBlackboardComponent()->SetValueAsBool(TEXT("HasSmartObject"), AICharacter->SmartObject != nullptr);
 	if (AICharacter->SmartObject)
 	{
 		FGameplayTag SubTag;
@@ -147,6 +154,20 @@ void ACAIController::OnDamaged(AActor* InstigatorActor, UCAttributeComponent* Ow
 		GetBrainComponent()->StopLogic(TEXT("Killed"));
 		ClearFocus(EAIFocusPriority::LastFocusPriority);
 		AIManager->RemoveAgent(this);
+		return;
+	}
+
+	// hit reaction
+	GetBlackboardComponent()->SetValueAsBool(TEXT("IsFlinching"), true);
+	UE_LOG(LogTemp, Log, TEXT("IsFlinching: true"));
+}
+
+void ACAIController::OnStopHitReaction(bool IsStarted)
+{
+	if (!IsStarted)
+	{
+		GetBlackboardComponent()->SetValueAsBool(TEXT("IsFlinching"), false);
+		UE_LOG(LogTemp, Log, TEXT("IsFlinching: false"));
 	}
 }
 
@@ -212,12 +233,11 @@ void ACAIController::SetShouldShootFromCover(bool ShouldShoot)
 	}
 }
 
-
 bool ACAIController::TrySetAIState(ECAIState NewState)
 {
 	if (GetAIState() < (uint8)NewState)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Priority of new state is lower"));
+		UE_LOG(LogTemp, Warning, TEXT("Can't set new state. Priority of %s is lower than %s"), UEnum::GetValueAsString(NewState), UEnum::GetValueAsString(GetAIState()));
 		return false;
 	}
 

@@ -26,6 +26,7 @@ namespace CGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Armed, "State.Armed");
 	UE_DEFINE_GAMEPLAY_TAG(Crouching, "State.Crouching");
 	UE_DEFINE_GAMEPLAY_TAG(SwappingShoulder, "State.SwappingShoulder");
+	UE_DEFINE_GAMEPLAY_TAG(ReactingToHit, "State.ReactingToHit");
 
 	// ========== CONDITIONS ==========
 	UE_DEFINE_GAMEPLAY_TAG(FireCooldown, "Condition.FireCooldown");

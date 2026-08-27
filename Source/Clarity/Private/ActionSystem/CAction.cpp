@@ -30,6 +30,8 @@ void UCAction::StartAction_Implementation(AActor* Instigator)
 
 	Component->ActiveGameplayTags.AppendTags(GrantsTags);
 
+	NotifyTagsStateChanged(GrantsTags, true);
+
 	bIsRunning = true;
 
 	Component->OnActionStarted.Broadcast(Component, this);
@@ -42,6 +44,8 @@ void UCAction::StopAction_Implementation(AActor* Instigator)
 	UCActionComponent* Component = GetOwningComponent();
 
 	Component->ActiveGameplayTags.RemoveTags(GrantsTags);
+
+	NotifyTagsStateChanged(GrantsTags, false);
 
 	bIsRunning = false;
 
@@ -84,4 +88,13 @@ UWorld* UCAction::GetWorld() const
 	if (Actor) { return Actor->GetWorld(); }
 
 	return nullptr;
+}
+
+void UCAction::NotifyTagsStateChanged(FGameplayTagContainer TagsToNotify, bool bIsStarted)
+{
+	// if needed to notify about ACTION TAG itself
+	//TagsToNotify.AddTag(ActionTag);
+
+	// notify about adding or notify about removing the tags
+	bIsStarted ? GetOwningComponent()->NotifyTagsAdded(TagsToNotify) : GetOwningComponent()->NotifyTagsRemoved(TagsToNotify);
 }

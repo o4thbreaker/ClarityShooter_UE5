@@ -61,7 +61,11 @@ void ACAICharacter::OnDamaged(AActor* InstigatorActor, UCAttributeComponent* Own
 	// ragdoll is in HitReactionComponent
 	// controller logic is in the controller class
 
-	ActionComponent->StartActionByTag(this, CGameplayTags::DeathAction);
+	if (!ActionComponent->StartActionByTag(this, CGameplayTags::DeathAction))
+	{
+		UE_LOG(LogTemp, Error, TEXT("DeathAction didn't start. Aborting death logic."));
+		return;
+	}
 
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetCharacterMovement()->DisableMovement();

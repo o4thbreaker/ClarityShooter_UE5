@@ -100,6 +100,9 @@ protected:
 	UFUNCTION()
 	void OnDamaged(AActor* InstigatorActor, UCAttributeComponent* OwningComp, float NewHealth, FHealthChangeInfo HealthChangeInfo);
 
+	UFUNCTION()
+	void OnStopHitReaction(bool IsStarted);
+
 	UFUNCTION(BlueprintCallable)
 	void OnWeaponLost(UCWeaponSlotsComponent* OwningComponent);
 };

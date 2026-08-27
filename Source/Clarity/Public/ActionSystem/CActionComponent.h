@@ -11,6 +11,7 @@
 class UCAction;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnActionStateChanged, UCActionComponent*, OwningComponent, UCAction*, Action);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTagStateChanged, bool, bIsStarted);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class CLARITY_API UCActionComponent : public UActorComponent
@@ -31,6 +32,12 @@ public:
 	FOnActionStateChanged OnActionStopped;
 
 	UCActionComponent();
+
+	/* finds or adds tag to delegates map */
+	FOnTagStateChanged& RegisterGameplayTagEvent(FGameplayTag Tag);
+
+	void NotifyTagsAdded(const FGameplayTagContainer& Tags);
+	void NotifyTagsRemoved(const FGameplayTagContainer& Tags);
 
 	/// \TODO: switch to Interface call, temporary solution
 	UFUNCTION(BlueprintCallable, Category = "Attrubutes")
@@ -60,7 +67,7 @@ public:
 	bool TryStartActionWithContext(const FActionEventData& EventData);
 
 protected:
-	/* active actions */
+	/* current set of activatable actions */
 	UPROPERTY(BlueprintReadOnly, Category = "Action")
 	TArray<UCAction*> Actions;
 
@@ -68,10 +75,11 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Action")
 	TArray<TSubclassOf<UCAction>> DefaultActions;
 
+	TMap<FGameplayTag, FOnTagStateChanged> SpecificTagDelegates;
+
 	void CancelActionsWithTags(AActor* Instigator, const FGameplayTagContainer& CancelTags, UCAction* ActionToIgnore);
 
 	virtual void BeginPlay() override;
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-		
 };
