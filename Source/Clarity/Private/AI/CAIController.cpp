@@ -237,7 +237,7 @@ bool ACAIController::TrySetAIState(ECAIState NewState)
 {
 	if (GetAIState() < (uint8)NewState)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Can't set new state. Priority of %s is lower than %s"), UEnum::GetValueAsString(NewState), UEnum::GetValueAsString(GetAIState()));
+		UE_LOG(LogTemp, Warning, TEXT("Can't set new state. Priority of %s is lower than %s"), *UEnum::GetValueAsString(NewState), *UEnum::GetValueAsString((ECAIState)GetAIState()));
 		return false;
 	}
 
