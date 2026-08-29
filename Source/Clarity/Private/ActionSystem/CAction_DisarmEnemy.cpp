@@ -8,14 +8,17 @@
 #include "ContextualAnimUtilities.h"
 #include "ContextualAnimSceneActorComponent.h"
 #include "CTimeDilationSubsystem.h"
-#include "CGameplayTags.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/KismetMathLibrary.h"
+
 
 static TAutoConsoleVariable<bool> CVarDrawDebugDisarmLines(TEXT("art.DisarmDrawDebug"), true, TEXT("Enable Debug Lines for disarming"), ECVF_Cheat);
 
 UCAction_DisarmEnemy::UCAction_DisarmEnemy()
 {
 	MaxRange = 500.0f;
-	SlowMotionTime = 0.5f;
+	SlowMotionTime = 1.f;
 }
 
 void UCAction_DisarmEnemy::Initialize(UCActionComponent* NewActionComponent)
@@ -49,6 +52,8 @@ bool UCAction_DisarmEnemy::CanStartAction_Implementation(AActor* Instigator)
 
 void UCAction_DisarmEnemy::StartAction_Implementation(AActor* Instigator)
 {
+	Super::StartAction_Implementation(Instigator);
+
 	FHitResult Hit = GetTraceHitInfo(GetActionOwner());
 	AActor* HitActor = Hit.GetActor();
 
@@ -56,11 +61,13 @@ void UCAction_DisarmEnemy::StartAction_Implementation(AActor* Instigator)
 	{
 		/// \NOTE: an actual weapon transfer is in Notify_RetrieveWeapon
 
+		ACharacter* OwnerCharacter = GetActionOwner<ACharacter>();
+		if (OwnerCharacter) OwnerCharacter->GetCharacterMovement()->StopMovementImmediately();
+
 		// start animation
 		if (PlayContextualAnimation(GetActionOwner(), HitActor))
 		{
-			// add Disarming state
-			ActionComponent->ActiveGameplayTags.AddTag(CGameplayTags::Disarming);
+			PlayCameraShake();
 
 			// remove the Armed state
 			UCActionComponent* VictimActionComponent = UCActionComponent::GetActionComponent(HitActor);
@@ -69,13 +76,20 @@ void UCAction_DisarmEnemy::StartAction_Implementation(AActor* Instigator)
 				VictimActionComponent->ActiveGameplayTags.RemoveTag(CGameplayTags::Armed);
 			}
 
-			// start SlowMo
-			UCTimeDilationSubsystem* TimeDilationSubsystem = GetWorld()->GetSubsystem<UCTimeDilationSubsystem>();
-			if (TimeDilationSubsystem)
+			if (SlowMotionTime < 1.0f)
 			{
-				TimeDilationSubsystem->SetSlowMotion(SlowMotionTime);
+				// start SlowMo
+				UCTimeDilationSubsystem* TimeDilationSubsystem = GetWorld()->GetSubsystem<UCTimeDilationSubsystem>();
+				if (TimeDilationSubsystem)
+				{
+					TimeDilationSubsystem->SetSlowMotion(SlowMotionTime);
+				}
 			}
 		}
+	}
+	else
+	{
+		StopAction(GetActionOwner());
 	}
 }
 
@@ -83,14 +97,17 @@ void UCAction_DisarmEnemy::StopAction_Implementation(AActor* Instigator)
 {
 	/// \WARNING: this can become a problem in future because StopAction will also be called if the action is interrupted
 
-	UCTimeDilationSubsystem* TimeDilationSubsystem = GetWorld()->GetSubsystem<UCTimeDilationSubsystem>();
-
-	if (TimeDilationSubsystem)
+	if (SlowMotionTime < 1.0f)
 	{
-		TimeDilationSubsystem->ResetSlowMotion();
+		UCTimeDilationSubsystem* TimeDilationSubsystem = GetWorld()->GetSubsystem<UCTimeDilationSubsystem>();
+
+		if (TimeDilationSubsystem)
+		{
+			TimeDilationSubsystem->ResetSlowMotion();
+		}
 	}
-	 
-	ActionComponent->ActiveGameplayTags.RemoveTag(CGameplayTags::Disarming);
+	
+	Super::StopAction_Implementation(Instigator);
 }
 
 
@@ -139,6 +156,20 @@ FHitResult UCAction_DisarmEnemy::GetTraceHitInfo(AActor* FromActor) const
 	
 	UE_LOG(LogTemp, Warning, TEXT("Couldn't translate crosshair to world position and direction. Hit Result is empty"));
 	return FHitResult();
+}
+
+void UCAction_DisarmEnemy::PlayCameraShake()
+{
+	if (!CameraShakeClass) return;
+
+	ACharacter* OwnerCharacter = GetActionOwner<ACharacter>();
+	if (!OwnerCharacter) return;
+
+	APlayerController* OwnerPlayerController = Cast<APlayerController>(OwnerCharacter->GetController());
+	if (OwnerPlayerController && OwnerPlayerController->PlayerCameraManager)
+	{
+		OwnerPlayerController->PlayerCameraManager->StartCameraShake(CameraShakeClass);
+	}
 }
 
 bool UCAction_DisarmEnemy::PlayContextualAnimation(AActor* Attacker, AActor* Victim)

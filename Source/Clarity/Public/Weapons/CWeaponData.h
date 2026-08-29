@@ -33,14 +33,11 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Effects")
 	UAnimSequence* FireAnimation;
 
-	/*UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Effects")
-	UParticleSystem* MuzzleFlash;*/
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Effects")
+	UAnimSequence* WeaponReloadAnimation;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Effects")
 	UParticleSystem* ImpactEffect;
-
-	/*UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Audio")
-	USoundCue* FiringAudio;*/
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Stats")
 	float Damage;

@@ -7,6 +7,7 @@
 #include "CAction_DisarmEnemy.generated.h"
 
 class UContextualAnimSceneAsset;
+class UCameraShakeBase;
 
 /**
  * Action that plays the Disarm animation that fires the RetrieveWeapon notify
@@ -41,11 +42,16 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "Properties", meta = (ClampMin = "0.0", ClampMax = "1.0", UIMin = "0.0", UIMax = "1.0"))
 	float SlowMotionTime;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadonly, Category = "Camera")
+	TSubclassOf<UCameraShakeBase> CameraShakeClass;
+
 	UFUNCTION()
 	FHitResult GetTraceHitInfo(AActor* FromActor) const;
 
 	UFUNCTION()
 	bool PlayContextualAnimation(AActor* Attacker, AActor* Victim);
+
+	void PlayCameraShake();
 
 private:
 	UFUNCTION()

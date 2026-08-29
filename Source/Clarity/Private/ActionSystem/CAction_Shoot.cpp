@@ -102,7 +102,9 @@ void UCAction_Shoot::StartAction_Implementation(AActor* Instigator)
 		Params.bReturnPhysicalMaterial = true;
 
 		PerformCrosshairLineTrace(CrosshairHitResult, Start, End, Params);
-	
+
+		PlayCameraShake();
+
 		/* trace from weapon to hit location */
 		FHitResult WeaponHitResult;
 		/* get location to pass it to the function*/
@@ -192,6 +194,20 @@ void UCAction_Shoot::PlayWeaponRecoil(const ACWeaponBase* Weapon)
 	if (BaseCharacter && BaseCharacter->GetBaseAnimInstance())
 	{
 		BaseCharacter->GetBaseAnimInstance()->DoProceduralRecoil(Weapon->GetWeaponData()->RecoilRate);
+	}
+}
+
+void UCAction_Shoot::PlayCameraShake()
+{
+	if (!CameraShakeClass) return;
+
+	ACBaseCharacter* BaseCharacter = GetActionOwner<ACBaseCharacter>();
+	if (!BaseCharacter) return;
+	
+	APlayerController* OwnerPlayerController = Cast<APlayerController>(BaseCharacter->GetController());
+	if (OwnerPlayerController && OwnerPlayerController->PlayerCameraManager)
+	{
+		OwnerPlayerController->PlayerCameraManager->StartCameraShake(CameraShakeClass);
 	}
 }
 

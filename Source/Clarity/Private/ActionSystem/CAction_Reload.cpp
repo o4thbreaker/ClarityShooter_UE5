@@ -67,6 +67,8 @@ void UCAction_Reload::PlayReloadMontage(AActor* ActorToReload)
 			{
 				TargetCharacter->PlayAnimMontage(ReloadMontage, 1.0f, FName("Default"));
 
+				PlayWeaponReloadAnimation();
+
 				if (!GetWorld()->GetTimerManager().IsTimerActive(ReloadTimerHandle))
 				{
 					FTimerDelegate Delegate;
@@ -76,6 +78,16 @@ void UCAction_Reload::PlayReloadMontage(AActor* ActorToReload)
 				}
 			}
 		}
+	}
+}
+
+void UCAction_Reload::PlayWeaponReloadAnimation()
+{
+	ACWeaponBase* Weapon = WeaponSlotsComponent->GetCurrentWeapon();
+	UAnimSequence* WeaponReloadAnimation = Weapon->GetWeaponData()->WeaponReloadAnimation;
+	if (WeaponReloadAnimation)
+	{
+		Weapon->GetMesh()->PlayAnimation(WeaponReloadAnimation, false);
 	}
 }
 

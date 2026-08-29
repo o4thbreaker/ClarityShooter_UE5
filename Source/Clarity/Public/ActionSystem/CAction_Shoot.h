@@ -8,6 +8,7 @@
 
 class UCWeaponSlotsComponent;
 class ACWeaponBase;
+class UCameraShakeBase;
 struct FCollisionQueryParams;
 
 /**
@@ -17,27 +18,28 @@ UCLASS()
 class CLARITY_API UCAction_Shoot : public UCAction
 {
 	GENERATED_BODY()
-	
-public:
-	virtual void Initialize(UCActionComponent* NewActionComponent) override;
-
-	virtual void StartAction_Implementation(AActor* Instigator) override;
-	virtual bool CanStartAction_Implementation(AActor* Instigator) override;
 
 protected:
 	/* tags that required for action to start. might be generilzed later*/
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Action")
 	FGameplayTagContainer RequiredTags;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera")
+	TSubclassOf<UCameraShakeBase> CameraShakeClass;
+
 	float Accuracy;
 
 	bool bWillMiss;
 
 	void PlayFireAnimation(const ACWeaponBase* Weapon);
-
 	void PlayImpactEffect(const ACWeaponBase* Weapon, const FVector& ImpactPoint);
-
 	void PlayWeaponRecoil(const ACWeaponBase* Weapon);
+
+	void PlayCameraShake();
+
+	virtual void Initialize(UCActionComponent* NewActionComponent) override;
+	virtual bool CanStartAction_Implementation(AActor* Instigator) override;
+	virtual void StartAction_Implementation(AActor* Instigator) override;
 private:
 	UPROPERTY()
 	UCWeaponSlotsComponent* OwnerWeaponSlotsComponent;

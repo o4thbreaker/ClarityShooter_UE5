@@ -44,4 +44,6 @@ private:
 
 	UFUNCTION()
 	void PlayReloadMontage(AActor* ActorToReload);
+
+	void PlayWeaponReloadAnimation();
 };
