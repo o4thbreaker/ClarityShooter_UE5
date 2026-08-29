@@ -4,6 +4,7 @@
 #include "ActionSystem/CAction_Shoot.h"
 #include "CBaseCharacter.h"
 #include "Weapons/CWeaponBase.h"
+#include "Weapons/CBallistics.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Kismet/GameplayStatics.h"
 #include "CBaseAnimInstance.h"
@@ -103,8 +104,6 @@ void UCAction_Shoot::StartAction_Implementation(AActor* Instigator)
 
 		PerformCrosshairLineTrace(CrosshairHitResult, Start, End, Params);
 
-		PlayCameraShake();
-
 		/* trace from weapon to hit location */
 		FHitResult WeaponHitResult;
 		/* get location to pass it to the function*/
@@ -120,6 +119,7 @@ void UCAction_Shoot::StartAction_Implementation(AActor* Instigator)
 	}
 
 	PlayWeaponRecoil(Weapon);
+	PlayCameraShake();
 
 	// add blocking tag after the fire
 	ActionComponent->ActiveGameplayTags.AddTag(CGameplayTags::FireCooldown);
@@ -141,7 +141,16 @@ void UCAction_Shoot::PerformCrosshairLineTrace(FHitResult& CrosshairHitResult, c
 
 void UCAction_Shoot::PerformWeaponLineTrace(const ACWeaponBase* Weapon, FHitResult& WeaponHitResult, const FHitResult& CrosshairHitResult, const FVector& Start, const FVector& End, const FCollisionQueryParams& Params)
 {
-	FVector AdjustedEnd = CalculateBulletEndLocation(Weapon, CrosshairHitResult, Start, End);
+	FCBulletTraceParams BulletTraceParams;
+	BulletTraceParams.bWillMiss = bWillMiss;
+	BulletTraceParams.CrosshairHitResult = CrosshairHitResult;
+	BulletTraceParams.Start = Start;
+	BulletTraceParams.End = End;
+	BulletTraceParams.MinMissAngle = Weapon->GetWeaponData()->MinMissAngle;
+	BulletTraceParams.MaxMissAngle = Weapon->GetWeaponData()->MaxMissAngle;
+	BulletTraceParams.ShotRange = Weapon->GetWeaponData()->ShotRange;
+
+	FVector AdjustedEnd = CBallistics::CalculateBulletEndLocation(BulletTraceParams);
 
 	// ECC_GameTraceChannel1 = Bullet
 	GetWorld()->LineTraceSingleByChannel(WeaponHitResult, Start, AdjustedEnd, ECollisionChannel::ECC_GameTraceChannel1, Params);
@@ -218,36 +227,6 @@ void UCAction_Shoot::DrawDebugLineTrace(const FVector& Start, const FVector& End
 	{
 		DrawDebugLine(GetWorld(), Start, End, TraceColor, false, 2.0f);
 		DrawDebugPoint(GetWorld(), HitLocation, 4.0f, HitColor, false, 2.0f);
-	}
-}
-
-FVector UCAction_Shoot::CalculateBulletEndLocation(const ACWeaponBase* Weapon, const FHitResult& CrosshairHitResult, const FVector& Start, const FVector& End) const
-{
-	/// \NOTE: due to floating point precision WeaponEnd can be coincided exactly with the surface point from CrosshairHitResult
-		///		   and UE can sometimes not register the intersection
-	FVector WeaponEnd = CrosshairHitResult.bBlockingHit ? CrosshairHitResult.Location : End;
-
-	FVector WeaponDirection = (WeaponEnd - Start).GetSafeNormal();
-	
-	if (bWillMiss)
-	{
-		// calculate a random miss angle within a certain range
-		const float MinMissAngle = 10.0f;
-		const float MaxMissAngle = 35.0f;
-		float MissAngleRad = FMath::DegreesToRadians(FMath::FRandRange(MinMissAngle, MaxMissAngle));
-
-		// calculate direction based on the miss angle and the original direction
-		FVector ScatteredDirection = FMath::VRandCone(WeaponDirection, MissAngleRad);
-		 
-		// calculate the end point
-		FVector AdjustedEnd = Start + ScatteredDirection * Weapon->GetWeaponData()->ShotRange;
-		return AdjustedEnd;
-	}
-	else
-	{
-		/// \NOTE: because of the first NOTE we have to adjust vector by small number (10.0f) to make a difference
-		FVector AdjustedEnd = CrosshairHitResult.bBlockingHit ? CrosshairHitResult.Location + (WeaponDirection * 10.0f) : WeaponEnd;
-		return AdjustedEnd;
 	}
 }
 

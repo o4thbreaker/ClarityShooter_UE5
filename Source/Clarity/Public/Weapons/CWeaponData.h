@@ -46,6 +46,14 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Stats")
 	float FireRate;
 
+	/* parameter for Accuracy */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Stats")
+	float MinMissAngle;
+
+	/* parameter for Accuracy */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Stats")
+	float MaxMissAngle;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Stats")
 	int32 MagazineSize;
 
@@ -62,6 +70,8 @@ public:
 	float ShotRange;
 
 	/* how hard should recoil be */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Info")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon Stats")
 	float RecoilRate;
+
+	UCWeaponData();
 };

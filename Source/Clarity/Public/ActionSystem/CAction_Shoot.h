@@ -20,6 +20,7 @@ class CLARITY_API UCAction_Shoot : public UCAction
 	GENERATED_BODY()
 
 protected:
+
 	/* tags that required for action to start. might be generilzed later*/
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Action")
 	FGameplayTagContainer RequiredTags;
@@ -28,7 +29,6 @@ protected:
 	TSubclassOf<UCameraShakeBase> CameraShakeClass;
 
 	float Accuracy;
-
 	bool bWillMiss;
 
 	void PlayFireAnimation(const ACWeaponBase* Weapon);
@@ -54,8 +54,6 @@ private:
 	void ProvideDamage(AActor* DamageProvider, AActor* Victim, const ACWeaponBase* Weapon, const FHitResult& WeaponHitResult);
 
 	void DrawDebugLineTrace(const FVector& Start, const FVector& End, const FVector& HitLocation, const FColor& TraceColor, const FColor& HitColor);
-
-	FVector CalculateBulletEndLocation(const ACWeaponBase* Weapon, const FHitResult& CrosshairHitResult, const FVector& Start, const FVector& End) const;
 
 	void ClearFireCooldown();
 };
