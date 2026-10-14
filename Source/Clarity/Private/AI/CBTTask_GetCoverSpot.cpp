@@ -2,7 +2,7 @@
 
 
 #include "AI/CBTTask_GetCoverSpot.h"
-#include "CCoverActor.h"
+#include "SmartObjects/CCoverActor.h"
 #include "AI/CAIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Kismet/KismetMathLibrary.h"

@@ -6,7 +6,7 @@
 #include "Camera/CameraComponent.h"
 #include "ActionSystem/CActionComponent.h" 
 #include "Camera/PlayerCameraManager.h"
-#include "CCameraModifier_Zoom.h"
+#include "Modifiers/CCameraModifier_Zoom.h"
 #include "CGameplayTags.h"
 
 UCAction_ZoomCamera::UCAction_ZoomCamera()

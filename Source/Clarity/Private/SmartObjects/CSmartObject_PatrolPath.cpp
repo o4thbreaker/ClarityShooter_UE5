@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "AI/CSmartObject_PatrolPath.h"
+#include "SmartObjects/CSmartObject_PatrolPath.h"
 #include "Components/SplineComponent.h"
 
 ACSmartObject_PatrolPath::ACSmartObject_PatrolPath()

@@ -61,82 +61,114 @@ Used by shooting, reloading, death, disarm, hit reaction, sprint, aim, swap shou
 
 ### Shooting & Ballistics
 
-![TODO](docs/media/TODO.gif)
+![Shooting](docs/media/TODO.gif)
 
 **How it works**
-The most example part of Action System. The breakdown:
-1. inital checks (CanStartAction())
-2. Try to get the weapon from WeaponSlotsComponent
-3. Get position and direction of the crosshair by defining whether shooter is AI or Player via Interface call. (The vector is caclulated in specific character classes. ex: Player calculates by using the crosshair screen position)
-4. At the same time get the accuracy (always 100 for Player, tweakable for AI)
-5. Perform crosshair line trace
-6. Perform weapon line trace
-7. Provide damage via AttributesComponent
-8. Add fire cooldown tag to make the fire rate work.
-(did not include cosmetic methods like PlayWeaponRecoil, PlayFireAnimation, etc)
+`UCAction_Shoot` is the most representative action: the same code path serves the player and AI. A shot goes through these steps:
+1. Cheap checks in `CanStartAction()` (see Action System above).
+2. Get the weapon from `WeaponSlotsComponent`.
+3. Get the aim origin and direction from the shooter through an interface call. The action never checks who is shooting. The player derives the aim from the crosshair's screen position, AI from calculating normalalized vector from target's location - barrel's location.
+4. At the same time, get the shooter's accuracy: always 100 for the player, tunable for AI. Accuracy is later used to set a random chance for miss. The missed shot's angle is calculated from a certain range (range is tweakable), then the scattered direction is calculated using VRandCone, then the end point is calculated using scattered direction and starting point. See more in [`Ballistics class`](Source/Clarity/Private/Weapons/CBallistics.cpp).
+5. Crosshair trace: finds the point the shooter is aiming at.
+6. Weapon trace: the actual trace, that decides if the bullet has hit the target. Because sometimes crosshair can hit the target, while the weapon is aiming the obstacle.
+7. Apply damage through `AttributesComponent`. The Shoot Action fills the bus (`FHealthChangeInfo`) and calls the `ApplyHealthChange` method from owner's attribute component. See `ProvideDamage()` in `UCAction_Shoot`.
+8. Add a fire-cooldown tag. While it is present, `CanStartAction()` rejects the next shot, which is how the fire rate works.
+
+Cosmetic methods (recoil, fire animation, etc.) are omitted.
 
 **Why this way**
-- Problem: The shooting system is crucial to TPS, so I've needed the hitscan shooting system that is suitable for both ai and player and is pretty rapid and easy to use.
-- Alternatives considered: Projectile-based shooting system.
-- Chosen: Projectile-based system is a rare case for guns like pistols and rifles, and it also it spawns objects, so I would have to implement something like Object Pooling.
-- Cost / trade-off: None.
+- **Problem:** One fire pipeline for both the player and AI that does not branch on shooter type. In TPS, the camera and the weapon barrel are in different places: as mentioned, barrel sometimes can hit the obstacle, while the shooter's crosshair is on the target. It is especially seen from shooting behind the cover, when the wall is too close.
+- **Alternatives considered:**
+  - Projectile-based shooting: No gameplay need for projectile, because by design, the hit must be instant and impactful.
+  - A single trace (from the camera only, or from the barrel only): 
+      1. camera-only: the hit registers even when the barrel is pressed against cover, so the shot passes through the wall (the case described above);
+      2. barrel-only: the shot follows the barrel's direction instead of the crosshair, and with the camera offset over the shoulder it lands beside the point the player is aiming at.
+- **Chosen:** Hitscan with two traces, crosshair first, then weapon.
+- **Cost / trade-off:**
+  - In case of adding (for example) grenade launcher, there will be need for projectile-based shooting system. Current implementation supports only hitscan weapons.
+  - Two traces per shot instead of one.
+  - The weapon trace aims at the crosshair hit point, which lies exactly on a surface. A trace ending exactly on a surface may not register the hit, so the endpoint is extended slightly along the direction.
+  - When the crosshair hits nothing (sky, open space), there is no point to aim at.
 
-**Where to look:** [`CAction_Shoot`](Source/Clarity/Public/ActionSystem/CAction_Shoot.h)
+**Where to look**
+1. [`CAction_Shoot`](Source/Clarity/Public/ActionSystem/CAction_Shoot.h) and its `.cpp` (Source/Clarity/Source/Clarity/Private/ActionSystem/CAction_Shoot.cpp): the full pipeline
+2. [`CBallistics`](Source/Clarity/Source/Clarity/Private/Weapons/CBallistics.cpp): the pure function that computes the bullet end point
+3. [`CShooterInterface`](Source/Clarity/Public/CShooterInterface.h): the shooter interface
 
 ### Physics-based Hit Reaction System
 
 ![TODO](docs/media/TODO.gif)
 
 **How it works**
-After getting the signal, system enables the collision and makes all the bodies rigid (except pelvis, so it won't fall down).
-Then it perform the impulse from the hit (tweakable) and after some time (also tweakable) sets the physics off and collision back to original.
-Note that the core technology for this system is Physical Animation. It is used to set the animation profile so it would look natural.
+`CHitReactionComponent` is subscribed to `CAttributeComponent`'s OnDamage delegate. On a hit, every body except the pelvis starts simulating physics (a partial ragdoll), so the character does not fall over. The component then applies an impulse from the hit (tunable: from the WeaponData) and gradually returns to the non-ragdoll state. After the reaction is complete, component stops ticking. In case of death, component immediately stops ticking and sets the body to a full ragdoll state.
+
+The core technology is Physical Animation (`UPhysicalAnimationComponent`). It remembers the original animation pose and "relaxes" bodies to a certain extend.
 
 **Why this way**
-- Problem: Need for realistic impact to make the shooting system more responsive. Also, to see where hit landed to make the limb damage feel fair.
-- Alternatives considered: Hit animations.
-- Chosen: Hit animation implies having an animator or specific skills. Otherwise, it would look boring to use the same 4-6 animations for hits. I don't have an animator neither animating skills.
-- Cost / trade-off: PAC is still in beta (I think). So it caused a plenty of bugs, that I had to fix. Such as: PAC ticking problem, the unrealistic impulse, collision issues. All of them are fixed, but it was hell of an adventure.
+- **Problem:** Hitscan shooting is instant, so each hit needs visible feedback that varies with the impact point and direction, without an authored animation for every case. Also, damage variation by hit location is not readable visually.
+- **Alternatives considered:**
+  - Authored hit animations: they need an animator or animation skills, and a set of 4–6 clips visibly repeats.
+  - Full ragdoll on every hit: the character loses its animation pose, would need recovery logic, and would break the Behavior Tree flow. It is reserved for death.
+- **Chosen:** A partial ragdoll driven by Physical Animation with a dedicated profile.
+- **Cost / trade-off:**
+  - The reaction is hardly predictable and can sometimes look messy (unlike prebuilt ones).
+  - Due to PAC's specifics, sometimes the reaction can look a little strange as it is "relaxes" multiple bodies at once.
+  - Engine lessons, root causes of the worst bugs: 
+      1. **Render vs. physics transform divergence.** `GetBoneLocation` returns the render (blended) transform, while the Chaos body diverges from it during physical animation blending - up to ~40 units at peak for a head hit. Traces query the physics scene (real body position), not the render position, so they missed the body the player was aiming at. Fix:  due to floating point precision WeaponEnd can be coincided exactly with the surface point from CrosshairHitResult, so I had to addjust the hit vector with a small number (see [`CBallistics`](Source/Clarity/Source/Clarity/Private/Weapons/CBallistics.cpp) for more)
+      2. **PAC assumes it is always on.** UPhysicalAnimationComponent::UpdateTargetActors is called not only from its own tick but also synchronously from OnTeleport, which fires inside SetAllBodiesBelowSimulatePhysics whenever the physics state is recreated. Dynamically toggling simulation while DriveData was populated caused LocalTransforms[BoneIndex] out-of-bounds crashes - timing-dependent at first, then deterministic when multiple bots were active. Fix: PAC and physics simulation are initialized once in BeginPlay and left permanently active; the reaction is controlled entirely by blend weight, so SetAllBodiesBelowSimulatePhysics is never called at runtime.
 
-**Where to look:** [`CHitReactionComponent`](Source/Clarity/Public/CHitReactionComponent.h)
+**Where to look**
+1. [`CHitReactionComponent`](Source/Clarity/Public/CHitReactionComponent.h) and its `.cpp`(Source/Clarity/Private/CHitReactionComponent.cpp)
 
 ### AI System
 
-![TODO](docs/media/TODO.gif)
+![AI](docs/media/TODO.gif)
 
 **How it works**
-Every AI has a role: defender or an attacker (more roles will be added later). And also there is a [`manager`](Source/Clarity/Public/AI/CAIManagerSubsystem.h), that orchestrates the tactical movement of the defenders.
-Defender's combat cycle:
-1. Spot the target (by itself or by the info from the teammates via Manager)
-2. Investigate the last seen target's location
-3. If there is one, increase the detection level (time is tweakable) and tell others to set the Combat State to Attack (via Manager)
-4. Find the nearest free cover.
-5. Call for cover fire, try to take found cover.
-6. Based on distance from cover (via blackboard key): if cover is too far, sprint to it. If it close enough, walk towards the cover while shooting the enemy.
-7. When at cover, based on distance from target: if the target is too close, run EQS Query to move away from target and try to find the other cover, calling for cover fire via Manager.
-8. Otherwise, sit at the cover and fire from the cover when Manager has requested.
+Enemy squads run on Behavior Trees and EQS, split across three layers:
 
-Attacker's combat cycle is much simplier:
-1. Spot the target (by itself or by the info from the teammates via Manager)
-2. Investigate the last seen target's location
-3. If there is one, increase the detection level (time is tweakable) and tell others to set the Combat State to Attack (via Manager)
-4. If the target is far enough - move towards it while shooting
-5. If got too close, then depends on exact distance and injuries:
-     - if really close and was damaged, run EQS Query to find strafe location and strafe while shooting
-     - if not that close and wasn't damaged, run EQS Query to create distance, then shoot
-     - fallback: strafe on one place and shoot.
+| Layer | Class | Decides |
+|-------|-------|---------|
+| Agent | `ACAIController` | Perception, detection level, the agent's own `AIState` / `CombatState`; reports detection to the Manager |
+| Squad | `UCAIManagerSubsystem` | Squad-wide state changes, the combat loop and cover-fire requests |
+| Behavior | Behavior Tree + EQS | How each state is executed: movement, cover selection, shooting, etc |
+
+Each agent has a role (`Defender` or `Engager`) that selects its Behavior Tree branch. A new role needs a new `ECCombatRole` value. The squad manager coordinates `Defender`s only, using a fire-and-maneuver pattern: on a 1-second timer it sends a Defender that is not yet in cover to approach one, and asks a Defender already holding cover to fire in the meantime.
+
+Two enums drive the logic. `AIState` is the overall mode (`Idle`, `Investigate`, `Attack`, `Search`, `LostEnemy`, `WeaponLost`). It is written through `TrySetAIState`, which accepts a new state only if its priority is equal to or higher than the current one (the enum's integer value is the priority, lower value = higher priority), so lower-priority systems cannot overwrite a more important state. `CombatState` is the sub-mode inside combat (ex. `ApproachingCover`, `HoldCover`, `NeedToReload`).
+
+Detection is gradual. While an agent has a hostile in sight, a timer raises its detection level step by step: at half of the threshold it switches to `Investigate` (moving to the last seen position), at the full threshold it reports to the manager, which switches the whole squad to `Attack` and starts the combat loop. Only the state is broadcast, not the target. See [`UCAIManagerSubsystem::RunCombatLoop()`](Source/Clarity/Private/AI/CAIManagerSubsystem.cpp) for the commented breakdown of the loop.
+
+Full behavior cycles for both roles: [docs/AI.md](docs/AI.md).
 
 **Why this way**
-- Problem: Every TPS has to have at least somewhat smart enemies, that are aware of surroundings and each other. Also, the role system must be scalable to add more roles, such as flanker.
-- Alternatives considered: Basic AI to focus more on shooting mechanics.
-- Chosen: Chose to implement more complex system to make project wider and look more like a game.
-- Cost / trade-off: Had to cancel some shooter mechanics, like finishers. Moreover, the more system is complex, the more it needs to look better and appear smarter.
 
-Every AI has to Enum States to rely on: AIState that is responsible for overall AI behavior (Investigate, Attack, Search, ManDown, LostWeapon, etc) and also CombatState that (as name suggests) is responsible for behaviour during combat.
-All is managed by BehaviorTree, EQS, BlackboardBased Conditions.
-All of the actions are done via custom [`BTTasks, BTServices and BTDecorators`](Source/Clarity/Public/AI) (it has some interesting coding features, such as [`latent tasks`](Source/Clarity/Private/AI/CBTTask_RangeAttack.cpp) or [`instanced node memories`](Source/Clarity/Private/AI/CBTTask_Reload.h))
+*Decision 1: a central squad manager*
+- **Problem:** Squad tactics need a decision that spans several agents. Each agent's Behavior Tree sees only its own agent, so it can not know who is moving and who is holding.
+- **Alternatives considered:**
+  - Fully autonomous agents: each decides alone. To coordinate they would have to read each other's state, and nothing prevents all Defenders from (for example) advancing at once.
+  - Token-based coordination: agents request permission ("tokens") to advance or fire. It is distributed (like in DOOM or my previous project Cutting Edge), but the tokens still come from a shared pool, and someone has to decide who gets them.
+- **Chosen:** A world subsystem that keeps the agents of one faction (`ManagerFaction`). It broadcasts `AIState`, runs the combat loop on a 1-second timer, and assigns cover fire.
+- **Cost / trade-off:**
+  - Agents are registered once, in `OnWorldBeginPlay`, so enemies spawned later are not managed.
+  - The manager holds references to agents it does not own, so every death or despawn path must unregister them by hand (`RemoveAgent`).
+  - It depends on concrete types (`ACAIController`, `ACAICharacter`), so it works only with this AI stack.
+  - See [Limitations](#limitations--roadmap) for the known issues around this.
 
-**Where to look:** [`AI directory`](Source/Clarity/Public/AI)
+*Decision 2: priority arbitration for `AIState`*
+- **Problem:** Several systems write `AIState` at once: perception, the squad manager, Behavior Tree tasks and weapon events. Without a rule, whichever write comes last wins, even if it is the less important one.
+- **Alternatives considered:**
+  - Free writes with a guard at each call site (like `OnPerception` does with an early return while attacking): the rule is duplicated, and a missed guard can become a problem.
+  - An explicit state machine with a table of allowed transitions: it expresses legality, not just priority, but the table has to be maintained.
+- **Chosen:** One setter, `TrySetAIState`, that compares priorities and rejects lower-priority writes. The priority is the enum's integer value.
+- **Cost / trade-off:**
+  - The priority is implicit in the enum order, so reordering the enum silently changes the behavior.
+  - A priority check says who wins, not which transitions are legal. A write that moves to a lower-priority state (such as `Idle` after a search) is rejected by the check by definition, so such transitions need a separate path: ███
+
+**Where to look**
+1. [`ACAIController`](Source/Clarity/Private/AI/CAIController.cpp): perception, detection, `TrySetAIState`
+2. [`UCAIManagerSubsystem`](Source/Clarity/Private/AI/CAIManagerSubsystem.cpp): combat loop, cover-fire requests
+3. [`UCBTTask_Reload`](Source/Clarity/Private/AI/CBTTask_Reload.cpp): event-driven latent task with subscribe/unsubscribe
 
 ### Weapon System & Data-Driven Design
 

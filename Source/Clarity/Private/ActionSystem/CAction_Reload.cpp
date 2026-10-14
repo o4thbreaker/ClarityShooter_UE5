@@ -7,7 +7,7 @@
 #include "CGameplayTags.h"
 #include "ActionSystem/CActionComponent.h"
 #include "CBaseCharacter.h"
-#include "Weapon/CWeaponAnimData.h"
+#include "Weapons/CWeaponAnimData.h"
 
 UCAction_Reload::UCAction_Reload()
 {

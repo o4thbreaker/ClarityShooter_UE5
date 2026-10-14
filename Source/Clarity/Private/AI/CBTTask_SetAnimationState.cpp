@@ -17,7 +17,7 @@ UCBTTask_SetAnimationState::UCBTTask_SetAnimationState()
 
 	bInCombat = false;
 	bShouldFocus = false;
-	bInCombat = false;
+	bIsCrouching = false;
 }
 
 EBTNodeResult::Type UCBTTask_SetAnimationState::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)

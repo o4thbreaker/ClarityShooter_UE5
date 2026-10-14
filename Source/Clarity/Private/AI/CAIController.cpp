@@ -2,7 +2,7 @@
 
 #include "AI/CAIController.h"
 #include "AI/CAICharacter.h"
-#include "AI/CSmartObject.h"
+#include "SmartObjects/CSmartObject.h"
 #include "AI/CAIManagerSubsystem.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"

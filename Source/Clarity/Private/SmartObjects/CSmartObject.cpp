@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "AI/CSmartObject.h"
+#include "SmartObjects/CSmartObject.h"
 #include "Components/BillboardComponent.h"
 #include "Components/ArrowComponent.h"
 

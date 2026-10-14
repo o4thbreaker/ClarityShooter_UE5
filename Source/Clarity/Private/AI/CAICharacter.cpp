@@ -78,7 +78,7 @@ void ACAICharacter::OnDamaged(AActor* InstigatorActor, UCAttributeComponent* Own
 	SetLifeSpan(10.0f);
 }
 
-bool ACAICharacter::CanBeSeenFrom(const FVector& ObserverLocation, FHitResult& OutHitResult, const AActor* IgnoreActor) const
+/*bool ACAICharacter::CanBeSeenFrom(const FVector& ObserverLocation, FHitResult& OutHitResult, const AActor* IgnoreActor) const
 {
 	// function that makes AI look at other bones rather than to the center of the mass
 	/// \NOTE: is not used for now, needs review
@@ -110,6 +110,7 @@ bool ACAICharacter::CanBeSeenFrom(const FVector& ObserverLocation, FHitResult& O
 
 	return false;
 }
+*/
 
 void ACAICharacter::GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const
 {

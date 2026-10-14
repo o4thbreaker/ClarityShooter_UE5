@@ -8,7 +8,7 @@
 #include "CWeaponAnimData.generated.h"
 
 /**
- * data asset to store the weapon animations to dynamically change the skeleton
+ * Data asset to store the weapon animations to dynamically change the skeleton
  */
 UCLASS()
 class CLARITY_API UCWeaponAnimData : public UDataAsset

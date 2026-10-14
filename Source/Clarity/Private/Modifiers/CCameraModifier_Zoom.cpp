@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "CCameraModifier_Zoom.h"
+#include "Modifiers/CCameraModifier_Zoom.h"
 
 UCCameraModifier_Zoom::UCCameraModifier_Zoom()
 {

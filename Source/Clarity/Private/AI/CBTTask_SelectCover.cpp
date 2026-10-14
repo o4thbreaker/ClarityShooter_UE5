@@ -5,7 +5,7 @@
 #include "AI/CAIController.h"
 #include "AI/CAICharacter.h"
 #include "BehaviorTree/BlackboardComponent.h"
-#include "CCoverActor.h"
+#include "SmartObjects/CCoverActor.h"
 
 UCBTTask_SelectCover::UCBTTask_SelectCover()
 {

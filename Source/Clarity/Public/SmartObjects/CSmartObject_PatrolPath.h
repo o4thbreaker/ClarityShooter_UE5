@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "AI/CSmartObject.h"
+#include "SmartObjects/CSmartObject.h"
 #include "CSmartObject_PatrolPath.generated.h"
 
 class USplineComponent;

@@ -5,7 +5,7 @@
 #include "AIController.h"
 #include "Components/SplineComponent.h"
 #include "AI/CAICharacter.h"
-#include "AI/CSmartObject_PatrolPath.h"
+#include "SmartObjects/CSmartObject_PatrolPath.h"
 #include "BehaviorTree/BlackboardComponent.h"
 
 UCBTTask_GetPathPoints::UCBTTask_GetPathPoints(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
