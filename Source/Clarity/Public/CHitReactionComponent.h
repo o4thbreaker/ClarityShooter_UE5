@@ -27,7 +27,7 @@ public:
 	void PerformHitReaction(const FHitResult& Hit, const float KnockbackTime, const float KnockbackForce);
 
 	UFUNCTION(BlueprintCallable, Category = "HitReaction")
-	void HandleDeath();
+	void HandleDeath(const FHitResult& Hit, const float KnockbackForce);
 
 	FORCEINLINE UPhysicalAnimationComponent* GetPhysicalAnimationComponent() { return PhysicalAnimationComponent; }
 
@@ -44,4 +44,6 @@ protected:
 
 private:
 	float HitReactionTimeRemaining;
+
+	void PerformImpulse(const FHitResult& Hit, const float KnockbackForce);
 };

@@ -59,7 +59,7 @@ EBTNodeResult::Type UCBTTask_RangeAttack::ExecuteTask(UBehaviorTreeComponent& Ow
 		
 		if (!MyController->GetTargetActor())
 		{
-			UE_LOG(LogTemp, Warning, TEXT("No target set. Aborting task."));
+			UE_LOG(LogClarityAI, Warning, TEXT("No target set. Aborting task."));
 			return EBTNodeResult::Failed;
 		}
 
@@ -84,7 +84,7 @@ void UCBTTask_RangeAttack::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* No
 		if (!Weapon)
 		{
 			// no weapon attached
-			UE_LOG(LogTemp, Warning, TEXT("No Weapon attached. Aborting task."));
+			UE_LOG(LogClarityAI, Warning, TEXT("No Weapon attached. Aborting task."));
 			FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
 			return;
 		}
@@ -98,7 +98,7 @@ void UCBTTask_RangeAttack::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* No
 			if (!Memory->OwnerActionComponent->StartActionByTag(Memory->Owner, CGameplayTags::FireAction))
 			{
 				// for some reason we couldn't start the action, so we had to finish earlier than planned
-				UE_LOG(LogTemp, Warning, TEXT("Couldn't start Shoot for %s. Aborting task."), *OwnerComp.GetOwner()->GetName());
+				UE_LOG(LogClarityAI, Warning, TEXT("Couldn't start Shoot for %s. Aborting task."), *OwnerComp.GetOwner()->GetName());
 				FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
 			}
 		}
@@ -120,21 +120,21 @@ bool UCBTTask_RangeAttack::IsMemoryValid(UBehaviorTreeComponent& OwnerComp, uint
 {
 	if (!IsValid(Memory->Owner))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Owner is nullptr or pending to kill. Aborting task."));
+		UE_LOG(LogClarityAI, Warning, TEXT("Owner is nullptr or pending to kill. Aborting task."));
 		FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
 		return false;
 	}
 
 	if (!IsValid(Memory->OwnerActionComponent))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("No ActionComponent attached. Aborting task."));
+		UE_LOG(LogClarityAI, Warning, TEXT("No ActionComponent attached. Aborting task."));
 		FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
 		return false;
 	}
 
 	if (!IsValid(Memory->OwnerWeaponSlotsComponent))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("No WeaponSlotsComponent attached. Aborting task."));
+		UE_LOG(LogClarityAI, Warning, TEXT("No WeaponSlotsComponent attached. Aborting task."));
 		FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
 		return false;
 	}

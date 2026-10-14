@@ -3,6 +3,7 @@
 
 #include "ActionSystem/CAction.h"
 #include "ActionSystem/CActionComponent.h"
+#include "Clarity.h"
 
 UCAction::UCAction()
 {
@@ -24,7 +25,7 @@ void UCAction::StartActionWithContext(AActor* Instigator, const FActionEventData
 
 void UCAction::StartAction_Implementation(AActor* Instigator)
 {
-	UE_LOG(LogTemp, Log, TEXT("StartAction: %s"), *GetNameSafe(this));
+	UE_LOG(LogClarity, Log, TEXT("StartAction: %s"), *GetNameSafe(this));
 
 	UCActionComponent* Component = GetOwningComponent();
 

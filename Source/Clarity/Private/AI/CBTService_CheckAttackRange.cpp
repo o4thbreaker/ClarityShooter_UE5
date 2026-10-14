@@ -4,6 +4,7 @@
 #include "AI/CBTService_CheckAttackRange.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "AIController.h"
+#include "Clarity.h"
 
 void UCBTService_CheckAttackRange::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
@@ -16,7 +17,7 @@ void UCBTService_CheckAttackRange::TickNode(UBehaviorTreeComponent& OwnerComp, u
 		/// \NOTE: probably better to refactor with GetCurrentTarget
 		AActor* TargetActor = Cast<AActor>(BlackboardComponent->GetValueAsObject(TargetActorKey.SelectedKeyName));
 
-		UE_LOG(LogTemp, Warning, TEXT("Target Actor: %s"), *GetNameSafe(TargetActor));
+		UE_LOG(LogClarityAI, Warning, TEXT("Target Actor: %s"), *GetNameSafe(TargetActor));
 
 		if (TargetActor)
 		{

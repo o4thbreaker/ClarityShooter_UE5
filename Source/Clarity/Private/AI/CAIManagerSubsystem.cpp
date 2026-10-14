@@ -22,14 +22,14 @@ void UCAIManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 
-	UE_LOG(LogTemp, Warning, TEXT("%s AIManager Subsystem has been initialized!"), *UEnum::GetValueAsString(ManagerFaction));
+	UE_LOG(LogClarityAI, Warning, TEXT("%s AIManager Subsystem has been initialized!"), *UEnum::GetValueAsString(ManagerFaction));
 }
 
 void UCAIManagerSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 {
 	Super::OnWorldBeginPlay(InWorld);
 
-	UE_LOG(LogTemp, Warning, TEXT("%s AIManager Subsystem OnWorldBeginPlay has been called!"), *UEnum::GetValueAsString(ManagerFaction));
+	UE_LOG(LogClarityAI, Warning, TEXT("%s AIManager Subsystem OnWorldBeginPlay has been called!"), *UEnum::GetValueAsString(ManagerFaction));
 
 	CreateAgentsList();
 }
@@ -57,6 +57,7 @@ void UCAIManagerSubsystem::CreateAgentsList()
 					if (Controller->GetAICharacter()->CombatRole == ECCombatRole::Defender)
 					{
 						Defenders.AddUnique(Controller->GetAICharacter());
+						UE_LOG(LogClarityAI, Log, TEXT("Added agent to the Defenders list: %s. Index: %d"), *Controller->GetName(), Defenders.IndexOfByKey(Controller->GetAICharacter()));
 					}
 				}
 			}
@@ -93,6 +94,9 @@ void UCAIManagerSubsystem::RunCombatLoop()
 {
 	if (IsEngaged())
 	{
+		UE_LOG(LogClarityAI, Log, TEXT("[COMBAT LOOP] Approacher index: %d | Defenders Amount: %d | Is Valid Index: %s"), 
+			ApproacherIndex, Defenders.Num(), Defenders.IsValidIndex(ApproacherIndex) ? TEXT("true") : TEXT("false"));
+
 		// approach if not in hold cover
 		if (Defenders.Num() > 0 && Defenders[ApproacherIndex]->AIController->GetCombatState() != (uint8)ECCombatState::HoldCover)
 		{
@@ -152,6 +156,9 @@ void UCAIManagerSubsystem::RequestCoverFire(bool ShouldProvideCoverFire, ACAICha
 
 void UCAIManagerSubsystem::RemoveAgent(ACAIController* AgentToRemove)
 {
+	UE_LOG(LogClarityAI, Log, TEXT("[REMOVE AGENT: START] Agent: %s | Index in Agents: %d | Index in Defenders: %d | Defenders: %d"),
+		*GetNameSafe(AgentToRemove), Agents.Find(AgentToRemove), Defenders.Find(AgentToRemove->GetAICharacter()), Defenders.Num());
+
 	int32 IndexToRemove = Agents.Find(AgentToRemove);
 	if (IndexToRemove < 0) return;
 
@@ -161,6 +168,9 @@ void UCAIManagerSubsystem::RemoveAgent(ACAIController* AgentToRemove)
 	{
 		Defenders.RemoveSingle(AgentToRemove->GetAICharacter());
 	}
+
+	UE_LOG(LogClarityAI, Log, TEXT("[REMOVE AGENT: END] Agent: %s | Index in Defenders: %d | Defenders: %d"),
+		*GetNameSafe(AgentToRemove), Defenders.Find(AgentToRemove->GetAICharacter()), Defenders.Num());
 }
 
 bool UCAIManagerSubsystem::IsEngaged()

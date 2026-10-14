@@ -181,6 +181,7 @@ bool ACPlayerCharacter::GetAimOriginAndDirection(FVector& OutWorldPosition, FVec
 	// try to convert data from screen to world and save to WorldPosition and WorldDirection
 	return UGameplayStatics::DeprojectScreenToWorld(GetController<ACPlayerController>(), CrosshairLocation, OutWorldPosition, OutWorldDirection);
 }
+
 void ACPlayerCharacter::Aim(const FInputActionValue& Value)
 {
 	if (Value.Get<bool>())

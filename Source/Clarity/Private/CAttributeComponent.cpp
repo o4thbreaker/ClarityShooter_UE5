@@ -57,7 +57,7 @@ bool UCAttributeComponent::ApplyHealthChange(AActor* InstigatorActor, FHealthCha
 	{
 		MulticastHealthChanged(InstigatorActor, Health, HealthChangeInfo);
 
-		UE_LOG(LogTemp, Log, TEXT("%s was hit"), *HealthChangeInfo.Hit.BoneName.ToString());
+		UE_LOG(LogClarity, Log, TEXT("%s was hit"), *HealthChangeInfo.Hit.BoneName.ToString());
 
 		if (ActualDelta < 0.0f)
 		{

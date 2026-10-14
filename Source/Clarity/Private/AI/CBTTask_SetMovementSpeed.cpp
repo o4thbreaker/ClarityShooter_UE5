@@ -42,7 +42,7 @@ EBTNodeResult::Type UCBTTask_SetMovementSpeed::ExecuteTask(UBehaviorTreeComponen
 			return EBTNodeResult::Succeeded;
 			break;
 		default:
-			UE_LOG(LogTemp, Error, TEXT("Something clearly went wrong in SetMovementSpeed task"));
+			UE_LOG(LogClarityAI, Error, TEXT("Something clearly went wrong in SetMovementSpeed task"));
 			return EBTNodeResult::Failed;
 			break;
 		}

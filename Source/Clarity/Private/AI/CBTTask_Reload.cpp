@@ -26,14 +26,14 @@ EBTNodeResult::Type UCBTTask_Reload::ExecuteTask(UBehaviorTreeComponent& OwnerCo
 
 		if (MyController->GetAICharacter() == nullptr)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Couldn't get Character on AI. Aborting task!"));
+			UE_LOG(LogClarityAI, Warning, TEXT("Couldn't get Character on AI. Aborting task!"));
 			return EBTNodeResult::Failed;
 		}
 
 		Memory->OwnerActionComponent = MyController->GetAICharacter()->GetActionComponent();
 		if (Memory->OwnerActionComponent == nullptr)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Couldn't find ActionComponent on AI. Aborting task!"));
+			UE_LOG(LogClarityAI, Warning, TEXT("Couldn't find ActionComponent on AI. Aborting task!"));
 			return EBTNodeResult::Failed;
 		}
 

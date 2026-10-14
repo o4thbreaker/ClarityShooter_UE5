@@ -3,6 +3,7 @@
 
 #include "ActionSystem/CActionComponent.h"
 #include "ActionSystem/CAction.h"
+#include "Clarity.h"
 
 UCActionComponent::UCActionComponent()
 {
@@ -42,7 +43,7 @@ void UCActionComponent::CancelActionsWithTags(AActor* Instigator, const FGamepla
 
 		if (CancelTags.HasTag(Action->ActionTag))
 		{
-			UE_LOG(LogTemp, Log, TEXT("ActionComponent: %s canceled because of tag matching"), *GetNameSafe(Action));
+			UE_LOG(LogClarity, Log, TEXT("ActionComponent: %s canceled because of tag matching"), *GetNameSafe(Action));
 			Action->StopAction(Instigator);
 		}
 	}
@@ -94,7 +95,7 @@ bool UCActionComponent::StartActionByTag(AActor* Instigator, FGameplayTag Action
 			if (!Action->CanStartAction(Instigator))
 			{
 				FString InstigatorName = Instigator ? Instigator->GetName() : "None";
-				UE_LOG(LogTemp, Warning, TEXT("Failed to start action %s for %s"), *Action->ActionName.ToString(), *InstigatorName);
+				UE_LOG(LogClarity, Warning, TEXT("Failed to start action %s for %s"), *Action->ActionName.ToString(), *InstigatorName);
 				continue;
 			}
 
@@ -142,7 +143,7 @@ bool UCActionComponent::TryStartActionWithContext(const FActionEventData& EventD
 {
 	if (!EventData.EventTag.IsValid())
 	{	
-		UE_LOG(LogTemp, Warning, TEXT("TryStartActionWithContext: Invalid EventTag"));
+		UE_LOG(LogClarity, Warning, TEXT("TryStartActionWithContext: Invalid EventTag"));
 		return false;
 	}
 
@@ -152,7 +153,7 @@ bool UCActionComponent::TryStartActionWithContext(const FActionEventData& EventD
 		{
 			if (!Action->CanStartAction(EventData.Instigator))
 			{
-				UE_LOG(LogTemp, Warning, TEXT("TryStartActionWithContext: Can't start action"));
+				UE_LOG(LogClarity, Warning, TEXT("TryStartActionWithContext: Can't start action"));
 				return false;
 			}
 			

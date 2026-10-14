@@ -6,3 +6,4 @@
 IMPLEMENT_PRIMARY_GAME_MODULE( FDefaultGameModuleImpl, Clarity, "Clarity" );
 
 DEFINE_LOG_CATEGORY(LogClarity)
+DEFINE_LOG_CATEGORY(LogClarityAI)

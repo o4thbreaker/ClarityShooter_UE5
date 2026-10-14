@@ -21,6 +21,11 @@ EBTNodeResult::Type UCBTTask_FindStrafeLocation::ExecuteTask(UBehaviorTreeCompon
 	{
 		LocationSeekerQueryRequest = FEnvQueryRequest(LocationSeekerQuery, AIController->GetAICharacter());
 		LocationSeekerQueryRequest.Execute(EEnvQueryRunMode::AllMatching, this, &UCBTTask_FindStrafeLocation::LocationSeekerQueryFinished);
+		
+		UE_LOG(LogClarityAI, Log, TEXT("[EQS][FindStrafe] Execute -> Succeeded. Frame: %llu | Agent: %s | MoveToLocation in BB: %s"),
+			GFrameCounter, *GetNameSafe(AIController),
+			*AIController->GetBlackboardComponent()->GetValueAsVector("MoveToLocation").ToString());
+
 		return EBTNodeResult::Succeeded;
 	}
 
@@ -46,6 +51,9 @@ void UCBTTask_FindStrafeLocation::LocationSeekerQueryFinished(TSharedPtr<FEnvQue
 
 
 	AIController->GetBlackboardComponent()->SetValueAsVector("MoveToLocation", StrafeLocation);
+
+	UE_LOG(LogClarityAI, Log, TEXT("[EQS][FindStrafe] Query finished. Frame: %llu | Agent: %s | Set MoveToLocation: %s"),
+		GFrameCounter, *GetNameSafe(AIController), *StrafeLocation.ToString());
 }
 
 bool UCBTTask_FindStrafeLocation::IsDistanceGreater(FVector Location)

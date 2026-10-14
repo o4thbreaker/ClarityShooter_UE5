@@ -29,7 +29,7 @@ EBTNodeResult::Type UCBTTask_GetPathPoints::ExecuteTask(UBehaviorTreeComponent& 
 	ACSmartObject_PatrolPath* PatrolPath = Cast<ACSmartObject_PatrolPath>(AICharacter->SmartObject);
 	if (!PatrolPath || PatrolPath->Locations.Num() < 1)
 	{
-		UE_LOG(LogTemp, Log, TEXT("No PatrolPath (or locations are not populated) on GetPathPoints Task"));
+		UE_LOG(LogClarityAI, Log, TEXT("No PatrolPath (or locations are not populated) on GetPathPoints Task"));
 		return EBTNodeResult::Succeeded;
 	}
 

@@ -29,27 +29,27 @@ bool UCAction_Shoot::CanStartAction_Implementation(AActor* Instigator)
 
 	if (!Cast<ICShooterInterface>(GetActionOwner()))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("%s doesn't implement ICShooterInterface. Aborting Shoot Action."), *GetNameSafe(GetActionOwner()));
+		UE_LOG(LogClarity, Warning, TEXT("%s doesn't implement ICShooterInterface. Aborting Shoot Action."), *GetNameSafe(GetActionOwner()));
 		return false;
 	}
 
 	if (!IsValid(OwnerWeaponSlotsComponent))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Couldn't find WeaponSlotsComponent. Aborting Shoot Action."));
+		UE_LOG(LogClarity, Warning, TEXT("Couldn't find WeaponSlotsComponent. Aborting Shoot Action."));
 		return false;
 	}
 
 	ACWeaponBase* Weapon = OwnerWeaponSlotsComponent->GetCurrentWeapon();
 	if (!IsValid(Weapon))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Couldn't find attached Weapon. Aborting Shoot Action."));
+		UE_LOG(LogClarity, Warning, TEXT("Couldn't find attached Weapon. Aborting Shoot Action."));
 		return false;
 	}
 
 	/// \NOTE: defensive check, WeaponData is guaranteed non-null by WeaponBase invariant, kept for safety margin
 	if (!Weapon->GetWeaponData())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Couldn't find Weapon Data on Weapon. Aborting Shoot Action."));
+		UE_LOG(LogClarity, Warning, TEXT("Couldn't find Weapon Data on Weapon. Aborting Shoot Action."));
 		return false;
 	}
 

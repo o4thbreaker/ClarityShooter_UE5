@@ -27,6 +27,9 @@ EBTNodeResult::Type UCBTTask_SelectCombatTarget::ExecuteTask(UBehaviorTreeCompon
 		// execute query with all matching, and when we get the result of eqs - run EnemySeekerQueryFinished()
 		EnemySeekerQueryRequest.Execute(EEnvQueryRunMode::AllMatching, this, &UCBTTask_SelectCombatTarget::EnemySeekerQueryFinished);
 
+		UE_LOG(LogClarityAI, Log, TEXT("[EQS][SelectCombatTarget] Execute -> Succeeded. Frame: %llu | Agent: %s | Target in BB: %s"),
+			GFrameCounter, *GetNameSafe(AIController), *GetNameSafe(AIController->GetTargetActor()));
+
 		return EBTNodeResult::Succeeded;
 	}
 
@@ -68,4 +71,7 @@ void UCBTTask_SelectCombatTarget::EnemySeekerQueryFinished(TSharedPtr<FEnvQueryR
 	{
 		AIController->SetTargetActor(BestTarget);
 	}
+
+	UE_LOG(LogClarityAI, Log, TEXT("[EQS][SelectCombatTarget] Query finished. Frame: %llu | Agent: %s | New target: %s"),
+		GFrameCounter, *GetNameSafe(AIController), *GetNameSafe(BestTarget));
 }

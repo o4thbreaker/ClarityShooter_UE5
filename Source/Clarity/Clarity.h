@@ -4,8 +4,9 @@
 
 #include "CoreMinimal.h"
 
-/** Main log category used across the project */
+/** Main log categories used across the project */
 DECLARE_LOG_CATEGORY_EXTERN(LogClarity, Log, All);
+DECLARE_LOG_CATEGORY_EXTERN(LogClarityAI, Log, All);
 
 /* global enum for AI states */
 /// \WARNING: please remember that ordering is IMPORTANT for this enum. number = state priority. 

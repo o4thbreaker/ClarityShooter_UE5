@@ -26,6 +26,10 @@ EBTNodeResult::Type UCBTTask_SelectCover::ExecuteTask(UBehaviorTreeComponent& Ow
 		CoverSeekerQueryRequest.Execute(EEnvQueryRunMode::AllMatching, this, &UCBTTask_SelectCover::CoverSeekerQueryFinished);
 	}
 
+	UE_LOG(LogClarityAI, Log, TEXT("[EQS][SelectCover] Execute -> Succeeded. Frame: %llu | Agent: %s | Cover in BB: %s"),
+		GFrameCounter, *GetNameSafe(AIController),
+		*GetNameSafe(AIController->GetBlackboardComponent()->GetValueAsObject("CoverActor")));
+
 	return EBTNodeResult::Succeeded;
 }
 
@@ -124,6 +128,9 @@ void UCBTTask_SelectCover::CoverSeekerQueryFinished(TSharedPtr<FEnvQueryResult> 
 		SelectedCover->CurrentCharacter = AIController->GetAICharacter();
 		SelectedCover->bIsCoverAvailable = false;
 	}
+
+	UE_LOG(LogClarityAI, Log, TEXT("[EQS][SelectCover] Query finished. Frame: %llu | Agent: %s | Selected: %s"),
+		GFrameCounter, *GetNameSafe(AIController), *GetNameSafe(SelectedCover));
 
 }
 

@@ -159,7 +159,7 @@ void ACAIController::OnDamaged(AActor* InstigatorActor, UCAttributeComponent* Ow
 
 	// hit reaction
 	GetBlackboardComponent()->SetValueAsBool(TEXT("IsFlinching"), true);
-	UE_LOG(LogTemp, Log, TEXT("IsFlinching: true"));
+	UE_LOG(LogClarityAI, Log, TEXT("IsFlinching: true"));
 }
 
 void ACAIController::OnStopHitReaction(bool IsStarted)
@@ -167,7 +167,7 @@ void ACAIController::OnStopHitReaction(bool IsStarted)
 	if (!IsStarted)
 	{
 		GetBlackboardComponent()->SetValueAsBool(TEXT("IsFlinching"), false);
-		UE_LOG(LogTemp, Log, TEXT("IsFlinching: false"));
+		UE_LOG(LogClarityAI, Log, TEXT("IsFlinching: false"));
 	}
 }
 
@@ -221,7 +221,7 @@ void ACAIController::SetDetectionLevel()
 
 void ACAIController::OnWeaponLost(UCWeaponSlotsComponent* OwningComponent)
 {
-	UE_LOG(LogTemp, Log, TEXT("AI has lost a weapon! Changing state to WeaponLost"));
+	UE_LOG(LogClarity, Log, TEXT("AI has lost a weapon! Changing state to WeaponLost"));
 	TrySetAIState(ECAIState::WeaponLost);
 }
 
@@ -235,13 +235,18 @@ void ACAIController::SetShouldShootFromCover(bool ShouldShoot)
 
 bool ACAIController::TrySetAIState(ECAIState NewState)
 {
+	UE_LOG(LogClarityAI, Log, TEXT("[%s] | State before re-setting: %s [%d]"), *GetName(), *UEnum::GetValueAsString((ECAIState)GetAIState()), (int32)GetAIState());
+
 	if (GetAIState() < (uint8)NewState)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Can't set new state. Priority of %s is lower than %s"), *UEnum::GetValueAsString(NewState), *UEnum::GetValueAsString((ECAIState)GetAIState()));
+		UE_LOG(LogClarityAI, Warning, TEXT("[%s] Rejected: %s [%d] has lower priority than %s [%d]"),
+			*GetNameSafe(GetPawn()), *UEnum::GetValueAsString(NewState), (int32)NewState,
+			*UEnum::GetValueAsString((ECAIState)GetAIState()), GetAIState());
 		return false;
 	}
 
 	GetBlackboardComponent()->SetValueAsEnum(TEXT("AIState"), (uint8)NewState);
+	UE_LOG(LogClarityAI, Log, TEXT("Agent: %s | Succesfully set new state: %s [%d]"), *GetName(), *UEnum::GetValueAsString(NewState), (int32)NewState);
 	return true;
 }
 

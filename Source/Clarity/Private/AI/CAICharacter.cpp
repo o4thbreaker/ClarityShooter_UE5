@@ -43,16 +43,20 @@ void ACAICharacter::PostInitializeComponents()
 
 void ACAICharacter::OnDamaged(AActor* InstigatorActor, UCAttributeComponent* OwningComp, float NewHealth, FHealthChangeInfo HealthChangeInfo)
 {
+	// package the event data
+	FActionEventData EventData;
+	EventData.EventTag = CGameplayTags::HitReactionAction;
+	EventData.Instigator = InstigatorActor;
+	EventData.EventContext.InitializeAs<FHealthChangeInfo>(HealthChangeInfo); // the structure will automatically allocate memory for the event data
+
 	// hit reaction
 	if (NewHealth > 0.0f)
 	{
-		// package the event data
-		FActionEventData EventData;
-		EventData.EventTag = CGameplayTags::HitReactionAction;
-		EventData.Instigator = InstigatorActor;
-		EventData.EventContext.InitializeAs<FHealthChangeInfo>(HealthChangeInfo); // the structure will automatically allocate memory for the event data
 		// start action with context
-		ActionComponent->TryStartActionWithContext(EventData);
+		if (!ActionComponent->TryStartActionWithContext(EventData))
+		{
+			UE_LOG(LogClarityAI, Error, TEXT("HitReactionAction didn't start. Aborting hit reaction logic."));
+		}
 		return;
 	}
 	
@@ -61,9 +65,10 @@ void ACAICharacter::OnDamaged(AActor* InstigatorActor, UCAttributeComponent* Own
 	// ragdoll is in HitReactionComponent
 	// controller logic is in the controller class
 
-	if (!ActionComponent->StartActionByTag(this, CGameplayTags::DeathAction))
+	EventData.EventTag = CGameplayTags::DeathAction;
+	if (!ActionComponent->TryStartActionWithContext(EventData))
 	{
-		UE_LOG(LogTemp, Error, TEXT("DeathAction didn't start. Aborting death logic."));
+		UE_LOG(LogClarityAI, Error, TEXT("DeathAction didn't start. Aborting death logic."));
 		return;
 	}
 
@@ -164,14 +169,14 @@ bool ACAICharacter::GetAimOriginAndDirection(FVector& OutOrigin, FVector& OutDir
 	AActor* TargetActor = AIController->GetTargetActor();
 	if (TargetActor == nullptr)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("AI has no target"));
+		UE_LOG(LogClarityAI, Warning, TEXT("AI has no target"));
 		return false;
 	}
 
 	ACWeaponBase* Weapon = WeaponSlotsComponent->GetCurrentWeapon();
 	if (Weapon == nullptr)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("AI has no weapon"));
+		UE_LOG(LogClarityAI, Warning, TEXT("AI has no weapon"));
 		return false;
 	}
 

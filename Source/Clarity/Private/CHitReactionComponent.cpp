@@ -21,9 +21,10 @@ void UCHitReactionComponent::BeginPlay()
 	/// \TODO: might be better to initialize it in Character class, but for now i want to make this component as modular as possible 
 	//         (and i dont have base class for both player and ai) so we will add physical animation component there
 	PhysicalAnimationComponent = Cast<UPhysicalAnimationComponent>(GetOwner()->AddComponentByClass(UPhysicalAnimationComponent::StaticClass(), false, GetOwner()->GetTransform(), false));
-	OwnerMeshComponent = Cast<ACharacter>(GetOwner())->GetMesh();
+	if (!ensureAlwaysMsgf(PhysicalAnimationComponent, TEXT("PhysicalAnimationComponent is null"))) return;
 
-	if (!ensureAlwaysMsgf(PhysicalAnimationComponent, TEXT("PhysicalAnimationComponent is null")) || !ensureAlwaysMsgf(OwnerMeshComponent, TEXT("OwnerMeshComponent is null"))) return;
+	OwnerMeshComponent = Cast<ACharacter>(GetOwner())->GetMesh();
+	if (!ensureAlwaysMsgf(OwnerMeshComponent, TEXT("OwnerMeshComponent is null"))) return;
 
 	PhysicalAnimationComponent->SetSkeletalMeshComponent(OwnerMeshComponent);
 	PhysicalAnimationComponent->SetComponentTickEnabled(false);
@@ -44,16 +45,12 @@ void UCHitReactionComponent::PerformHitReaction(const FHitResult& Hit, const flo
 	// do not set the include self because we dont want to make character fall as a ragdoll
 	OwnerMeshComponent->SetAllBodiesBelowSimulatePhysics(CoreBodyName, true, false);
 
-	FName HitBoneName;
+	PerformImpulse(Hit, KnockbackForce);
 
-	(Hit.BoneName == CoreBodyName) ? HitBoneName = FName("spine_02") : HitBoneName = Hit.BoneName;
-
-	FVector ImpulseVector = (Hit.TraceEnd - Hit.TraceStart).GetSafeNormal() * KnockbackForce;
-	OwnerMeshComponent->AddImpulse(ImpulseVector, HitBoneName, true);
 	PhysicalAnimationComponent->SetComponentTickEnabled(true);
 }
 
-void UCHitReactionComponent::HandleDeath()
+void UCHitReactionComponent::HandleDeath(const FHitResult& Hit, const float KnockbackForce)
 {
 	HitReactionTimeRemaining = 0.0f;
 	PhysicalAnimationComponent->SetComponentTickEnabled(false);
@@ -62,6 +59,8 @@ void UCHitReactionComponent::HandleDeath()
 	SetComponentTickEnabled(false);
 	OwnerMeshComponent->SetCollisionProfileName("Ragdoll");
 	OwnerMeshComponent->SetAllBodiesSimulatePhysics(true);
+
+	PerformImpulse(Hit, KnockbackForce);
 }
 
 void UCHitReactionComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -98,4 +97,15 @@ void UCHitReactionComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 		float MinValue = FMath::Min(HitReactionTimeRemaining, 1.0f);
 		OwnerMeshComponent->SetAllBodiesBelowPhysicsBlendWeight(CoreBodyName, MinValue, false, true);
 	}
+}
+
+void UCHitReactionComponent::PerformImpulse(const FHitResult& Hit, const float KnockbackForce)
+{
+	FName HitBoneName;
+	(Hit.BoneName == CoreBodyName) ? HitBoneName = FName("spine_02") : HitBoneName = Hit.BoneName;
+
+	FVector ImpulseVector = (Hit.TraceEnd - Hit.TraceStart).GetSafeNormal() * KnockbackForce;
+
+	UE_LOG(LogTemp, Warning, TEXT("Bone: %s, Impulse: %s"), *HitBoneName.ToString(), *ImpulseVector.ToString());
+	OwnerMeshComponent->AddImpulse(ImpulseVector, HitBoneName, true);
 }

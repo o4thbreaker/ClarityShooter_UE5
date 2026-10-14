@@ -23,14 +23,14 @@ void UCBTService_CheckAmmoLevel::TickNode(UBehaviorTreeComponent& OwnerComp, uin
 			UCWeaponSlotsComponent* WeaponSlotsComponent = AICharacter->GetWeaponSlotsComponent();
 			if (WeaponSlotsComponent == nullptr)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("Couldn't find WeaponSlotsComponent on AI. Aborting service!"));
+				UE_LOG(LogClarityAI, Warning, TEXT("Couldn't find WeaponSlotsComponent on AI. Aborting service!"));
 				return;
 			}
 
 			ACWeaponBase* Weapon = WeaponSlotsComponent->GetCurrentWeapon();
 			if (Weapon == nullptr)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("Couldn't find current weapon on AI. Aborting service!"));
+				UE_LOG(LogClarityAI, Warning, TEXT("Couldn't find current weapon on AI. Aborting service!"));
 				return;
 			}
 
