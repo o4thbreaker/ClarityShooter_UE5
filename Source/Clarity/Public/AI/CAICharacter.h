@@ -91,7 +91,7 @@ protected:
 	virtual void PostInitializeComponents() override;
 
 	/* Custom view target for perception component */
-	virtual bool CanBeSeenFrom(const FVector& ObserverLocation, FHitResult& OutHitResult, const AActor* IgnoreActor = nullptr) const;
+	//virtual bool CanBeSeenFrom(const FVector& ObserverLocation, FHitResult& OutHitResult, const AActor* IgnoreActor = nullptr) const;
 
 	virtual void GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const override;
 };
