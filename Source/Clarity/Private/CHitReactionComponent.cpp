@@ -67,8 +67,8 @@ void UCHitReactionComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	FVector HeadLoc = OwnerMeshComponent->GetBoneLocation(FName("head"));
-	DrawDebugSphere(GetWorld(), HeadLoc, 12.f, 8, FColor::Red, false, 0.f);
+	//FVector HeadLoc = OwnerMeshComponent->GetBoneLocation(FName("head"));
+	//DrawDebugSphere(GetWorld(), HeadLoc, 12.f, 8, FColor::Red, false, 0.f);
 
 	GEngine->AddOnScreenDebugMessage(-1, 0.f, FColor::Yellow, FString::Printf(TEXT("%f"), HitReactionTimeRemaining));
 

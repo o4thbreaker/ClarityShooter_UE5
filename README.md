@@ -31,13 +31,13 @@ Development of the first vertical slice took about 5 months working part-time.
 **How it works**
 A GAS-inspired system written from scratch (not a fork of GAS), built by breaking GAS down to understand its trade-offs. Each behavior (shooting, reloading, death, disarm, etc) is a `UCAction` subclass. `UCActionComponent` on the actor owns the actions and runs their lifecycle (`CanStartAction` → `StartAction` → `StopAction`). Actions are gated and cancelled through GameplayTags, and the player and AI use the same system. The component/action split follows the pattern from Tom Looman's Unreal C++ course; i've added gameplay tag registration to implement tags additions/removal delegates, starting action with data-bus, using the InstancedStruct (see [`FActionEventData`](Source/Clarity/Public/ActionSystem/CActionSystemTypes.h) and action cancel by tag).
 
-`CanStartAction` is limited to cheap checks (asset presence, owner state, tags); anything expensive, such as line traces, runs in `StartAction`. ███[4]
+`CanStartAction` is limited to cheap checks (asset presence, owner state, tags); anything expensive, such as line traces, runs in `StartAction`. Logically, `CanStartAction` is about "can it be checked in the beggining of the action"
 
 **Why this way**
 - **Problem:** Player and AI both need to shoot, reload, die and disarm under shared rules about what can run together and what interrupts what. Without a common layer, each behavior would carry its own state flags, and those rules would end up scattered across the codebase. For example, without single point of entry we would have to call the same logic from BTTask and Player's class, which leads to swelling the codebase and adding the probability of code duplication. Moreover, adding it to one system with single flow actions can interrupt each others easily (Reload to Fire, Aim to Run, etc).
 - **Alternatives considered:**
   - Behavior logic directly in the character class and components, with state flags: same rules are scattered and duplicated, but not synchronised and some cases would be much harder to implement without the proper flow. Example: resetting actor's state after ending Aim would take another layer of logic instead of simple StopAction().
-  - Unreal's Gameplay Ability System: the project is single-player by design, so GAS's prediction and replication give nothing here; ███[7]
+  - Unreal's Gameplay Ability System: the project is single-player by design, so GAS's prediction and replication give nothing here.
 - **Chosen:** a smaller GAS-inspired system, easier to navigate at this project's scale. It keeps tag-based gating and cancellation.
 - **Cost / trade-off:**
   - Anything GAS provides that I need, I build and debug myself. Added on demand so far: action ticks, tag notifies.
@@ -111,11 +111,11 @@ The core technology is Physical Animation (`UPhysicalAnimationComponent`). It re
       2. **PAC assumes it is always on.** UPhysicalAnimationComponent::UpdateTargetActors is called not only from its own tick but also synchronously from OnTeleport, which fires inside SetAllBodiesBelowSimulatePhysics whenever the physics state is recreated. Dynamically toggling simulation while DriveData was populated caused LocalTransforms[BoneIndex] out-of-bounds crashes - timing-dependent at first, then deterministic when multiple bots were active. Fix: PAC and physics simulation are initialized once in BeginPlay and left permanently active; the reaction is controlled entirely by blend weight, so SetAllBodiesBelowSimulatePhysics is never called at runtime.
 
 **Where to look**
-1. [`CHitReactionComponent`](Source/Clarity/Public/CHitReactionComponent.h) and its `.cpp`(Source/Clarity/Private/CHitReactionComponent.cpp)
+1. [`CHitReactionComponent`](Source/Clarity/Public/CHitReactionComponent.h) and its [`.cpp`](Source/Clarity/Private/CHitReactionComponent.cpp)
 
 ### AI System
 
-![AI](docs/media/TODO.gif)
+![AI](docs/media/ai.gif)
 
 **How it works**
 Enemy squads run on Behavior Trees and EQS, split across three layers:
@@ -140,7 +140,7 @@ Full behavior cycles for both roles: [docs/AI.md](docs/AI.md).
 - **Problem:** Squad tactics need a decision that spans several agents. Each agent's Behavior Tree sees only its own agent, so it can not know who is moving and who is holding.
 - **Alternatives considered:**
   - Fully autonomous agents: each decides alone. To coordinate they would have to read each other's state, and nothing prevents all Defenders from (for example) advancing at once.
-  - Token-based coordination: agents request permission ("tokens") to advance or fire. It is distributed (like in DOOM or my previous project Cutting Edge), but the tokens still come from a shared pool, and someone has to decide who gets them.
+  - Token-based coordination: agents request permission aka "tokens" to advance or fire. It is distributed (like in DOOM or my previous project Cutting Edge), but the tokens still come from a shared pool, and someone has to decide who gets them.
 - **Chosen:** A world subsystem that keeps the agents of one faction (`ManagerFaction`). It broadcasts `AIState`, runs the combat loop on a 1-second timer, and assigns cover fire.
 - **Cost / trade-off:**
   - Agents are registered once, in `OnWorldBeginPlay`, so enemies spawned later are not managed.
@@ -497,6 +497,9 @@ Source/Clarity/
 Name's Artem, and I'm looking for a job in programming! Feel free to contact any time
 
 LinkedIn: [link](https://www.linkedin.com/in/artem-demchenko-096a67294)
+
 Telegram: [t.me](https://t.me/o4thbreaker)
+
 CV: TBA
+
 Email: 04thbreaker@gmail.com
