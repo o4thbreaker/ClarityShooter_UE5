@@ -165,7 +165,7 @@ Full behavior cycles for both roles: [docs/AI.md](docs/AI.md).
 
 ### Weapon System & Data-Driven Design
 
-![Weapons](docs/media/TODO.gif)
+![Weapons](docs/media/weapon_data.png)
 
 **How it works**
 Weapons are Blueprint children of [`ACWeaponBase`](Source/Clarity/Public/Weapons/CWeaponBase.h), which owns the ammo state and the common structure (mesh, barrel socket). A weapon's characteristics (e.g. magazine size, hit impulse) live in a [`UCWeaponData`](Source/Clarity/Public/Weapons/CWeaponData.h) DataAsset assigned in the weapon's Blueprint.
@@ -205,7 +205,7 @@ Adding a weapon variant:
 
 ### Disarm (Contextual Animation)
 
-![Disarm](docs/media/TODO.gif)
+![Disarm](docs/media/disarm.gif)
 
 **How it works**
 While the player has no weapon, they can get close to an armed enemy and take theirs.
@@ -231,9 +231,6 @@ The alignment of the two characters is configured in the scene asset, not in cod
 2. [`CAnimNotify_RetrieveWeapon`](Source/Clarity/Private/Notifies/CAnimNotify_RetrieveWeapon.cpp): the weapon swap
 
 ### Smart object
-
-![Smart objects](docs/media/TODO.gif)
-
 **How it works**
 Inspired by the GDC 2015 talk [*Remember to Relax! Realizing Relaxed Behaviors in AAA Games*](https://www.gdcvault.com/play/1022230/Remember-to-Relax-Realizing-Relaxed), which is about non-combat behavior. In this project that is the part of the Behavior Tree that runs while an agent is in `Idle`.
 
@@ -259,7 +256,7 @@ The only type so far is [`ACSmartObject_PatrolPath`](Source/Clarity/Public/Smart
 
 ### Cover System
 
-![Cover](docs/media/TODO.gif)
+![Cover](docs/media/covers.png)
 
 **How it works**
 Cover is a placed actor ([`ACCoverActor`](Source/Clarity/Public/SmartObjects/CCoverActor.h)): a trigger volume plus arrow components that mark usable positions (`CoverSpots`, collected at `BeginPlay`). Using cover takes four steps:
