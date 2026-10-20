@@ -25,9 +25,6 @@ Development of the first vertical slice took about 5 months working part-time.
 ---
 
 ### Action System
-
-![Action System](docs/media/TODO.gif)
-
 **How it works**
 A GAS-inspired system written from scratch (not a fork of GAS), built by breaking GAS down to understand its trade-offs. Each behavior (shooting, reloading, death, disarm, etc) is a `UCAction` subclass. `UCActionComponent` on the actor owns the actions and runs their lifecycle (`CanStartAction` → `StartAction` → `StopAction`). Actions are gated and cancelled through GameplayTags, and the player and AI use the same system. The component/action split follows the pattern from Tom Looman's Unreal C++ course; i've added gameplay tag registration to implement tags additions/removal delegates, starting action with data-bus, using the InstancedStruct (see [`FActionEventData`](Source/Clarity/Public/ActionSystem/CActionSystemTypes.h) and action cancel by tag).
 
@@ -89,7 +86,7 @@ Cosmetic methods (recoil, fire animation, etc.) are omitted.
 
 ### Physics-based Hit Reaction System
 
-![TODO](docs/media/TODO.gif)
+![Hit reaction](docs/media/hit_reaction.gif)
 
 **How it works**
 On damage, the character starts `UCAction_HitReaction`, passing the hit data (`FHealthChangeInfo`) in the action's event payload. The action calls `UCHitReactionComponent::PerformHitReaction` and owns the reaction's duration: a timer stops the action, and its tag events let the AI controller clear its `IsFlinching` flag. The component itself knows nothing about the Action System or the attribute component.
