@@ -50,7 +50,7 @@ Used by shooting, reloading, death, disarm, hit reaction, sprint, aim, swap shou
 
 ### Shooting & Ballistics
 
-![Shooting](docs/media/TODO.gif)
+![Shooting](docs/media/shoot.gif)
 
 **How it works**
 `UCAction_Shoot` is the most representative action: the same code path serves the player and AI. A shot goes through these steps:
@@ -64,6 +64,9 @@ Used by shooting, reloading, death, disarm, hit reaction, sprint, aim, swap shou
 8. Add a fire-cooldown tag and start a timer that removes it. While the tag is present, `CanStartAction()` rejects the next shot (blocked tags), which is how the fire rate works. The action itself is instantaneous: it stops at the end of `StartAction`.
 
 Cosmetic methods (recoil, fire animation, etc.) are omitted.
+
+AI shooting example:
+![AI Shooting](docs/media/ai_shoot.gif)
 
 **Why this way**
 - **Problem:** One fire pipeline for both the player and AI that does not branch on shooter type. In TPS, the camera and the weapon barrel are in different places: as mentioned, barrel sometimes can hit the obstacle, while the shooter's crosshair is on the target. It is especially seen from shooting behind the cover, when the wall is too close.
