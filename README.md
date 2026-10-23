@@ -26,11 +26,13 @@ Development of the first vertical slice took about 5 months working part-time.
 
 ### Action System
 **How it works**
+
 A GAS-inspired system written from scratch (not a fork of GAS), built by breaking GAS down to understand its trade-offs. Each behavior (shooting, reloading, death, disarm, etc) is a `UCAction` subclass. `UCActionComponent` on the actor owns the actions and runs their lifecycle (`CanStartAction` → `StartAction` → `StopAction`). Actions are gated and cancelled through GameplayTags, and the player and AI use the same system. The component/action split follows the pattern from Tom Looman's Unreal C++ course; i've added gameplay tag registration to implement tags additions/removal delegates, starting action with data-bus, using the InstancedStruct (see [`FActionEventData`](Source/Clarity/Public/ActionSystem/CActionSystemTypes.h) and action cancel by tag).
 
 `CanStartAction` is limited to cheap checks (asset presence, owner state, tags); anything expensive, such as line traces, runs in `StartAction`. Logically, `CanStartAction` is about "can it be checked in the beggining of the action"
 
 **Why this way**
+
 - **Problem:** Player and AI both need to shoot, reload, die and disarm under shared rules about what can run together and what interrupts what. Without a common layer, each behavior would carry its own state flags, and those rules would end up scattered across the codebase. For example, without single point of entry we would have to call the same logic from BTTask and Player's class, which leads to swelling the codebase and adding the probability of code duplication. Moreover, adding it to one system with single flow actions can interrupt each others easily (Reload to Fire, Aim to Run, etc).
 - **Alternatives considered:**
   - Behavior logic directly in the character class and components, with state flags: same rules are scattered and duplicated, but not synchronised and some cases would be much harder to implement without the proper flow. Example: resetting actor's state after ending Aim would take another layer of logic instead of simple StopAction().
@@ -42,6 +44,7 @@ A GAS-inspired system written from scratch (not a fork of GAS), built by breakin
   - Upside: each piece I add teaches me how the matching GAS feature works and why.
 
 **Where to look**
+
 1. [`UCActionComponent`](Source/Clarity/Public/ActionSystem/CActionComponent.h) — owns the actions, runs the lifecycle, holds the tag state
 2. [`UCAction`](Source/Clarity/Public/ActionSystem/CAction.h) — base class for every behavior
 3. [`UCAction_DisarmEnemy`](Source/Clarity/Public/ActionSystem/CAction_DisarmEnemy.h) — the most complex example: Contextual Animation, Motion Warping, time dilation
@@ -53,6 +56,7 @@ Used by shooting, reloading, death, disarm, hit reaction, sprint, aim, swap shou
 ![Shooting](docs/media/shoot.gif)
 
 **How it works**
+
 `UCAction_Shoot` is the most representative action: the same code path serves the player and AI. A shot goes through these steps:
 1. Cheap checks in `CanStartAction()` (see Action System above).
 2. Get the weapon from `WeaponSlotsComponent`.
@@ -69,6 +73,7 @@ AI shooting example:
 ![AI Shooting](docs/media/ai_shoot.gif)
 
 **Why this way**
+
 - **Problem:** One fire pipeline for both the player and AI that does not branch on shooter type. In TPS, the camera and the weapon barrel are in different places: as mentioned, barrel sometimes can hit the obstacle, while the shooter's crosshair is on the target. It is especially seen from shooting behind the cover, when the wall is too close.
 - **Alternatives considered:**
   - Projectile-based shooting: No gameplay need for projectile, because by design, the hit must be instant and impactful.
@@ -83,7 +88,8 @@ AI shooting example:
   - When the crosshair hits nothing (sky, open space), there is no point to aim at.
 
 **Where to look**
-1. [`CAction_Shoot`](Source/Clarity/Public/ActionSystem/CAction_Shoot.h) and its `.cpp` (Source/Clarity/Source/Clarity/Private/ActionSystem/CAction_Shoot.cpp): the full pipeline
+
+1. [`CAction_Shoot`](Source/Clarity/Public/ActionSystem/CAction_Shoot.h) and its `.cpp` (Source/Clarity/Private/ActionSystem/CAction_Shoot.cpp): the full pipeline
 2. [`CBallistics`](Source/Clarity/Source/Clarity/Private/Weapons/CBallistics.cpp): the pure function that computes the bullet end point
 3. [`CShooterInterface`](Source/Clarity/Public/CShooterInterface.h): the shooter interface
 
@@ -92,12 +98,14 @@ AI shooting example:
 ![Hit reaction](docs/media/hit_reaction.gif)
 
 **How it works**
+
 On damage, the character starts `UCAction_HitReaction`, passing the hit data (`FHealthChangeInfo`) in the action's event payload. The action calls `UCHitReactionComponent::PerformHitReaction` and owns the reaction's duration: a timer stops the action, and its tag events let the AI controller clear its `IsFlinching` flag. The component itself knows nothing about the Action System or the attribute component.
 On a hit, every body except the pelvis starts simulating physics (a partial ragdoll), so the character does not fall over. The component then applies an impulse (force and time arrive in `FHealthChangeInfo`, filled by the shooting action) and gradually returns to the non-ragdoll state. After the reaction is complete, component stops ticking. In case of death, component immediately stops ticking and sets the body to a full ragdoll state.
 
 The core technology is Physical Animation (`UPhysicalAnimationComponent`). It remembers the original animation pose and "relaxes" bodies to a certain extend.
 
 **Why this way**
+
 - **Problem:** Hitscan shooting is instant, so each hit needs visible feedback that varies with the impact point and direction, without an authored animation for every case. Also, damage variation by hit location is not readable visually.
 - **Alternatives considered:**
   - Authored hit animations: they need an animator or animation skills, and a set of 4–6 clips visibly repeats.
@@ -111,6 +119,7 @@ The core technology is Physical Animation (`UPhysicalAnimationComponent`). It re
       2. **PAC assumes it is always on.** UPhysicalAnimationComponent::UpdateTargetActors is called not only from its own tick but also synchronously from OnTeleport, which fires inside SetAllBodiesBelowSimulatePhysics whenever the physics state is recreated. Dynamically toggling simulation while DriveData was populated caused LocalTransforms[BoneIndex] out-of-bounds crashes - timing-dependent at first, then deterministic when multiple bots were active. Fix: PAC and physics simulation are initialized once in BeginPlay and left permanently active; the reaction is controlled entirely by blend weight, so SetAllBodiesBelowSimulatePhysics is never called at runtime.
 
 **Where to look**
+
 1. [`CHitReactionComponent`](Source/Clarity/Public/CHitReactionComponent.h) and its [`.cpp`](Source/Clarity/Private/CHitReactionComponent.cpp)
 
 ### AI System
@@ -118,6 +127,7 @@ The core technology is Physical Animation (`UPhysicalAnimationComponent`). It re
 ![AI](docs/media/ai.gif)
 
 **How it works**
+
 Enemy squads run on Behavior Trees and EQS, split across three layers:
 
 | Layer | Class | Decides |
@@ -159,6 +169,7 @@ Full behavior cycles for both roles: [docs/AI.md](docs/AI.md).
   - A priority check says who wins, not which transitions are legal. A write that moves to a lower-priority state (such as `Idle` after a search) is rejected by the check by definition, so such transitions need a separate path: by bypassing the method and changing the state directly.
 
 **Where to look**
+
 1. [`ACAIController`](Source/Clarity/Private/AI/CAIController.cpp): perception, detection, `TrySetAIState`
 2. [`UCAIManagerSubsystem`](Source/Clarity/Private/AI/CAIManagerSubsystem.cpp): combat loop, cover-fire requests
 3. [`UCBTTask_Reload`](Source/Clarity/Private/AI/CBTTask_Reload.cpp): event-driven latent task with subscribe/unsubscribe
@@ -168,6 +179,7 @@ Full behavior cycles for both roles: [docs/AI.md](docs/AI.md).
 ![Weapons](docs/media/weapon_data.png)
 
 **How it works**
+
 Weapons are Blueprint children of [`ACWeaponBase`](Source/Clarity/Public/Weapons/CWeaponBase.h), which owns the ammo state and the common structure (mesh, barrel socket). A weapon's characteristics (e.g. magazine size, hit impulse) live in a [`UCWeaponData`](Source/Clarity/Public/Weapons/CWeaponData.h) DataAsset assigned in the weapon's Blueprint.
 
 [`UCWeaponSlotsComponent`](Source/Clarity/Public/Weapons/CWeaponSlotsComponent.h) manages an actor's arsenal: spawning the default weapon, equipping, switching and losing weapons. It publishes `OnWeaponLost`; the AI controller subscribes to it and switches the agent to the `WeaponLost` state.
@@ -198,6 +210,7 @@ Adding a weapon variant:
   - One more asset per character type, and a category that has to be kept in sync.
 
 **Where to look**
+
 1. [`ACWeaponBase`](Source/Clarity/Public/Weapons/CWeaponBase.h): ammo state and structure
 2. [`UCWeaponSlotsComponent`](Source/Clarity/Public/Weapons/CWeaponSlotsComponent.h): arsenal, `OnWeaponLost`
 3. [`UCWeaponData`](Source/Clarity/Public/Weapons/CWeaponData.h): the data asset
@@ -208,6 +221,7 @@ Adding a weapon variant:
 ![Disarm](docs/media/disarm.gif)
 
 **How it works**
+
 While the player has no weapon, they can get close to an armed enemy and take theirs.
 
 `UCAction_DisarmEnemy` is a regular Action. On start it sweeps a capsule along the player's aim ray (up to `MaxRange`, pawns only). If it finds a target, it binds the two characters to the `Attacker` and `Victim` roles of a Contextual Animation scene asset and starts the scene. It also removes the `Armed` tag from the victim right away, so actions that require it (e.g Aim) can no longer start. The action stays active until the scene ends: `OnLeftSceneDelegate` stops it.
@@ -217,6 +231,7 @@ A custom notify in the animation, [`CAnimNotify_RetrieveWeapon`](Source/Clarity/
 The alignment of the two characters is configured in the scene asset, not in code.
 
 **Why this way**
+
 - **Problem:** A takedown that involves two characters needs their animations, positions and the weapon hand-off to stay in sync. Two independent montages play wherever the characters happen to stand, and nothing aligns them to each other.
 - **Alternatives considered:**
   - Two independent montages started at the same time: no shared alignment, no guarantee that the characters face each other at the right distance.
@@ -227,11 +242,14 @@ The alignment of the two characters is configured in the scene asset, not in cod
   - The notify resolves the participants with `FindBindingByRole` and a few casts. It has not been profiled: the action fires rarely, so it is not worth optimizing now.
 
 **Where to look**
+
 1. [`UCAction_DisarmEnemy`](Source/Clarity/Public/ActionSystem/CAction_DisarmEnemy.h) and its [`.cpp`](Source/Clarity/Private/ActionSystem/CAction_DisarmEnemy.cpp): the action
 2. [`CAnimNotify_RetrieveWeapon`](Source/Clarity/Private/Notifies/CAnimNotify_RetrieveWeapon.cpp): the weapon swap
 
 ### Smart object
+
 **How it works**
+
 Inspired by the GDC 2015 talk [*Remember to Relax! Realizing Relaxed Behaviors in AAA Games*](https://www.gdcvault.com/play/1022230/Remember-to-Relax-Realizing-Relaxed), which is about non-combat behavior. In this project that is the part of the Behavior Tree that runs while an agent is in `Idle`.
 
 A smart object ([`ACSmartObject`](Source/Clarity/Public/SmartObjects/CSmartObject.h)) is an actor placed in the level that carries a Behavior Subtree  describing what an agent does with it. An AI references its smart object; when the controller begins play, it sets the `HasSmartObject` Blackboard key and injects the `SubTree` into the Idle branch with `SetDynamicSubtree`. Without a smart object, the Idle branch does nothing but plays the idle animation. A designer adds a new idle behavior by deriving from `ACSmartObject` and authoring a subtree, without touching the shared Behavior Tree.
@@ -239,6 +257,7 @@ A smart object ([`ACSmartObject`](Source/Clarity/Public/SmartObjects/CSmartObjec
 The only type so far is [`ACSmartObject_PatrolPath`](Source/Clarity/Public/SmartObjects/CSmartObject_PatrolPath.h): a wrapper around a spline that caches its points at `BeginPlay`. Its subtree uses [`UCBTTask_GetPathPoints`](Source/Clarity/Private/AI/CBTTask_GetPathPoints.cpp), which writes the next point as the move target and loops back to the first one at the end.
 
 **Why this way**
+
 - **Problem:** Idle behavior should differ from agent to agent (patrol, standing, interacting with a prop), and a designer should be able to add a variant without editing the shared Behavior Tree.
 - **Alternatives considered:**
   - More branches and subtrees in the shared Behavior Tree: it swells with optional logic, and the tree needs extra logic to recognize the context and choose a branch.
@@ -250,6 +269,7 @@ The only type so far is [`ACSmartObject_PatrolPath`](Source/Clarity/Public/Smart
   - The contract between an object and its subtree is implicit: `GetPathPoints` casts to the concrete `ACSmartObject_PatrolPath` and writes a shared Blackboard key (`MoveToLocation`), and nothing enforces either. A new object type needs its own subtree and tasks.
 
 **Where to look**
+
 1. [`ACSmartObject`](Source/Clarity/Public/SmartObjects/CSmartObject.h) and [`ACSmartObject_PatrolPath`](Source/Clarity/Public/SmartObjects/CSmartObject_PatrolPath.h)
 2. [`ACAIController::BeginPlay`](Source/Clarity/Private/AI/CAIController.cpp): where the subtree is injected
 3. [`UCBTTask_GetPathPoints`](Source/Clarity/Private/AI/CBTTask_GetPathPoints.cpp)
@@ -259,6 +279,7 @@ The only type so far is [`ACSmartObject_PatrolPath`](Source/Clarity/Public/Smart
 ![Cover](docs/media/covers.png)
 
 **How it works**
+
 Cover is a placed actor ([`ACCoverActor`](Source/Clarity/Public/SmartObjects/CCoverActor.h)): a trigger volume plus arrow components that mark usable positions (`CoverSpots`, collected at `BeginPlay`). Using cover takes four steps:
 
 1. **Select.** [`UCBTTask_SelectCover`](Source/Clarity/Private/AI/CBTTask_SelectCover.cpp) runs an EQS query for candidate covers and picks the best-scoring free one that passes a mode-specific filter (`Approach`, `Reposition`, `Retreat`). The filter uses *directness*, `(agent→target - cover→target) / agent→cover`: positive means the cover is closer to the target than the agent is. `Approach` requires directness above `DesiredDirectness` and a cover at least `DesiredDistance` from the target; `Retreat` requires the opposite sign. The measure comes from the tactical position selection chapter in *Game AI Pro* (M. Jack).
@@ -269,6 +290,7 @@ Cover is a placed actor ([`ACCoverActor`](Source/Clarity/Public/SmartObjects/CCo
 The squad manager does not use cover actors. It coordinates through the combat state (`HoldCover`, `ApproachingCover`) that this system produces (see the AI System section).
 
 **Why this way**
+
 - **Problem:** Tactical AI has to choose cover relative to the target, and two agents must not pick the same one.
 - **Alternatives considered:**
   - Cover points generated at runtime from level geometry (EQS grid + traces): no manual placement, but the points have no authored facing, and quality depends on trace heuristics.
@@ -280,6 +302,7 @@ The squad manager does not use cover actors. It coordinates through the combat s
   - Occupancy depends on the collision and overlap setup rather than on the agent's intent.
 
 **Where to look**
+
 1. [`ACCoverActor`](Source/Clarity/Public/SmartObjects/CCoverActor.h): trigger, spots, occupancy
 2. [`UCBTTask_SelectCover`](Source/Clarity/Private/AI/CBTTask_SelectCover.cpp): selection, directness, reservation
 3. [`UCBTTask_GetCoverSpot`](Source/Clarity/Private/AI/CBTTask_GetCoverSpot.cpp): spot choice
@@ -419,6 +442,7 @@ sequenceDiagram
 | **Minor:** the detection timer's interval changes apply only when the timer restarts; `SelectCover` in `Reposition` mode checks the score outside the loop; dead code (`CanBeSeenFrom`, an empty BT service); `LogTemp` in many places; the bullet trace channel is hard-coded | Cosmetic or edge cases | Known | Clean up after the first release |
 
 **Not implemented**
+
 - Finishers (cut to keep the focus on AI).
 - Slow motion during disarm: implemented (`UCTimeDilationSubsystem`), disabled by default because the animation is too short for it to look right.
 - Projectile weapons: shooting is hitscan only.
@@ -428,9 +452,11 @@ sequenceDiagram
 - Tank enemy variant
 
 **Out of scope by design**
+
 - Multiplayer and replication: the Action System is single-player by design, with no prediction or replication.
 
 **Roadmap**
+
 - AI decision-making and agressiveness improvement
 - Improvement of the `Engager` combat role
 - Finishers
@@ -454,6 +480,7 @@ Source/Clarity/
 ```
 
 **Start reading here**
+
 1. [`UCActionComponent`](Source/Clarity/Public/ActionSystem/CActionComponent.h): the hub. Owns the actions, gates and cancels them by tags, publishes tag events
 2. [`UCAction`](Source/Clarity/Public/ActionSystem/CAction.h): the base lifecycle that every behavior shares
 3. [`UCAction_Shoot`](Source/Clarity/Private/ActionSystem/CAction_Shoot.cpp): the most representative action, one code path for the player and AI
