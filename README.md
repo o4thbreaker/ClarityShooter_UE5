@@ -522,7 +522,7 @@ Source/Clarity/
 
 ---
 
-<!-- 
+<!--
 ## Build from source
 
 **Prerequisites:** TODO: версия UE, VS + workload, ОС 
@@ -530,6 +530,8 @@ Source/Clarity/
 **Not included in this repository:** big size assets, such as models, animations, vfx and enivornment.
 
 ---
+
+-->
 
 ## Credits & License
 
